@@ -1,0 +1,154 @@
+<main class="pt-20 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen">
+
+  <!-- HERO SECTION -->
+  <section class="max-w-6xl mx-auto text-center mb-16">
+
+    <!-- IMAGE -->
+    <div class="w-full h-64 rounded-3xl mb-6 flex items-center justify-center shadow-lg border-4 border-purple-300 overflow-hidden">
+      <img [src]="heroImage" alt="Hero Image" class="w-full h-full object-cover" />
+      <span *ngIf="!heroImage" class="text-gray-600 absolute">Hero Image Placeholder</span>
+    </div>
+
+    <h1 class="text-5xl font-extrabold text-purple-700 drop-shadow-md mb-4">
+      Tubong Pinoy
+    </h1>
+
+    <p class="text-lg text-gray-700 max-w-2xl mx-auto mb-6">
+      A modern browser-based gaming platform inspired by traditional Filipino games.
+      Experience fun, accessible, and interactive gameplay anytime, anywhere—no downloads required.
+    </p>
+
+    <!-- CTA BUTTONS -->
+    <div class="flex justify-center gap-4 flex-wrap">
+
+      <button routerLink="/games"
+        class="px-6 py-3 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
+        shadow-[0_5px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_7px_0_#92400e]
+        active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold">
+        🎮 Explore Games
+      </button>
+
+      <button routerLink="/signup"
+        class="px-6 py-3 bg-green-400 border-4 border-green-600 rounded-2xl
+        shadow-[0_5px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_7px_0_#14532d]
+        active:translate-y-1 active:shadow-[0_3px_0_#14532d] transition font-bold">
+        🚀 Create Account
+      </button>
+
+    </div>
+  </section>
+
+  <!-- ABOUT SECTION -->
+  <section class="max-w-6xl mx-auto mb-16 grid md:grid-cols-2 gap-10 items-center">
+
+    <!-- IMAGE -->
+    <div class="w-full h-72 rounded-3xl flex items-center justify-center shadow-lg border-4 border-pink-300 overflow-hidden">
+      <img [src]="aboutImage" alt="About Image" class="w-full h-full object-cover" />
+      <span *ngIf="!aboutImage" class="text-gray-600 absolute">About Image Placeholder</span>
+    </div>
+
+    <!-- TEXT -->
+    <div>
+      <h2 class="text-3xl font-extrabold text-pink-600 mb-4">
+        About Tubong Pinoy
+      </h2>
+
+      <p class="text-gray-700 mb-4">
+        Tubong Pinoy is a web-based casual gaming platform designed to bring traditional Filipino-inspired games into the modern digital space.
+        Built using Angular and MongoDB, the platform allows users to instantly play games directly from their browser.
+      </p>
+
+      <p class="text-gray-700 mb-4">
+        The system focuses on accessibility, simplicity, and engagement—making it suitable for both children and adults.
+        Players can create accounts, track their progress, and enjoy interactive drag-and-shoot gameplay mechanics.
+      </p>
+
+      <p class="text-gray-700">
+        By blending cultural inspiration with modern web technologies, Tubong Pinoy preserves classic gameplay experiences
+        while adapting them for today’s digital generation.
+      </p>
+    </div>
+
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section class="max-w-6xl mx-auto text-center mb-16">
+
+    <h2 class="text-3xl font-extrabold text-purple-700 mb-10">
+      ✨ Platform Features
+    </h2>
+
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <!-- FEATURE 1 -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-green-300">
+        <div class="w-full h-32 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+          <img [src]="featureImages[0]" alt="Feature 1" class="w-full h-full object-cover" />
+          <span *ngIf="!featureImages[0]" class="text-gray-500 text-sm absolute">Image</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2">⚡ Energy System</h3>
+        <p class="text-gray-600">
+          Gameplay is managed through an energy system that encourages balanced play sessions.
+        </p>
+      </div>
+
+      <!-- FEATURE 2 -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-yellow-300">
+        <div class="w-full h-32 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+          <img [src]="featureImages[1]" alt="Feature 2" class="w-full h-full object-cover" />
+          <span *ngIf="!featureImages[1]" class="text-gray-500 text-sm absolute">Image</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2">🎨 Customization</h3>
+        <p class="text-gray-600">
+          Personalize your experience with skins, effects, and visual enhancements.
+        </p>
+      </div>
+
+      <!-- FEATURE 3 -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-blue-300">
+        <div class="w-full h-32 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+          <img [src]="featureImages[2]" alt="Feature 3" class="w-full h-full object-cover" />
+          <span *ngIf="!featureImages[2]" class="text-gray-500 text-sm absolute">Image</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2">🌐 Browser-Based</h3>
+        <p class="text-gray-600">
+          No installation needed—play instantly on desktop or mobile browsers.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="text-center">
+
+    <!-- IMAGE -->
+    <div class="w-full max-w-3xl mx-auto h-48 rounded-3xl mb-6 flex items-center justify-center shadow-lg border-4 border-blue-300 overflow-hidden">
+      <img [src]="ctaImage" alt="CTA Image" class="w-full h-full object-cover" />
+      <span *ngIf="!ctaImage" class="text-gray-600 absolute">CTA Image Placeholder</span>
+    </div>
+
+    <h2 class="text-3xl font-extrabold text-purple-700 mb-4">
+      Ready to Play?
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      Join now and start enjoying fun, accessible games inspired by Filipino culture.
+    </p>
+
+    <button routerLink="/signup"
+      class="px-8 py-4 bg-pink-400 border-4 border-pink-600 rounded-2xl
+      shadow-[0_6px_0_#831843] hover:-translate-y-1 hover:shadow-[0_8px_0_#831843]
+      active:translate-y-1 active:shadow-[0_3px_0_#831843] transition font-bold text-lg">
+      Join Now
+    </button>
+
+  </section>
+
+  <!-- LIVE CLOCK -->
+  <div class="absolute top-24 right-10 bg-white px-4 py-2 rounded-xl shadow-md border-2 border-purple-300 font-bold text-purple-700">
+    🕒 {{ currentTime$ | async | time }}
+  </div>
+
+</main>

@@ -1,0 +1,96 @@
+<main class="pt-20 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen flex items-center justify-center relative overflow-hidden">
+
+  <div class="absolute -top-10 -right-10 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40"></div>
+  <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40"></div>
+
+  <section class="max-w-2xl w-full bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl border-4 border-purple-300 relative z-10">
+
+    <a routerLink="/" class="absolute -top-5 -left-5 bg-yellow-400 border-4 border-yellow-600 p-3 rounded-2xl shadow-[0_4px_0_#92400e] hover:-translate-y-1 transition active:translate-y-0.5 text-xl">
+      🏠
+    </a>
+
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-extrabold text-purple-700 drop-shadow-sm mb-2">Join the Tribe!</h1>
+      <p class="text-gray-600 font-medium">Create your account to save your progress and unlock skins.</p>
+    </div>
+
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-purple-700 font-bold mb-2 ml-1">Username</label>
+          <input formControlName="username" type="text" placeholder="GamerName"
+            [class.border-red-400]="f.username.invalid && f.username.touched"
+            class="w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
+          <p *ngIf="f.username.invalid && f.username.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">⚠️ Min 3 characters.</p>
+        </div>
+
+        <div>
+          <label class="block text-purple-700 font-bold mb-2 ml-1">Email Address</label>
+          <input formControlName="email" type="email" placeholder="hello@pinoy.com"
+            [class.border-red-400]="f.email.invalid && f.email.touched"
+            class="w-full px-5 py-3 rounded-2xl border-4 border-green-200 focus:border-green-400 focus:outline-none transition bg-green-50 text-gray-700 font-medium placeholder-green-300" />
+          <p *ngIf="f.email.invalid && f.email.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">⚠️ Enter a valid email.</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="relative">
+          <label class="block text-purple-700 font-bold mb-2 ml-1">Password</label>
+          <div class="relative">
+            <input formControlName="password" [type]="showPassword ? 'text' : 'password'" placeholder="••••••••"
+              [class.border-red-400]="f.password.invalid && f.password.touched"
+              class="w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
+            <button type="button" (click)="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
+              {{ showPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          <p *ngIf="f.password.invalid && f.password.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">⚠️ Min 6 characters.</p>
+        </div>
+
+        <div class="relative">
+          <label class="block text-purple-700 font-bold mb-2 ml-1">Confirm Password</label>
+          <div class="relative">
+            <input formControlName="confirmPassword" [type]="showConfirmPassword ? 'text' : 'password'" placeholder="••••••••"
+              [class.border-red-400]="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched"
+              class="w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
+            <button type="button" (click)="toggleConfirmPassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
+              {{ showConfirmPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          <p *ngIf="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">⚠️ Passwords do not match!</p>
+        </div>
+      </div>
+
+      <div class="px-1">
+        <label class="flex items-start cursor-pointer group">
+          <input type="checkbox" formControlName="terms" class="hidden peer">
+          <div class="mt-1 w-6 h-6 shrink-0 border-4 border-purple-200 rounded-lg bg-white peer-checked:bg-purple-500 peer-checked:border-purple-700 transition flex items-center justify-center text-white text-xs">
+            ✔
+          </div>
+          <span class="ml-3 text-sm font-bold text-gray-600 group-hover:text-purple-700 transition">
+            I agree to play fair and respect the community guidelines. 🇵🇭
+          </span>
+        </label>
+        <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-500 text-[10px] font-bold mt-1 ml-9">⚠️ You must agree to continue.</p>
+      </div>
+
+      <button type="submit" [disabled]="signupForm.invalid"
+        class="w-full py-4 bg-pink-400 border-4 border-pink-600 rounded-2xl
+        shadow-[0_6px_0_#831843] hover:-translate-y-1 hover:shadow-[0_8px_0_#831843]
+        active:translate-y-1 active:shadow-[0_2px_0_#831843] transition-all font-bold text-xl text-white tracking-widest
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none">
+        🚀 CREATE ACCOUNT
+      </button>
+
+    </form>
+
+    <div class="mt-8 text-center border-t-4 border-dashed border-gray-100 pt-6">
+      <p class="text-gray-600 font-medium">
+        Already have an account?
+        <a routerLink="/login" class="text-purple-700 font-extrabold hover:underline ml-1">Log In Here</a>
+      </p>
+    </div>
+
+  </section>
+</main>

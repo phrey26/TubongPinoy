@@ -1,0 +1,82 @@
+<!-- NAVIGATION -->
+<nav class="fixed top-0 left-0 w-full bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400
+shadow-lg border-b-4 border-purple-600 z-50">
+  <div class="flex items-center justify-between px-6 py-3 text-white font-extrabold h-16">
+
+    <!-- LEFT (Logo) -->
+    <div class="flex items-center">
+      <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black font-bold shadow-md">
+        LOGO
+      </div>
+    </div>
+
+    <!-- CENTER (Navigation) -->
+    <div class="flex gap-4 justify-center flex-1">
+      <a routerLink="/"
+         routerLinkActive="ring-4 ring-white"
+         [routerLinkActiveOptions]="{ exact: true }"
+         class="px-5 py-2 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
+         shadow-[0_4px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_6px_0_#92400e]
+         active:translate-y-1 active:shadow-[0_2px_0_#92400e] transition">
+         🏠 Home
+      </a>
+
+      <a routerLink="/games"
+         routerLinkActive="ring-4 ring-white"
+         class="px-5 py-2 bg-orange-400 border-4 border-orange-600 rounded-2xl
+         shadow-[0_4px_0_#7c2d12] hover:-translate-y-1 hover:shadow-[0_6px_0_#7c2d12]
+         active:translate-y-1 active:shadow-[0_2px_0_#7c2d12] transition">
+         🎮 Games
+      </a>
+
+      <a routerLink="/shop"
+         routerLinkActive="ring-4 ring-white"
+         class="px-5 py-2 bg-green-400 border-4 border-green-600 rounded-2xl
+         shadow-[0_4px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_6px_0_#14532d]
+         active:translate-y-1 active:shadow-[0_2px_0_#14532d] transition">
+         🛒 Shop
+      </a>
+
+      <a routerLink="/topup"
+         routerLinkActive="ring-4 ring-white"
+         class="px-5 py-2 bg-blue-400 border-4 border-blue-600 rounded-2xl
+         shadow-[0_4px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_6px_0_#1e3a8a]
+         active:translate-y-1 active:shadow-[0_2px_0_#1e3a8a] transition">
+         💎 Top Up
+      </a>
+
+      <a routerLink="/contact"
+         routerLinkActive="ring-4 ring-white"
+         class="px-5 py-2 bg-pink-400 border-4 border-pink-600 rounded-2xl
+         shadow-[0_4px_0_#831843] hover:-translate-y-1 hover:shadow-[0_6px_0_#831843]
+         active:translate-y-1 active:shadow-[0_2px_0_#831843] transition">
+         📩 Contact
+      </a>
+    </div>
+
+    <!-- RIGHT (Auth) -->
+    <div class="flex items-center gap-3">
+      <a routerLink="/login"
+         routerLinkActive="ring-2 ring-white"
+         class="px-3 py-1 text-sm bg-indigo-400 border-2 border-indigo-600 rounded-xl
+         shadow-[0_3px_0_#312e81] hover:-translate-y-0.5 hover:shadow-[0_4px_0_#312e81]
+         active:translate-y-0.5 active:shadow-[0_2px_0_#312e81] transition">
+         Login
+      </a>
+
+      <a routerLink="/signup"
+         routerLinkActive="ring-2 ring-white"
+         class="px-3 py-1 text-sm bg-teal-400 border-2 border-teal-600 rounded-xl
+         shadow-[0_3px_0_#134e4a] hover:-translate-y-0.5 hover:shadow-[0_4px_0_#134e4a]
+         active:translate-y-0.5 active:shadow-[0_2px_0_#134e4a] transition">
+         Signup
+      </a>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ADD TOP PADDING TO MAIN CONTENT TO AVOID NAV OVERLAP -->
+<main class="pt-16">
+  <!-- Your page content here -->
+</main>

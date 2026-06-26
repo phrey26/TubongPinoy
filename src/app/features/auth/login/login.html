@@ -1,0 +1,88 @@
+<main class="pt-20 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen flex items-center justify-center relative overflow-hidden">
+
+  <div class="absolute -top-10 -left-10 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+  <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+
+  <section class="max-w-md w-full bg-white p-8 rounded-[2.5rem] shadow-2xl border-4 border-purple-300 relative z-10">
+
+    <a routerLink="/" class="absolute -top-5 -left-5 bg-yellow-400 border-4 border-yellow-600 p-3 rounded-2xl shadow-[0_4px_0_#92400e] hover:-translate-y-1 transition active:translate-y-0.5 flex items-center justify-center text-xl" title="Back to Home">
+      🏠
+    </a>
+
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-extrabold text-purple-700 drop-shadow-sm mb-2">
+        Welcome Back!
+      </h1>
+      <p class="text-gray-600 font-medium italic">Ready for another round of Tubong Pinoy?</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+
+      <div class="relative">
+        <label class="block text-purple-700 font-bold mb-2 ml-1">Username or Email</label>
+        <input
+          formControlName="identity"
+          type="text"
+          placeholder="Enter username"
+          [class.border-red-400]="f.identity.invalid && f.identity.touched"
+          class="w-full px-5 py-4 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
+
+        <div *ngIf="f.identity.invalid && f.identity.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">
+          ⚠️ Username is required (min 3 chars).
+        </div>
+      </div>
+
+      <div class="relative">
+        <label class="block text-purple-700 font-bold mb-2 ml-1">Password</label>
+        <div class="relative">
+          <input
+            formControlName="password"
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="••••••••"
+            [class.border-red-400]="f.password.invalid && f.password.touched"
+            class="w-full px-5 py-4 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium placeholder-pink-300" />
+
+          <button
+            type="button"
+            (click)="togglePassword()"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-xl hover:scale-110 transition active:scale-95">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+
+        <div *ngIf="f.password.invalid && f.password.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">
+          ⚠️ Password must be at least 6 characters.
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between px-1">
+        <label class="flex items-center cursor-pointer group">
+          <input type="checkbox" formControlName="rememberMe" class="hidden peer">
+          <div class="w-6 h-6 border-4 border-purple-200 rounded-lg bg-white peer-checked:bg-purple-500 peer-checked:border-purple-700 transition flex items-center justify-center text-white text-xs">
+            ✔
+          </div>
+          <span class="ml-2 text-sm font-bold text-gray-600 group-hover:text-purple-700 transition">Remember Me</span>
+        </label>
+        <a href="#" class="text-sm text-pink-600 font-bold hover:underline">Forgot?</a>
+      </div>
+
+      <button type="submit"
+        [disabled]="loginForm.invalid"
+        class="w-full py-4 bg-green-400 border-4 border-green-600 rounded-2xl
+        shadow-[0_6px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_8px_0_#14532d]
+        active:translate-y-1 active:shadow-[0_2px_0_#14532d] transition-all font-bold text-xl text-white tracking-widest
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none mt-2">
+        🕹️ START PLAYING
+      </button>
+
+    </form>
+
+    <div class="mt-8 text-center border-t-4 border-dashed border-gray-100 pt-6">
+      <p class="text-gray-600 font-medium">
+        New to the game?
+        <a routerLink="/signup" class="text-purple-700 font-extrabold hover:underline ml-1">Create Account</a>
+      </p>
+    </div>
+
+  </section>
+</main>

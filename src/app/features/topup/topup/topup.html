@@ -1,0 +1,191 @@
+<main class="pt-20 px-6 pb-20 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen">
+
+  <!-- HEADER -->
+  <header class="max-w-6xl mx-auto mb-20 flex flex-col md:flex-row justify-between items-end gap-6">
+
+    <div>
+      <h1 class="text-5xl font-extrabold text-orange-600 drop-shadow-md mb-2">
+        Buy Tansans
+      </h1>
+      <p class="text-lg text-gray-700">
+        Top up your account to unlock premium skins and energy boosts.
+      </p>
+    </div>
+
+    <!-- TANSANS DISPLAY -->
+    <div class="bg-white px-6 py-3 rounded-2xl shadow-lg border-4 border-yellow-300 flex items-center gap-3">
+      <span class="text-2xl">🥮</span>
+      <span class="font-black text-yellow-700 text-xl">
+        {{ currency.getCoins() }}
+      </span>
+    </div>
+
+  </header>
+
+  <!-- HERO -->
+  <section class="max-w-4xl mx-auto text-center mb-20">
+
+    <div class="w-full h-64 rounded-3xl mb-6 flex items-center justify-center shadow-lg border-4 border-orange-300 overflow-hidden bg-white">
+
+      <!-- Image (no ngIf) -->
+      <img [src]="heroImage"
+           alt="Topup Image"
+           class="w-full h-full object-cover" />
+
+    </div>
+
+    <h1 class="text-5xl font-extrabold text-orange-600 drop-shadow-md mb-4">
+      Buy Tansans
+    </h1>
+
+    <p class="text-lg text-gray-700 max-w-2xl mx-auto">
+      Top up your account to unlock premium skins, upgrades, and energy boosts.
+    </p>
+
+  </section>
+
+  <!-- PACKAGES -->
+  <section class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 mb-20">
+
+    <!-- 100 -->
+    <div class="bg-white p-8 rounded-3xl shadow-lg border-4 border-green-300 text-center hover:-translate-y-2 transition">
+
+      <div class="text-5xl mb-4">📦</div>
+
+      <h3 class="font-bold text-xl mb-2">Sari-Sari Starter</h3>
+      <p class="text-gray-500 text-sm mb-4">Perfect for a few quick games.</p>
+
+      <div class="text-3xl font-black text-orange-600 mb-6">
+        100 Tansans
+      </div>
+
+      <button (click)="selectPackage(100, 49)"
+        class="w-full px-6 py-3 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
+        shadow-[0_5px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_7px_0_#92400e]
+        active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold">
+        ₱49.00
+      </button>
+
+    </div>
+
+    <!-- 500 -->
+    <div class="bg-white p-8 rounded-3xl shadow-xl border-4 border-orange-400 text-center relative hover:-translate-y-2 transition">
+
+      <div class="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 text-xs font-bold rounded-full">
+        BEST VALUE
+      </div>
+
+      <div class="text-5xl mb-4">💰</div>
+
+      <h3 class="font-bold text-xl mb-2 text-orange-700">Tindahan Special</h3>
+      <p class="text-gray-500 text-sm mb-4">Our most popular choice!</p>
+
+      <div class="text-3xl font-black text-orange-600 mb-6">
+        500 Tansans
+      </div>
+
+      <button (click)="selectPackage(500, 199)"
+        class="w-full px-6 py-3 bg-orange-400 border-4 border-orange-600 rounded-2xl
+        shadow-[0_5px_0_#9a3412] hover:-translate-y-1 hover:shadow-[0_7px_0_#9a3412]
+        active:translate-y-1 active:shadow-[0_3px_0_#9a3412] transition font-bold text-white">
+        ₱199.00
+      </button>
+
+    </div>
+
+    <!-- 1500 -->
+    <div class="bg-white p-8 rounded-3xl shadow-lg border-4 border-blue-300 text-center hover:-translate-y-2 transition">
+
+      <div class="text-5xl mb-4">🏺</div>
+
+      <h3 class="font-bold text-xl mb-2 text-purple-700">Piyesta Pack</h3>
+      <p class="text-gray-500 text-sm mb-4">Unlock everything at once.</p>
+
+      <div class="text-3xl font-black text-orange-600 mb-6">
+        1500 Tansans
+      </div>
+
+      <button (click)="selectPackage(1500, 499)"
+        class="w-full px-6 py-3 bg-purple-400 border-4 border-purple-600 rounded-2xl
+        shadow-[0_5px_0_#581c87] hover:-translate-y-1 hover:shadow-[0_7px_0_#581c87]
+        active:translate-y-1 active:shadow-[0_3px_0_#581c87] transition font-bold text-white">
+        ₱499.00
+      </button>
+
+    </div>
+
+  </section>
+
+  <!-- PAYMENT -->
+  <section class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-lg border-4 border-pink-200">
+
+    <h2 class="text-2xl font-extrabold text-pink-600 mb-6">
+      💳 Payment Method <span class="text-sm font-normal text-gray-400">(Simulated)</span>
+    </h2>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+
+      <!-- GCASH -->
+      <label class="border-4 border-blue-300 rounded-xl p-4 flex items-center gap-3 cursor-pointer
+        bg-blue-50 hover:bg-blue-100 transition
+        has-[:checked]:border-blue-600 has-[:checked]:bg-blue-100">
+
+        <input type="radio" name="payment" class="accent-blue-600" checked>
+
+        <span class="font-bold text-blue-700">💙 GCash</span>
+
+      </label>
+
+      <!-- MAYA -->
+      <label class="border-4 border-green-300 rounded-xl p-4 flex items-center gap-3 cursor-pointer
+        bg-green-50 hover:bg-green-100 transition
+        has-[:checked]:border-green-600 has-[:checked]:bg-green-100">
+
+        <input type="radio" name="payment" class="accent-green-600">
+
+        <span class="font-bold text-green-700">💚 Maya</span>
+
+      </label>
+
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="bg-gray-50 p-4 rounded-2xl mb-6 border-2 border-dashed border-gray-300">
+
+      <div class="flex justify-between text-gray-600 mb-2">
+        <span>Selected Amount:</span>
+        <span class="font-bold">{{ selectedTansans }} Tansans</span>
+      </div>
+
+      <div class="flex justify-between text-xl font-black">
+        <span>Total Price:</span>
+        <span>₱{{ selectedPrice }}.00</span>
+      </div>
+
+    </div>
+
+    <!-- BUTTON -->
+    <button (click)="processPayment()"
+      class="w-full py-4 bg-green-400 border-4 border-green-600 rounded-2xl
+      shadow-[0_6px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_8px_0_#14532d]
+      active:translate-y-1 active:shadow-[0_3px_0_#14532d] transition font-bold text-lg">
+      Confirm Purchase
+    </button>
+
+  </section>
+
+  <!-- BACK BUTTON -->
+  <footer class="text-center mt-16 pb-10">
+
+    <button routerLink="/dashboard"
+      class="px-8 py-4 bg-pink-400 border-4 border-pink-600 rounded-2xl
+      shadow-[0_6px_0_#831843] hover:-translate-y-1 hover:shadow-[0_8px_0_#831843]
+      active:translate-y-1 active:shadow-[0_3px_0_#831843] transition font-bold text-lg">
+
+      ← Back to Dashboard
+
+    </button>
+
+  </footer>
+
+</main>
