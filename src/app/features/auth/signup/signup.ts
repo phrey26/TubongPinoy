@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validators, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Auth } from '../../../core/services/auth';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-signup',
   imports: [CommonModule, RouterLink, ReactiveFormsModule],
   templateUrl: './signup.html',

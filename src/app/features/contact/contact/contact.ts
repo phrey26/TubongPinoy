@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SafeUrlPipe } from '../../../shared/pipes/safe-url-pipe';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-contact',
   imports: [FormsModule, ReactiveFormsModule, SafeUrlPipe],
   templateUrl: './contact.html',

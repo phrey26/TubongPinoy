@@ -1,10 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { TimePipe } from '../../../shared/pipes/time-pipe';
 import { CommonModule } from '@angular/common';
 import { interval, map } from 'rxjs';
 import { RouterModule } from '@angular/router';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-home',
   imports: [CommonModule, TimePipe, RouterModule],
   templateUrl: './home.html',

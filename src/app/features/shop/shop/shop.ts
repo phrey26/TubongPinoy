@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Currency } from '../../../core/services/currency';
 import { Energy } from '../../../core/services/energy';
@@ -13,6 +13,7 @@ interface Skin {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-shop',
   imports: [CommonModule, RouterModule],
   templateUrl: './shop.html',

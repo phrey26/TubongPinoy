@@ -1,7 +1,14 @@
 # Tubongpinoybeta2
 
 A gaming website made to represent the Tradinional Filipino Games 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.2.
+This project targets Angular and Angular CLI 22.2.3 with TypeScript 6.0.
+
+## Requirements
+
+- Node.js 24.22.0 (or a later compatible Node.js 24 release)
+- npm 11.19.1
+
+Install dependencies using `npm ci`. Run npm commands without `sudo` so dependency files remain owned by your user.
 
 ## Development server
 
