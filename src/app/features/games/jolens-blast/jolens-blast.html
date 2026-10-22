@@ -1,44 +1,70 @@
-<main class="pt-24 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen">
+<main class="game-page pt-24 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen">
 
-  <header class="max-w-7xl mx-auto mb-10 text-center">
+  <header class="game-heading max-w-7xl mx-auto mb-10 text-center">
     <h1 class="text-4xl font-extrabold text-blue-700 drop-shadow-md mb-2">🔴 Jolens Blast</h1>
-    <p class="text-gray-700 font-medium">Pull back, aim, and match the colors in the circle!</p>
+    <p class="text-gray-700 font-medium">Win marbles by knocking them out. End your session to score 50 points for each marble you own.</p>
   </header>
 
-  <div class="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
+  <div class="game-layout max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
 
-    <section class="lg:col-span-2">
-      <div class="bg-white p-4 rounded-3xl shadow-lg border-4 border-blue-300 relative overflow-hidden">
+    <section class="play-section lg:col-span-2">
+      <div #gamePanel [class.is-fullscreen]="isFullscreen" class="game-panel bg-black p-4 rounded-3xl shadow-lg border-4 border-blue-300 relative overflow-hidden">
 
-        <div class="flex justify-between items-center mb-4 px-6 py-2 bg-blue-50 rounded-2xl border-2 border-blue-200">
-          <div class="flex gap-6">
-            <span class="font-bold text-blue-700">⭐ Score: {{ currentScore }}</span>
+        <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-6 py-2 bg-blue-50 rounded-2xl border-2 border-blue-200">
+          <div class="flex flex-wrap gap-3">
+            <span class="font-bold text-blue-700">⭐ Final score: {{ showGameOver ? currentScore : 'At session end' }}</span>
             <span class="font-bold text-pink-600">🧃 Juice: {{ energyLevel }}%</span>
-            <span class="font-bold text-gray-800">⚫ Marbles: {{ remainingMarbles }}</span>
+            <span class="font-bold text-gray-800">🔵 Your marbles: {{ marbleInventory }}</span>
           </div>
-          <span class="font-black text-blue-400">Level {{ currentLevel }}</span>
+          <span class="font-black text-blue-400">Bet: {{ selectedBet }} · Circle: {{ selectedBet * 2 }}</span>
+          <button type="button" class="fullscreen-button" (click)="toggleFullscreen()"
+            [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
+            {{ isFullscreen ? '⛶ Exit Fullscreen' : '⛶ Fullscreen' }}
+          </button>
+          <button type="button" (click)="endSession()" [disabled]="!canEndSession"
+            class="px-3 py-2 border-2 border-blue-400 rounded-xl text-blue-800 font-bold disabled:opacity-40">End Session</button>
+          <span class="w-full text-center text-xs text-blue-900" aria-live="polite">{{ shotMessage }}</span>
         </div>
 
-        <div class="w-full aspect-[6/5] bg-blue-50 rounded-3xl border-4 border-dashed border-blue-200 relative overflow-hidden max-w-[600px] mx-auto">
-          <canvas #gameCanvas width="600" height="500"
-            class="w-full h-full cursor-crosshair touch-none"
-            (mousedown)="onMouseDown($event)"
-            (mousemove)="onMouseMove($event)"
-            (mouseup)="onMouseUp()"
-            (mouseleave)="onMouseUp()">
+        <div class="board-space">
+        <div class="game-board w-full aspect-[9/16] bg-blue-50 rounded-3xl border-4 border-dashed border-blue-200 relative overflow-hidden mx-auto">
+          <canvas #gameCanvas width="450" height="800"
+            class="block w-full h-full cursor-crosshair touch-none"
+            (pointerdown)="onPointerDown($event)"
+            (pointermove)="onMouseMove($event)"
+            (pointerup)="onMouseUp()"
+            (pointercancel)="onPointerCancel()"
+            (lostpointercapture)="onPointerCancel()">
           </canvas>
 
-          <!-- Level Cleared -->
-          <div *ngIf="showLevelCleared" class="absolute inset-0 bg-blue-900/60 backdrop-blur-sm flex items-center justify-center z-30">
+          <div *ngIf="showBetSetup" class="absolute inset-0 bg-blue-950/70 flex items-center justify-center z-30">
+            <div class="bg-white p-6 rounded-3xl border-4 border-blue-400 text-center">
+              <h2 class="text-2xl font-black text-blue-700">Place Your Marbles</h2>
+              <p class="text-gray-700">You have {{ marbleInventory }} marbles. Bet 1–5; the circle gets twice your bet.</p>
+              <div class="flex flex-wrap justify-center gap-2 my-4">
+                <button *ngFor="let bet of betOptions" type="button" (click)="selectBet(bet)"
+                  [disabled]="bet > maxBet" [attr.aria-pressed]="selectedBet === bet"
+                  [class.ring-4]="selectedBet === bet"
+                  class="px-4 py-2 rounded-xl border-2 border-blue-500 bg-blue-100 font-bold disabled:opacity-30">{{ bet }}</button>
+              </div>
+              <p class="text-gray-700">Bet {{ selectedBet }} → {{ selectedBet * 2 }} in the circle.<br />Keep at least one marble as your shooter.</p>
+              <p class="text-sm text-gray-600">Valid knockouts become yours. A shooter that stays inside is lost, and the knocked-out marbles return.</p>
+              <button type="button" (click)="startRound()" [disabled]="selectedBet > maxBet"
+                class="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold disabled:opacity-30">Place Bet &amp; Play</button>
+            </div>
+          </div>
+
+          <!-- Round won -->
+          <div *ngIf="showRoundWon" class="absolute inset-0 bg-blue-900/60 backdrop-blur-sm flex items-center justify-center z-30">
             <div class="bg-white p-8 rounded-3xl border-4 border-blue-400 shadow-2xl text-center scale-110">
               <h2 class="text-4xl font-black text-blue-600 mb-2">Board Cleared!</h2>
-              <p class="text-gray-600 mb-6 font-medium">Awesome matching skills!</p>
+              <p class="text-gray-600 mb-6 font-medium">You knocked every marble out!</p>
               <div class="flex flex-col gap-3">
-                <button (click)="nextLevel()" class="px-10 py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a] active:translate-y-1 transition font-bold text-white">
-                  Next Level
+                <button (click)="chooseNextBet()" class="px-10 py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a] active:translate-y-1 transition font-bold text-white">
+                  Place Another Bet
                 </button>
-                <button routerLink="/games" class="text-sm font-bold text-gray-400 hover:text-red-500">
-                  Quit to Menu
+                <button (click)="endSession()" class="text-sm font-bold text-blue-700 hover:text-blue-900">
+                  End Session &amp; Score
                 </button>
               </div>
             </div>
@@ -47,14 +73,14 @@
           <!-- Game Over -->
           <div *ngIf="showGameOver" class="absolute inset-0 bg-purple-900/60 backdrop-blur-sm flex items-center justify-center z-10">
             <div class="bg-white p-8 rounded-3xl border-4 border-yellow-400 shadow-2xl text-center">
-              <h2 class="text-3xl font-black text-purple-700 mb-2">Grid Locked!</h2>
-              <p class="text-gray-600 mb-6 font-medium">No more moves left.</p>
+              <h2 class="text-3xl font-black text-purple-700 mb-2">Session Complete!</h2>
+              <p class="text-gray-600 mb-6 font-medium">{{ marbleInventory }} marbles × 50 = {{ currentScore }} points.</p>
               <div class="flex flex-col gap-3">
                 <button (click)="tryAgain()" class="px-10 py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a] active:translate-y-1 transition font-bold text-white">
-                  Try Again (-20🧃)
+                  New Game (-20🧃)
                 </button>
-                <button (click)="resetGame()" class="text-xs font-bold text-gray-400 hover:text-pink-500">
-                  Reset Game
+                <button routerLink="/games" class="text-xs font-bold text-gray-400 hover:text-pink-500">
+                  Back to Games
                 </button>
               </div>
             </div>
@@ -78,9 +104,10 @@
 
         </div>
       </div>
+      </div>
     </section>
 
-    <aside class="flex flex-col gap-6">
+    <aside class="game-sidebar flex flex-col gap-6">
       <div class="bg-white p-6 rounded-3xl shadow-lg border-4 border-blue-300">
         <h2 class="text-2xl font-extrabold text-blue-700 mb-6">🏆 Leaderboard</h2>
         <div class="space-y-3">

@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, ChangeDetectionStrategy } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, ChangeDetectionStrategy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { RouterModule, Router } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
+import { stepMarbles } from './marble-physics';
 
 interface Marble {
   x: number;
@@ -27,17 +28,65 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   private ctx!: CanvasRenderingContext2D;
   private animationFrameId!: number;
 
-  // ✅ Prevent duplicate starts
-  private gameStarted = false;
+  @ViewChild('gamePanel') gamePanel!: ElementRef<HTMLDivElement>;
+  isFullscreen = false;
+  private lastFrameTime: number | null = null;
+  private frameAccumulator = 0;
+  private shotFrames = 0;
+  private shotInProgress = false;
+  private pendingKnockouts: Marble[] = [];
+  shotMessage = '';
+  selectedBet = 3;
+  readonly betOptions = [1, 2, 3, 4, 5];
+  showBetSetup = true;
+
+  async toggleFullscreen(): Promise<void> {
+    this.isDragging = false;
+    if (this.isFullscreen) {
+      if (document.fullscreenElement === this.gamePanel.nativeElement) {
+        try { await document.exitFullscreen(); } catch { return; }
+      }
+      this.isFullscreen = false;
+    } else {
+      try { await this.gamePanel.nativeElement.requestFullscreen(); } catch {
+        // Use the same viewport-filling fallback as Tumbang Preso.
+      }
+      this.isFullscreen = true;
+    }
+    this.changeDetector.markForCheck();
+  }
+
+  @HostListener('document:fullscreenchange')
+  onFullscreenChange(): void {
+    this.isFullscreen = document.fullscreenElement === this.gamePanel.nativeElement;
+    this.isDragging = false;
+    this.changeDetector.markForCheck();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (!document.fullscreenElement) {
+      this.isFullscreen = false;
+      this.isDragging = false;
+      this.changeDetector.markForCheck();
+    }
+  }
+
+  onPointerDown(event: PointerEvent): void {
+    if (!event.isPrimary || event.button !== 0) return;
+    this.onMouseDown(event);
+    if (this.isDragging) this.canvasRef.nativeElement.setPointerCapture?.(event.pointerId);
+  }
+
+  onPointerCancel(): void { this.isDragging = false; }
 
   // Game State
   currentScore: number = 0;
   energyLevel: number = 100;
-  currentLevel: number = 1;
-  remainingMarbles: number = 20;
+  marbleInventory = 10;
 
   // Overlays
-  showLevelCleared = false;
+  showRoundWon = false;
   showGameOver = false;
   showOutOfJuice = false;
 
@@ -55,8 +104,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   private currentShooter!: Marble;
 
   // Canvas
-  private canvasWidth = 600;
-  private canvasHeight = 500;
+  private canvasWidth = 450;
+  private canvasHeight = 800;
   private playAreaRadius = 150;
   private marbleRadius = 20;
 
@@ -67,40 +116,28 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   private currentMouseX = 0;
   private currentMouseY = 0;
   private maxDragDistance = 150;
+  private readonly targetCenter = { x: 225, y: 300 };
+  // Reserve the lower quarter for dragging: a full pull ends at y=750,
+  // leaving 50 canvas pixels before the bottom edge.
+  private readonly shooterHome = { x: 225, y: 600 };
 
   private energySub!: Subscription;
 
-  constructor(private energyService: Energy) {}
+  constructor(private energyService: Energy, private changeDetector: ChangeDetectorRef, private router: Router) {}
 
   ngAfterViewInit(): void {
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
 
-    // ✅ Energy-driven game lifecycle
+    this.ctx.imageSmoothingEnabled = false;
+    this.spawnShooter();
     this.energySub = this.energyService.getEnergyLevel().subscribe(level => {
       this.energyLevel = level;
-
-      if (level <= 0) {
-        // 🚫 HARD STOP
-        this.showOutOfJuice = true;
-        this.showGameOver = false;
-        this.showLevelCleared = false;
-
-        cancelAnimationFrame(this.animationFrameId);
-        this.gameStarted = false;
-        return;
-      }
-
-      // ✅ Has juice again
-      this.showOutOfJuice = false;
-
-      // ▶️ Start game only once
-      if (!this.gameStarted) {
-        this.gameStarted = true;
-        this.initLevel();
-        this.gameLoop();
-      }
+      this.showOutOfJuice = level <= 0 && !this.showGameOver;
+      if (level <= 0) this.isDragging = false;
+      this.changeDetector.markForCheck();
     });
+    this.gameLoop();
   }
 
   ngOnDestroy(): void {
@@ -108,53 +145,61 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (this.energySub) this.energySub.unsubscribe();
   }
 
-  initLevel() {
+  get maxBet(): number { return Math.max(0, Math.min(5, this.marbleInventory - 1)); }
+
+  selectBet(bet: number): void {
+    if (this.showBetSetup && Number.isInteger(bet) && bet >= 1 && bet <= this.maxBet) this.selectedBet = bet;
+  }
+
+  startRound(): void {
+    if (this.showGameOver || !this.showBetSetup || this.energyLevel <= 0 || !Number.isInteger(this.selectedBet) ||
+        this.selectedBet < 1 || this.selectedBet > this.maxBet) return;
+    this.marbleInventory -= this.selectedBet;
+    this.showBetSetup = false;
+    this.initRound();
+  }
+
+  private initRound() {
     this.marblesOnBoard = [];
-    this.remainingMarbles = 20;
-    this.showLevelCleared = false;
+    this.showRoundWon = false;
     this.showGameOver = false;
-    this.currentScore = 0;
+    this.isDragging = false;
+    this.shotFrames = 0;
+    this.shotInProgress = false;
+    this.pendingKnockouts = [];
+    this.shotMessage = '';
 
-    const centerX = this.canvasWidth / 2;
-    const centerY = this.canvasHeight / 2;
+    const { x: centerX, y: centerY } = this.targetCenter;
 
-    for (let i = 0; i < 20; i++) {
-      let x: number, y: number;
-      let tries = 0;
-
-      do {
-        x = centerX + (Math.random() * 2 - 1) * this.playAreaRadius;
-        y = centerY + (Math.random() * 2 - 1) * this.playAreaRadius;
-        tries++;
-      } while (
-        (Math.hypot(x - centerX, y - centerY) > this.playAreaRadius - this.marbleRadius ||
-        this.isOverlapping(x, y)) && tries < 100
-      );
-
-      this.marblesOnBoard.push({
-        x, y,
-        radius: this.marbleRadius,
-        color: this.colors[Math.floor(Math.random() * this.colors.length)],
-        dx: 0, dy: 0,
-        isMoving: false
-      });
+    // A shuffled, spaced grid stays inside the ring even with unlucky random values.
+    const positions: { x: number; y: number }[] = [];
+    for (let row = -2; row <= 2; row++) {
+      for (let column = -2; column <= 2; column++) {
+        const x = centerX + column * 44, y = centerY + row * 44;
+        if (Math.hypot(x - centerX, y - centerY) <= this.playAreaRadius - this.marbleRadius) {
+          positions.push({ x, y });
+        }
+      }
     }
+    for (let i = positions.length - 1; i > 0; i--) {
+      const other = Math.floor(Math.random() * (i + 1));
+      [positions[i], positions[other]] = [positions[other], positions[i]];
+    }
+    this.marblesOnBoard = positions.slice(0, this.selectedBet * 2).map(position => ({
+      ...position, radius: this.marbleRadius,
+      color: this.colors[Math.floor(Math.random() * this.colors.length)],
+      dx: 0, dy: 0, isMoving: false,
+    }));
 
     this.spawnShooter();
   }
 
-  isOverlapping(x: number, y: number): boolean {
-    return this.marblesOnBoard.some(m =>
-      Math.hypot(m.x - x, m.y - y) < this.marbleRadius * 2
-    );
-  }
-
   spawnShooter() {
     this.currentShooter = {
-      x: this.canvasWidth / 2,
-      y: this.canvasHeight - this.marbleRadius * 2,
+      x: this.shooterHome.x,
+      y: this.shooterHome.y,
       radius: this.marbleRadius,
-      color: this.colors[Math.floor(Math.random() * this.colors.length)],
+      color: '#f8fafc',
       dx: 0,
       dy: 0,
       isMoving: false
@@ -163,8 +208,13 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
 
   onMouseDown(event: MouseEvent) {
     if (
+      this.showBetSetup ||
+      this.marbleInventory < 1 ||
+      !this.currentShooter ||
       this.currentShooter.isMoving ||
-      this.showLevelCleared ||
+      this.shotInProgress ||
+      this.showOutOfJuice ||
+      this.showRoundWon ||
       this.showGameOver ||
       this.energyLevel <= 0
     ) {
@@ -207,8 +257,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (!this.isDragging) return;
     this.isDragging = false;
 
-    if (this.energyLevel <= 0) {
-      this.showOutOfJuice = true;
+    if (this.energyLevel <= 0 || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) {
+      this.showOutOfJuice = this.energyLevel <= 0;
       return;
     }
 
@@ -217,9 +267,11 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     const dragDistance = Math.hypot(dx, dy);
 
     if (dragDistance > 10) {
-      if (this.remainingMarbles <= 0) return;
-
-      this.remainingMarbles--;
+      if (this.marbleInventory < 1) return;
+      this.shotFrames = 0;
+      this.shotInProgress = true;
+      this.pendingKnockouts = [];
+      this.shotMessage = '';
 
       this.currentShooter.dx = dx * 0.15;
       this.currentShooter.dy = dy * 0.15;
@@ -227,55 +279,79 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     }
   }
 
-  gameLoop() {
-    this.updatePhysics();
+  gameLoop(timestamp = performance.now()) {
+    const elapsed = this.lastFrameTime === null ? 0 : Math.min(50, Math.max(0, timestamp - this.lastFrameTime));
+    this.lastFrameTime = timestamp;
+    this.frameAccumulator += elapsed;
+    while (this.frameAccumulator >= 1000 / 60) {
+      this.updatePhysics();
+      this.frameAccumulator -= 1000 / 60;
+    }
     this.draw();
-    this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
+    this.animationFrameId = requestAnimationFrame(time => this.gameLoop(time));
   }
 
   updatePhysics() {
-    if (this.energyLevel <= 0) return;
-
-    if (this.currentShooter.isMoving) {
-      this.currentShooter.x += this.currentShooter.dx;
-      this.currentShooter.y += this.currentShooter.dy;
-
-      if (this.currentShooter.x - this.marbleRadius < 0 ||
-          this.currentShooter.x + this.marbleRadius > this.canvasWidth) {
-        this.currentShooter.dx *= -1;
+    if (this.energyLevel <= 0 || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) return;
+    if (!this.shotInProgress && !this.currentShooter.isMoving &&
+        !this.marblesOnBoard.some(marble => marble.isMoving)) return;
+    this.shotInProgress = true;
+    this.shotFrames++;
+    const knockedOut = stepMarbles(this.currentShooter, this.marblesOnBoard,
+      { ...this.targetCenter, radius: this.playAreaRadius },
+      { width: this.canvasWidth, height: this.canvasHeight });
+    this.pendingKnockouts.push(...this.marblesOnBoard.filter(marble => knockedOut.has(marble)));
+    this.marblesOnBoard = this.marblesOnBoard.filter(marble => !knockedOut.has(marble));
+    const moving = this.currentShooter.isMoving || this.marblesOnBoard.some(marble => marble.isMoving);
+    if (!moving || this.shotFrames >= 600) {
+      for (const marble of this.marblesOnBoard) {
+        marble.dx = marble.dy = 0;
+        marble.isMoving = false;
       }
-
-      if (this.currentShooter.y - this.marbleRadius < 0 ||
-          this.currentShooter.y + this.marbleRadius > this.canvasHeight) {
-        this.currentShooter.dy *= -1;
+      this.shotInProgress = false;
+      const shooterOutside = Math.hypot(this.currentShooter.x - this.targetCenter.x,
+        this.currentShooter.y - this.targetCenter.y) - this.currentShooter.radius > this.playAreaRadius;
+      if (shooterOutside) {
+        const won = this.pendingKnockouts.length;
+        this.marbleInventory += this.pendingKnockouts.length;
+        this.shotMessage = won ? `Won ${won} marble${won === 1 ? '' : 's'}! Shooter finished outside.` : 'No marbles knocked out. Try another angle.';
+      } else {
+        this.marbleInventory--;
+        this.returnKnockouts();
+        this.shotMessage = 'Shooter lost inside the circle. Knocked-out marbles returned.';
       }
+      this.pendingKnockouts = [];
+      this.spawnShooter();
+      this.showRoundWon = this.marblesOnBoard.length === 0;
+      if (this.marbleInventory <= 0) this.endSession();
+    }
+    this.changeDetector.markForCheck();
+  }
 
-      for (let i = 0; i < this.marblesOnBoard.length; i++) {
-        const target = this.marblesOnBoard[i];
-        const dist = Math.hypot(this.currentShooter.x - target.x, this.currentShooter.y - target.y);
-
-        if (dist < this.marbleRadius * 2) {
-          this.currentShooter.isMoving = false;
-
-          if (this.currentShooter.color === target.color) {
-            this.marblesOnBoard.splice(i, 1);
-            this.currentScore += 50;
-          } else {
-            this.marblesOnBoard.push({ ...this.currentShooter });
-          }
-
-          this.spawnShooter();
-          break;
+  private returnKnockouts(): void {
+    const spots: { x: number; y: number }[] = [];
+    const spacing = this.marbleRadius * 2 + 2;
+    for (let row = -3; row <= 3; row++) {
+      for (let column = -3; column <= 3; column++) {
+        if (Math.hypot(column * spacing, row * spacing) <= this.playAreaRadius - this.marbleRadius) {
+          spots.push({ x: this.targetCenter.x + column * spacing, y: this.targetCenter.y + row * spacing });
         }
       }
     }
-
-    if (this.marblesOnBoard.length === 0 && !this.showLevelCleared) {
-      this.showLevelCleared = true;
-    }
-
-    if (this.remainingMarbles <= 0 && !this.showGameOver) {
-      this.showGameOver = true;
+    spots.sort((a, b) => Math.hypot(a.x - this.targetCenter.x, a.y - this.targetCenter.y) -
+      Math.hypot(b.x - this.targetCenter.x, b.y - this.targetCenter.y));
+    for (const marble of this.pendingKnockouts) {
+      const spot = spots.find(point => this.marblesOnBoard.every(other =>
+        Math.hypot(point.x - other.x, point.y - other.y) >= marble.radius + other.radius));
+      if (!spot) {
+        // A fragmented board may have no free central slot. Repack safely inside the ring.
+        const all = [...this.pendingKnockouts, ...this.marblesOnBoard.filter(other => !this.pendingKnockouts.includes(other))];
+        all.forEach((other, index) => Object.assign(other, spots[index], { dx: 0, dy: 0, isMoving: false }));
+        this.marblesOnBoard = all;
+        return;
+      }
+      Object.assign(marble, spot, { dx: 0, dy: 0, isMoving: false });
+      this.marblesOnBoard.push(marble);
     }
   }
 
@@ -287,7 +363,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
 
     this.ctx.beginPath();
-    this.ctx.arc(this.canvasWidth / 2, this.canvasHeight / 2, this.playAreaRadius, 0, Math.PI * 2);
+    this.ctx.arc(this.targetCenter.x, this.targetCenter.y, this.playAreaRadius, 0, Math.PI * 2);
     this.ctx.fillStyle = '#eff6ff';
     this.ctx.fill();
     this.ctx.lineWidth = 4;
@@ -325,31 +401,51 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.ctx.fill();
   }
 
-  tryAgain() {
-    if (this.energyLevel >= 20) {
-      this.energyService.consumeEnergy(20);
-      this.showGameOver = false;
-      this.initLevel();
-    } else {
-      this.showOutOfJuice = true;
-    }
+  get canEndSession(): boolean {
+    return !this.showGameOver && !this.shotInProgress && !this.isDragging;
   }
 
-  resetGame() {
-    this.energyService.addEnergy(100 - this.energyLevel);
-    this.currentLevel = 1;
-    this.showGameOver = false;
+  endSession(): void {
+    if (!this.canEndSession) return;
+    this.currentScore = this.marbleInventory * 50;
+    this.showGameOver = true;
+    this.showBetSetup = false;
+    this.showRoundWon = false;
     this.showOutOfJuice = false;
-    this.initLevel();
   }
 
-  nextLevel() {
-    this.currentLevel++;
-    this.initLevel();
+  tryAgain() {
+    if (!this.showGameOver) return;
+    if (this.energyLevel < 20) {
+      this.showOutOfJuice = true;
+      return;
+    }
+    this.energyService.consumeEnergy(20);
+    this.currentScore = 0;
+    this.marbleInventory = 10;
+    this.showGameOver = false;
+    this.showOutOfJuice = this.energyLevel <= 0;
+    this.showRoundWon = false;
+    this.showBetSetup = true;
+    this.selectedBet = 3;
+    this.marblesOnBoard = [];
+    this.pendingKnockouts = [];
+    this.shotInProgress = false;
+    this.shotMessage = '';
+    this.spawnShooter();
+  }
+
+  chooseNextBet(): void {
+    if (!this.showRoundWon) return;
+    this.showRoundWon = false;
+    this.showBetSetup = this.maxBet >= 1;
+    if (!this.showBetSetup) this.endSession();
+    this.selectedBet = Math.min(this.selectedBet, this.maxBet);
+    this.marblesOnBoard = [];
+    this.shotMessage = '';
   }
 
   goToShop() {
-    this.showOutOfJuice = false;
-    window.location.href = '/shop';
+    void this.router.navigate(['/shop']);
   }
 }
