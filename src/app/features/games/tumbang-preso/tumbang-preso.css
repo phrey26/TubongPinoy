@@ -85,7 +85,7 @@
     max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
   border: 0;
   border-radius: 0;
-  background: #faf5ff;
+  background: #000;
 }
 
 .game-panel:fullscreen .game-stats,
@@ -101,6 +101,10 @@
 }
 
 .board-space {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #000;
   min-height: 0;
   min-width: 0;
   container-type: size;
@@ -109,9 +113,22 @@
   justify-content: center;
 }
 
+.board-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .game-board {
+  z-index: 1;
   /* Fit both dimensions while preserving the canvas's portrait proportions. */
   width: min(100cqw, 56.25cqh);
+  height: min(177.7778cqw, 100cqh);
   flex: none;
 }
 

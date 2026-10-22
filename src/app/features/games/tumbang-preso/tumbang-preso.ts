@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
-import { PixelEffects } from './pixel-effects';
+import { ImpactEffects } from './impact-effects';
+import { drawPixelText } from './pixel-text';
 import { generateLevel } from './level-generation';
 import { launchShot, Obstacle, stepShot } from './shot-physics';
 
@@ -26,18 +27,19 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private animationFrameId = 0;
   private ctx!: CanvasRenderingContext2D;
   private readonly changeDetector = inject(ChangeDetectorRef);
-  private readonly effects = new PixelEffects();
+  private reducedMotion = false;
+  private readonly impacts = new ImpactEffects();
   private lastFrameTime: number | null = null;
   private hitAge = 0;
-  private trailFrame = 0;
   private readonly obstacleFlashes = new Map<Obstacle, number>();
+  private bankPopups: { x: number; y: number; age: number }[] = [];
   private readonly sprites = new Map<string, HTMLImageElement>();
   private readonly stoneAssets = [
-    'assets/stones/stone_flat_brown.png',
-    'assets/stones/stone_mossy.png',
-    'assets/stones/stone_big_cracked.png',
-    'assets/stones/stone_round_blue.png',
-    'assets/stones/stone_small_gray.png',
+    'assets/tumbang-preso-assets/stones/stone_flat_brown.png',
+    'assets/tumbang-preso-assets/stones/stone_mossy.png',
+    'assets/tumbang-preso-assets/stones/stone_big_cracked.png',
+    'assets/tumbang-preso-assets/stones/stone_round_blue.png',
+    'assets/tumbang-preso-assets/stones/stone_small_gray.png',
   ];
 
   constructor(private energyService: Energy) {}
@@ -83,8 +85,9 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     cancelAnimationFrame(this.animationFrameId);
-    this.effects.clear();
+    this.impacts.clear();
     this.obstacleFlashes.clear();
+    this.bankPopups = [];
   }
 
   // Game State
@@ -131,12 +134,15 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   ngAfterViewInit() {
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
     this.ctx.imageSmoothingEnabled = false;
-    this.effects.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     for (const path of [
-      'assets/background/street_bg_clean.png',
-      'assets/can/can_standing.png',
-      'assets/can/can_fallen.png',
-      'assets/slippers/slipper_pink.png',
+      'assets/tumbang-preso-assets/background/street_bg_clean.png',
+      'assets/tumbang-preso-assets/can/can_standing.png',
+      'assets/tumbang-preso-assets/can/can_fallen.png',
+      'assets/tumbang-preso-assets/slippers/slipper_pink.png',
+      'assets/tumbang-preso-assets/ui/aim_arrow.png',
+      'assets/tumbang-preso-assets/ui/aim_dot.png',
+      'assets/tumbang-preso-assets/effects/impact-sheet.png',
       ...this.stoneAssets,
     ]) {
       const image = new Image();
@@ -190,7 +196,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.velocity.x = (this.dragStart.x - this.dragCurrent.x) * 0.22;
     this.velocity.y = (this.dragStart.y - this.dragCurrent.y) * 0.22;
     this.angularVelocity = launchShot(this.velocity.x, this.velocity.y).spin;
-    this.effects.burst(this.slipperPos.x, this.slipperPos.y + 12, ['#d6c5ab', '#a99b89', '#e4d9c5'], 12, 45);
+    if (!this.reducedMotion) this.impacts.play(this.slipperPos.x, this.slipperPos.y + 12, 'dust');
     this.isLaunched = true;
   }
 
@@ -206,28 +212,28 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.slipperAngle = shot.angle;
     this.angularVelocity = shot.spin;
 
-    if (++this.trailFrame % 2 === 0 && Math.hypot(this.velocity.x, this.velocity.y) > 2) {
-      this.effects.burst(this.slipperPos.x, this.slipperPos.y, ['#ed9db9', '#cf83a3', '#d6c5ab'], 1, 8);
-    }
     const bounces = Number(result.wallBounce) + result.rockBounces.length;
     if (bounces > 0) {
       this.shotBounces += bounces;
+      for (let bounce = 0; bounce < bounces; bounce++) {
+        this.bankPopups.push({ x: shot.x, y: shot.y, age: 0 });
+      }
       this.changeDetector.markForCheck();
     }
     if (result.wallBounce) {
-      this.effects.burst(shot.x, shot.y, ['#d6c5ab', '#bcbdb3', '#ece7d9'], 8, 50);
+      if (!this.reducedMotion) this.impacts.play(shot.x, shot.y, 'dust');
     }
     for (const obstacle of result.rockBounces) {
-      this.effects.burst(shot.x, shot.y, ['#c9c3b2', '#a4afa0', '#eee9d9'], 10, 65);
-      if (!this.effects.reducedMotion) this.obstacleFlashes.set(obstacle, 0.16);
+      if (!this.reducedMotion) this.impacts.play(shot.x, shot.y, 'dust');
+      if (!this.reducedMotion) this.obstacleFlashes.set(obstacle, 0.16);
     }
 
     if (result.hit) {
       this.isLaunched = false;
       this.angularVelocity = 0;
       this.hitAge = 0.001;
-      this.showNiceShot = this.effects.reducedMotion;
-      this.effects.burst(this.canPos.x, this.canPos.y, ['#eef5fa', '#a9c2d2', '#88c9b0'], 28, 120);
+      if (!this.reducedMotion) this.impacts.play(this.canPos.x, this.canPos.y, 'spark');
+      this.showNiceShot = this.reducedMotion;
       this.currentScore += 100;
       this.changeDetector.markForCheck();
       return;
@@ -237,7 +243,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.isLaunched = false;
       this.angularVelocity = 0;
       this.showTryAgain = true;
-      this.effects.burst(this.slipperPos.x, Math.min(this.CANVAS_HEIGHT - 8, Math.max(8, this.slipperPos.y)), ['#a99b89', '#d6c5ab'], 8, 35);
+      if (!this.reducedMotion) this.impacts.play(shot.x, Math.max(24, Math.min(this.CANVAS_HEIGHT - 24, shot.y)), 'dust');
       this.changeDetector.markForCheck();
     }
   }
@@ -268,17 +274,10 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.slipperAngle = 0;
     this.angularVelocity = 0;
     this.hitAge = 0;
-    this.trailFrame = 0;
     this.shotBounces = 0;
-    this.effects.clear();
+    this.bankPopups = [];
+    this.impacts.clear();
     this.obstacleFlashes.clear();
-  }
-
-  resetGame() {
-    this.currentScore = 0;
-    this.currentLevel = 1;
-    this.resetSlipper();
-    this.obstacles = generateLevel(1).obstacles;
   }
 
   goToShop() {
@@ -290,24 +289,27 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     const seconds = this.lastFrameTime === null ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
     this.lastFrameTime = timestamp;
     if (this.isLaunched) this.updatePhysics();
-    this.effects.update(seconds);
+    for (const popup of this.bankPopups) popup.age += seconds;
+    this.bankPopups = this.bankPopups.filter(popup => popup.age < 0.6);
+    this.impacts.update(seconds);
     for (const [obstacle, life] of this.obstacleFlashes) {
       if (life <= seconds) this.obstacleFlashes.delete(obstacle);
       else this.obstacleFlashes.set(obstacle, life - seconds);
     }
     if (this.hitAge > 0 && !this.showNiceShot) {
       this.hitAge += seconds;
-      if (this.hitAge >= 0.45) {
+      if (this.hitAge >= 0.65) {
         this.showNiceShot = true;
         this.changeDetector.markForCheck();
       }
     }
     this.ctx.clearRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
-    this.drawSprite('assets/background/street_bg_clean.png', 0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
+    this.drawSprite('assets/tumbang-preso-assets/background/street_bg_clean.png', 0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
     this.drawObstacles();
     this.drawCan();
     this.drawSlipper();
-    this.effects.draw(this.ctx);
+    this.impacts.draw(this.ctx, this.sprites.get('assets/tumbang-preso-assets/effects/impact-sheet.png'));
+    this.drawBankPopups();
     this.drawHitScore();
 
     if (this.isDragging) this.drawSlingshotLine();
@@ -319,7 +321,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.ctx.save();
     this.ctx.translate(this.slipperPos.x, this.slipperPos.y);
     this.ctx.rotate(this.slipperAngle);
-    if (!this.drawSprite('assets/slippers/slipper_pink.png',
+    if (!this.drawSprite('assets/tumbang-preso-assets/slippers/slipper_pink.png',
       -this.SLIPPER_HALF_WIDTH, -this.SLIPPER_HALF_HEIGHT,
       this.SLIPPER_HALF_WIDTH * 2, this.SLIPPER_HALF_HEIGHT * 2)) {
       this.ctx.fillStyle = '#ec4899';
@@ -336,8 +338,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     const fallen = this.hitAge > 0 || this.showNiceShot;
     const width = fallen ? 52 : 32;
     const height = fallen ? 32 : 52;
-    const hop = fallen && !this.effects.reducedMotion ? Math.sin(Math.min(this.hitAge / 0.45, 1) * Math.PI) * 18 : 0;
-    const path = fallen ? 'assets/can/can_fallen.png' : 'assets/can/can_standing.png';
+    const hop = fallen && !this.reducedMotion ? Math.sin(Math.min(this.hitAge / 0.45, 1) * Math.PI) * 18 : 0;
+    const path = fallen ? 'assets/tumbang-preso-assets/can/can_fallen.png' : 'assets/tumbang-preso-assets/can/can_standing.png';
     if (this.drawSprite(path, this.canPos.x - width / 2, this.canPos.y - height / 2 - hop, width, height)) return;
 
     this.ctx.fillStyle = '#64748b';
@@ -389,27 +391,44 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private drawHitScore(): void {
-    if (this.hitAge <= 0 || this.showNiceShot || this.effects.reducedMotion) return;
+    if (this.hitAge <= 0 || this.showNiceShot || this.reducedMotion) return;
     this.ctx.save();
     this.ctx.globalAlpha = Math.min(1, (0.5 - this.hitAge) * 5);
-    this.ctx.font = 'bold 22px monospace';
-    this.ctx.textAlign = 'center';
     this.ctx.fillStyle = '#b7f3d0';
-    this.ctx.fillText('+100', this.canPos.x, this.canPos.y - 38 - this.hitAge * 45);
-    if (this.shotBounces > 1) {
-      this.ctx.font = 'bold 14px monospace';
-      this.ctx.fillText(`${this.shotBounces} BANK CHAIN!`, this.canPos.x, this.canPos.y - 64 - this.hitAge * 45);
+    drawPixelText(this.ctx, '+100', this.canPos.x, this.canPos.y - 38 - this.hitAge * 45);
+    this.ctx.restore();
+  }
+
+  private drawBankPopups(): void {
+    this.ctx.save();
+    this.ctx.fillStyle = '#fef08a';
+    for (const popup of this.bankPopups) {
+      this.ctx.globalAlpha = Math.min(1, (0.6 - popup.age) / 0.2);
+      const rise = this.reducedMotion ? 0 : popup.age * 35;
+      drawPixelText(this.ctx, 'BANK!', Math.max(45, Math.min(this.CANVAS_WIDTH - 45, popup.x)),
+        Math.max(28, popup.y - 24 - rise));
     }
     this.ctx.restore();
   }
 
   private drawSlingshotLine() {
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.dragStart.x, this.dragStart.y);
-    this.ctx.lineTo(this.dragCurrent.x, this.dragCurrent.y);
-    this.ctx.strokeStyle = '#fef08a';
-    this.ctx.setLineDash([5, 5]);
-    this.ctx.stroke();
-    this.ctx.setLineDash([]);
+    // Match Jolens Blast's pixel aiming UI; this indicates direction, not a solved path.
+    const dx = this.dragStart.x - this.dragCurrent.x;
+    const dy = this.dragStart.y - this.dragCurrent.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance > 4) {
+      const length = Math.min(150, distance * 2);
+      for (let step = 20; step < length; step += 20) {
+        this.drawSprite('assets/tumbang-preso-assets/ui/aim_dot.png',
+          this.slipperPos.x + dx / distance * step - 4,
+          this.slipperPos.y + dy / distance * step - 4, 8, 8);
+      }
+      this.ctx.save();
+      this.ctx.translate(this.slipperPos.x + dx / distance * length,
+        this.slipperPos.y + dy / distance * length);
+      this.ctx.rotate(Math.atan2(dy, dx) + Math.PI / 2);
+      this.drawSprite('assets/tumbang-preso-assets/ui/aim_arrow.png', -12, -12, 24, 24);
+      this.ctx.restore();
+    }
   }
 }

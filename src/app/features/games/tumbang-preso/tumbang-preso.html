@@ -8,7 +8,7 @@
   <div class="game-layout max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
 
     <section class="play-section lg:col-span-2">
-      <div #gamePanel [class.is-fullscreen]="isFullscreen" class="game-panel max-w-[520px] mx-auto bg-white p-4 rounded-3xl shadow-lg border-4 border-purple-300 relative overflow-hidden">
+      <div #gamePanel [class.is-fullscreen]="isFullscreen" class="game-panel mx-auto bg-black p-4 rounded-3xl shadow-lg border-4 border-purple-300 relative overflow-hidden">
 
         <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-3 py-2 bg-purple-50 rounded-2xl border-2 border-purple-200">
           <div class="flex flex-wrap gap-3">
@@ -23,6 +23,8 @@
         </div>
 
         <div class="board-space">
+        <img class="board-backdrop" src="assets/tumbang-preso-assets/background/neighborhood-play-v2.png"
+          alt="" aria-hidden="true" />
         <div class="game-board w-full aspect-[9/16] bg-green-50 rounded-2xl border-4 border-dashed border-green-200 relative overflow-hidden">
           <canvas #gameCanvas width="450" height="800" class="block w-full h-full cursor-crosshair"></canvas>
 
@@ -56,9 +58,6 @@
                   shadow-[0_5px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_7px_0_#14532d]
                   active:translate-y-1 transition font-bold text-white">
                   Try Again (-20🧃)
-                </button>
-                <button (click)="resetGame()" class="text-xs font-bold text-gray-400 hover:text-pink-500">
-                  Reset Game
                 </button>
               </div>
             </div>

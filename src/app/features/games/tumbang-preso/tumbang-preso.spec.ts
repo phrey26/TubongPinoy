@@ -61,14 +61,6 @@ describe('TumbangPreso', () => {
     expect(component.currentScore).toBe(100);
   });
 
-  it('restarts with a fresh first-level board instead of keeping accumulated obstacles', () => {
-    for (let i = 0; i < 5; i++) component.nextLevel();
-    expect(component.obstacles.length).toBeGreaterThan(2);
-    component.resetGame();
-    expect(component.currentLevel).toBe(1);
-    expect(component.obstacles).toHaveLength(2);
-  });
-
   it.each([0, 0.5, 0.999999])('keeps entire obstacles inside the road when random is %s', (random) => {
     vi.spyOn(Math, 'random').mockReturnValue(random);
     for (let level = 0; level < 20; level++) component.nextLevel();
