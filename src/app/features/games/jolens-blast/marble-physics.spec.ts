@@ -6,6 +6,20 @@ const ball = (x: number, y: number, dx = 0, dy = 0): PhysicsMarble =>
   ({ x, y, radius: 20, dx, dy, isMoving: dx !== 0 || dy !== 0 });
 
 describe('Marble collision physics', () => {
+  it('keeps an exited target rolling with friction and colliding outside the ring', () => {
+    const shooter = ball(225, 600);
+    const target = ball(394, 300, 8, 0);
+    const exited = stepMarbles(shooter, [target], ring, board);
+    expect(exited.has(target)).toBe(true);
+    const x = target.x;
+    const speed = target.dx;
+    stepMarbles(shooter, [], ring, board, undefined, [target]);
+    expect(target.x).toBeGreaterThan(x);
+    expect(target.dx).toBeLessThan(speed);
+    const other = ball(target.x + 40, 300);
+    stepMarbles(shooter, [], ring, board, undefined, [target, other]);
+    expect(other.dx).toBeGreaterThan(0);
+  });
   it('passes momentum down a chain without increasing kinetic energy', () => {
     const shooter = ball(225, 380, 0, -12);
     const targets = [ball(225, 340), ball(225, 300)];

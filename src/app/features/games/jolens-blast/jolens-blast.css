@@ -113,6 +113,18 @@
   justify-content: center;
 }
 
+.board-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  filter: saturate(0.65) contrast(0.85);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .game-board {
   z-index: 1;
   /* Fit both dimensions while preserving the canvas's portrait proportions. */
@@ -122,6 +134,10 @@
 }
 
 .game-board canvas {
+  image-rendering: pixelated;
+}
+
+.game-board img {
   image-rendering: pixelated;
 }
 

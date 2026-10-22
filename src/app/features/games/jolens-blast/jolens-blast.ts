@@ -4,8 +4,13 @@ import { RouterModule, Router } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
 import { stepMarbles } from './marble-physics';
+import { scatterMarbles } from './marble-placement';
+import { JOLENS_ASSETS, JOLENS_ASSET_PATHS } from './jolens-assets';
+import { MarbleEffects } from './marble-effects';
+import { drawPixelText } from '../../../shared/canvas/pixel-text';
 
 interface Marble {
+  sprite?: string;
   x: number;
   y: number;
   radius: number;
@@ -35,7 +40,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   private shotFrames = 0;
   private shotInProgress = false;
   private pendingKnockouts: Marble[] = [];
-  shotMessage = '';
+  private outsideMarbles: Marble[] = [];
+  private textPopups: { text: string; x: number; y: number; color: string; age: number }[] = [];
   selectedBet = 3;
   readonly betOptions = [1, 2, 3, 4, 5];
   showBetSetup = true;
@@ -102,6 +108,16 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   private colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
   private marblesOnBoard: Marble[] = [];
   private currentShooter!: Marble;
+  readonly assets = JOLENS_ASSETS;
+  selectedShooter = JOLENS_ASSETS.shooters[0].path;
+  private readonly sprites = new Map<string, HTMLImageElement>();
+  private readonly effects = new MarbleEffects();
+
+  selectShooter(path: string): void {
+    if (!this.showBetSetup || !JOLENS_ASSETS.shooters.some(shooter => shooter.path === path)) return;
+    this.selectedShooter = path;
+    this.spawnShooter();
+  }
 
   // Canvas
   private canvasWidth = 450;
@@ -130,11 +146,16 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.ctx = canvas.getContext('2d')!;
 
     this.ctx.imageSmoothingEnabled = false;
+    this.effects.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    for (const path of JOLENS_ASSET_PATHS) {
+      const image = new Image();
+      image.src = path;
+      this.sprites.set(path, image);
+    }
     this.spawnShooter();
     this.energySub = this.energyService.getEnergyLevel().subscribe(level => {
       this.energyLevel = level;
-      this.showOutOfJuice = level <= 0 && !this.showGameOver;
-      if (level <= 0) this.isDragging = false;
+      this.showOutOfJuice = this.showBetSetup && level < 20 && !this.showGameOver;
       this.changeDetector.markForCheck();
     });
     this.gameLoop();
@@ -142,6 +163,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     cancelAnimationFrame(this.animationFrameId);
+    this.effects.clear();
     if (this.energySub) this.energySub.unsubscribe();
   }
 
@@ -152,14 +174,22 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   }
 
   startRound(): void {
-    if (this.showGameOver || !this.showBetSetup || this.energyLevel <= 0 || !Number.isInteger(this.selectedBet) ||
+    if (this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
         this.selectedBet < 1 || this.selectedBet > this.maxBet) return;
+    if (this.energyLevel < 20) {
+      this.showOutOfJuice = true;
+      return;
+    }
     this.marbleInventory -= this.selectedBet;
     this.showBetSetup = false;
+    this.energyService.consumeEnergy(20);
+    this.showOutOfJuice = false;
     this.initRound();
   }
 
   private initRound() {
+    this.effects.clear();
+    this.outsideMarbles = [];
     this.marblesOnBoard = [];
     this.showRoundWon = false;
     this.showGameOver = false;
@@ -167,26 +197,13 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.shotFrames = 0;
     this.shotInProgress = false;
     this.pendingKnockouts = [];
-    this.shotMessage = '';
+    this.textPopups = [];
 
-    const { x: centerX, y: centerY } = this.targetCenter;
-
-    // A shuffled, spaced grid stays inside the ring even with unlucky random values.
-    const positions: { x: number; y: number }[] = [];
-    for (let row = -2; row <= 2; row++) {
-      for (let column = -2; column <= 2; column++) {
-        const x = centerX + column * 44, y = centerY + row * 44;
-        if (Math.hypot(x - centerX, y - centerY) <= this.playAreaRadius - this.marbleRadius) {
-          positions.push({ x, y });
-        }
-      }
-    }
-    for (let i = positions.length - 1; i > 0; i--) {
-      const other = Math.floor(Math.random() * (i + 1));
-      [positions[i], positions[other]] = [positions[other], positions[i]];
-    }
+    const positions = scatterMarbles(this.selectedBet * 2, this.targetCenter,
+      this.playAreaRadius, this.marbleRadius);
     this.marblesOnBoard = positions.slice(0, this.selectedBet * 2).map(position => ({
       ...position, radius: this.marbleRadius,
+      sprite: JOLENS_ASSETS.marbles[Math.floor(Math.random() * JOLENS_ASSETS.marbles.length)],
       color: this.colors[Math.floor(Math.random() * this.colors.length)],
       dx: 0, dy: 0, isMoving: false,
     }));
@@ -195,11 +212,14 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   }
 
   spawnShooter() {
+    // A new shooter marks the next turn; the previous winnings are collected.
+    this.outsideMarbles = [];
     this.currentShooter = {
       x: this.shooterHome.x,
       y: this.shooterHome.y,
       radius: this.marbleRadius,
       color: '#f8fafc',
+      sprite: this.selectedShooter,
       dx: 0,
       dy: 0,
       isMoving: false
@@ -215,10 +235,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
       this.shotInProgress ||
       this.showOutOfJuice ||
       this.showRoundWon ||
-      this.showGameOver ||
-      this.energyLevel <= 0
+      this.showGameOver
     ) {
-      if (this.energyLevel <= 0) this.showOutOfJuice = true;
       return;
     }
 
@@ -257,8 +275,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (!this.isDragging) return;
     this.isDragging = false;
 
-    if (this.energyLevel <= 0 || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) {
-      this.showOutOfJuice = this.energyLevel <= 0;
+    if (this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) {
       return;
     }
 
@@ -271,11 +288,12 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
       this.shotFrames = 0;
       this.shotInProgress = true;
       this.pendingKnockouts = [];
-      this.shotMessage = '';
+      this.textPopups = [];
 
       this.currentShooter.dx = dx * 0.15;
       this.currentShooter.dy = dy * 0.15;
       this.currentShooter.isMoving = true;
+      this.effects.play(this.currentShooter.x, this.currentShooter.y + 12, 'dust');
     }
   }
 
@@ -287,42 +305,59 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
       this.updatePhysics();
       this.frameAccumulator -= 1000 / 60;
     }
+    this.effects.update(elapsed / 1000);
+    for (const popup of this.textPopups) popup.age += elapsed / 1000;
+    this.textPopups = this.textPopups.filter(popup => popup.age < 0.9);
     this.draw();
     this.animationFrameId = requestAnimationFrame(time => this.gameLoop(time));
   }
 
   updatePhysics() {
-    if (this.energyLevel <= 0 || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) return;
+    if (this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) return;
     if (!this.shotInProgress && !this.currentShooter.isMoving &&
         !this.marblesOnBoard.some(marble => marble.isMoving)) return;
     this.shotInProgress = true;
     this.shotFrames++;
     const knockedOut = stepMarbles(this.currentShooter, this.marblesOnBoard,
       { ...this.targetCenter, radius: this.playAreaRadius },
-      { width: this.canvasWidth, height: this.canvasHeight });
+      { width: this.canvasWidth, height: this.canvasHeight },
+      (x, y) => this.effects.play(x, y, 'sparks'),
+      [...this.pendingKnockouts, ...this.outsideMarbles]);
+    for (const marble of knockedOut) {
+      this.effects.play(marble.x, marble.y, 'dust');
+      this.popText('OUT!', marble.x, marble.y, '#fef08a');
+    }
     this.pendingKnockouts.push(...this.marblesOnBoard.filter(marble => knockedOut.has(marble)));
     this.marblesOnBoard = this.marblesOnBoard.filter(marble => !knockedOut.has(marble));
-    const moving = this.currentShooter.isMoving || this.marblesOnBoard.some(marble => marble.isMoving);
+    const allTargets = [...this.marblesOnBoard, ...this.pendingKnockouts, ...this.outsideMarbles];
+    const moving = this.currentShooter.isMoving || allTargets.some(marble => marble.isMoving);
     if (!moving || this.shotFrames >= 600) {
-      for (const marble of this.marblesOnBoard) {
+      for (const marble of allTargets) {
         marble.dx = marble.dy = 0;
         marble.isMoving = false;
       }
       this.shotInProgress = false;
+      // Collisions can send a provisional knockout back into the ring.
+      const reentered = this.pendingKnockouts.filter(marble =>
+        Math.hypot(marble.x - this.targetCenter.x, marble.y - this.targetCenter.y) - marble.radius <= this.playAreaRadius);
+      this.marblesOnBoard.push(...reentered);
+      this.pendingKnockouts = this.pendingKnockouts.filter(marble => !reentered.includes(marble));
       const shooterOutside = Math.hypot(this.currentShooter.x - this.targetCenter.x,
         this.currentShooter.y - this.targetCenter.y) - this.currentShooter.radius > this.playAreaRadius;
       if (shooterOutside) {
         const won = this.pendingKnockouts.length;
         this.marbleInventory += this.pendingKnockouts.length;
-        this.shotMessage = won ? `Won ${won} marble${won === 1 ? '' : 's'}! Shooter finished outside.` : 'No marbles knocked out. Try another angle.';
+        this.outsideMarbles.push(...this.pendingKnockouts);
+        this.popText(won ? `+${won}` : 'MISS!', this.currentShooter.x, this.currentShooter.y, won ? '#b7f3d0' : '#fef08a');
       } else {
         this.marbleInventory--;
         this.returnKnockouts();
-        this.shotMessage = 'Shooter lost inside the circle. Knocked-out marbles returned.';
+        this.popText('-1', this.currentShooter.x, this.currentShooter.y, '#fca5a5');
       }
       this.pendingKnockouts = [];
       this.spawnShooter();
       this.showRoundWon = this.marblesOnBoard.length === 0;
+      if (this.showRoundWon) this.outsideMarbles = [];
       if (this.marbleInventory <= 0) this.endSession();
     }
     this.changeDetector.markForCheck();
@@ -359,37 +394,77 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (!this.ctx) return;
 
     this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-    this.ctx.fillStyle = '#eff6ff';
-    this.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+    if (!this.drawSprite(JOLENS_ASSETS.background, 0, 0, this.canvasWidth, this.canvasHeight)) {
+      this.ctx.fillStyle = '#b99564';
+      this.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+    }
 
     this.ctx.beginPath();
     this.ctx.arc(this.targetCenter.x, this.targetCenter.y, this.playAreaRadius, 0, Math.PI * 2);
-    this.ctx.fillStyle = '#eff6ff';
-    this.ctx.fill();
     this.ctx.lineWidth = 4;
-    this.ctx.strokeStyle = '#bfdbfe';
+    this.ctx.strokeStyle = '#68421f';
     this.ctx.stroke();
 
     this.marblesOnBoard.forEach(m => this.drawMarble(m));
+    // Keep exits visible while the shot is judged and after they are collected.
+    // Collected marbles still collide, but cannot be counted twice.
+    this.outsideMarbles.forEach(m => this.drawMarble(m));
+    this.pendingKnockouts.forEach(m => this.drawMarble(m));
     this.drawMarble(this.currentShooter);
 
+    this.effects.draw((...args) => this.drawSprite(...args));
+    this.drawTextPopups();
     if (this.isDragging) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.currentShooter.x, this.currentShooter.y);
-
       const dx = this.dragStartX - this.currentMouseX;
       const dy = this.dragStartY - this.currentMouseY;
-
-      this.ctx.lineTo(this.currentShooter.x + dx, this.currentShooter.y + dy);
-      this.ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-      this.ctx.lineWidth = 4;
-      this.ctx.setLineDash([10, 10]);
-      this.ctx.stroke();
-      this.ctx.setLineDash([]);
+      const distance = Math.hypot(dx, dy);
+      if (distance > 4) {
+        const length = distance * 1.25;
+        for (let step = 18; step < length; step += 18) {
+          this.drawSprite(JOLENS_ASSETS.dot, this.currentShooter.x + dx / distance * step - 4,
+            this.currentShooter.y + dy / distance * step - 4, 8, 8);
+        }
+        this.ctx.save();
+        this.ctx.translate(this.currentShooter.x + dx / distance * length,
+          this.currentShooter.y + dy / distance * length);
+        this.ctx.rotate(Math.atan2(dy, dx) + Math.PI / 2);
+        this.drawSprite(JOLENS_ASSETS.arrow, -12, -12, 24, 24);
+        this.ctx.restore();
+      }
     }
   }
 
+  private popText(text: string, x: number, y: number, color: string): void {
+    this.textPopups.push({ text, x, y, color, age: 0 });
+    this.textPopups = this.textPopups.slice(-16);
+  }
+
+  private drawTextPopups(): void {
+    this.ctx.save();
+    for (const popup of this.textPopups) {
+      this.ctx.fillStyle = popup.color;
+      this.ctx.globalAlpha = Math.min(1, (0.9 - popup.age) / 0.25);
+      const rise = this.effects.reducedMotion ? 0 : popup.age * 30;
+      const halfWidth = (popup.text.length * 6 - 1) * 3 / 2;
+      drawPixelText(this.ctx, popup.text,
+        Math.max(halfWidth + 4, Math.min(this.canvasWidth - halfWidth - 4, popup.x)),
+        Math.max(25, Math.min(this.canvasHeight - 8, popup.y - 25 - rise)));
+    }
+    this.ctx.restore();
+  }
+
+  private drawSprite(path: string, x: number, y: number, width: number, height: number): boolean {
+    const image = this.sprites.get(path);
+    if (!image?.complete || !image.naturalWidth) return false;
+    this.ctx.drawImage(image, Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+    return true;
+  }
+
   drawMarble(marble: Marble) {
+    this.drawSprite(JOLENS_ASSETS.shadow, marble.x - marble.radius, marble.y + marble.radius - 5,
+      marble.radius * 2, 10);
+    if (marble.sprite && this.drawSprite(marble.sprite, marble.x - marble.radius,
+      marble.y - marble.radius, marble.radius * 2, marble.radius * 2)) return;
     this.ctx.beginPath();
     this.ctx.arc(marble.x, marble.y, marble.radius, 0, Math.PI * 2);
     this.ctx.fillStyle = marble.color;
@@ -412,26 +487,23 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.showBetSetup = false;
     this.showRoundWon = false;
     this.showOutOfJuice = false;
+    this.outsideMarbles = [];
   }
 
   tryAgain() {
     if (!this.showGameOver) return;
-    if (this.energyLevel < 20) {
-      this.showOutOfJuice = true;
-      return;
-    }
-    this.energyService.consumeEnergy(20);
     this.currentScore = 0;
     this.marbleInventory = 10;
+    this.outsideMarbles = [];
     this.showGameOver = false;
-    this.showOutOfJuice = this.energyLevel <= 0;
+    this.showOutOfJuice = this.energyLevel < 20;
     this.showRoundWon = false;
     this.showBetSetup = true;
     this.selectedBet = 3;
     this.marblesOnBoard = [];
     this.pendingKnockouts = [];
     this.shotInProgress = false;
-    this.shotMessage = '';
+    this.textPopups = [];
     this.spawnShooter();
   }
 
@@ -439,10 +511,12 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (!this.showRoundWon) return;
     this.showRoundWon = false;
     this.showBetSetup = this.maxBet >= 1;
+    this.showOutOfJuice = this.showBetSetup && this.energyLevel < 20;
     if (!this.showBetSetup) this.endSession();
     this.selectedBet = Math.min(this.selectedBet, this.maxBet);
     this.marblesOnBoard = [];
-    this.shotMessage = '';
+    this.outsideMarbles = [];
+    this.textPopups = [];
   }
 
   goToShop() {

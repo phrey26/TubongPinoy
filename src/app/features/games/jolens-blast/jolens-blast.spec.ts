@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { JolensBlast } from './jolens-blast';
 import { Energy } from '../../../core/services/energy';
+import { JOLENS_ASSETS, JOLENS_ASSET_PATHS } from './jolens-assets';
 
 describe('JolensBlast', () => {
   let component: JolensBlast;
@@ -15,7 +16,8 @@ describe('JolensBlast', () => {
     const context = {
       clearRect: vi.fn(), fillRect: vi.fn(), beginPath: vi.fn(),
       arc: vi.fn(), fill: vi.fn(), stroke: vi.fn(), moveTo: vi.fn(),
-      lineTo: vi.fn(), setLineDash: vi.fn(),
+      lineTo: vi.fn(), setLineDash: vi.fn(), drawImage: vi.fn(),
+      save: vi.fn(), restore: vi.fn(), translate: vi.fn(), rotate: vi.fn(),
     } as unknown as CanvasRenderingContext2D;
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
     vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(1);
@@ -102,10 +104,28 @@ describe('JolensBlast', () => {
     expect(component.showRoundWon).toBe(false);
   });
 
-  it('uses the future background’s 9:16 ratio without loading assets', () => {
+  it('matches the background’s 9:16 ratio and preloads every game asset', () => {
     const canvas = fixture.nativeElement.querySelector('canvas') as HTMLCanvasElement;
     expect([canvas.width, canvas.height]).toEqual([450, 800]);
-    expect(fixture.nativeElement.querySelector('img')).toBeNull();
+    expect([...component['sprites'].keys()]).toEqual(JOLENS_ASSET_PATHS);
+    expect(component['currentShooter'].sprite).toBe(JOLENS_ASSETS.shooters[0].path);
+    expect(component['marblesOnBoard'].every(marble => JOLENS_ASSETS.marbles.includes(marble.sprite!))).toBe(true);
+  });
+
+  it('lets players choose a shooter before betting and draws its loaded sprite', () => {
+    component.showBetSetup = true;
+    component.selectShooter(JOLENS_ASSETS.shooters[1].path);
+    component.startRound();
+    const shooter = component['currentShooter'];
+    expect(shooter.sprite).toBe(JOLENS_ASSETS.shooters[1].path);
+    const sprite = component['sprites'].get(shooter.sprite!)!;
+    Object.defineProperty(sprite, 'complete', { value: true });
+    Object.defineProperty(sprite, 'naturalWidth', { value: 16 });
+    component.drawMarble(shooter);
+    expect(component.canvasRef.nativeElement.getContext('2d')!.drawImage)
+      .toHaveBeenCalledWith(sprite, 205, 580, 40, 40);
+    component.selectShooter(JOLENS_ASSETS.shooters[2].path);
+    expect(component.selectedShooter).toBe(JOLENS_ASSETS.shooters[1].path);
   });
 
   it('places nonoverlapping targets inside the ring even when randomness repeats', () => {
@@ -129,10 +149,20 @@ describe('JolensBlast', () => {
     component.updatePhysics();
     expect(component.currentScore).toBe(0);
     expect(component.showRoundWon).toBe(false);
+    expect(component['pendingKnockouts']).toContain(target);
+    expect(component.marbleInventory).toBe(1);
+    const draw = vi.spyOn(component, 'drawMarble');
+    component.draw();
+    expect(draw).toHaveBeenCalledWith(target);
     for (let tick = 0; tick < 601; tick++) component.updatePhysics();
     expect(component.showRoundWon).toBe(true);
     expect(component.showGameOver).toBe(false);
     expect(component.currentScore).toBe(0);
+    expect(component['outsideMarbles']).toHaveLength(0);
+    expect(component['pendingKnockouts']).toHaveLength(0);
+    expect(component.marbleInventory).toBe(2);
+    component.updatePhysics();
+    expect(component.marbleInventory).toBe(2);
     component.chooseNextBet();
     expect(component.showBetSetup).toBe(true);
     expect(component.currentScore).toBe(0);
@@ -149,11 +179,13 @@ describe('JolensBlast', () => {
     component.updatePhysics();
     expect(component.currentScore).toBe(0);
     expect(component['marblesOnBoard']).toEqual([target]);
+    expect(component['outsideMarbles']).toHaveLength(0);
+    expect(component['pendingKnockouts']).toHaveLength(0);
     expect([target.x, target.y]).toEqual([225, 300]);
     expect(component.showRoundWon).toBe(false);
     expect(component.showGameOver).toBe(true);
     expect(component['currentShooter']).not.toBe(oldShooter);
-    expect(component.shotMessage).toContain('Knocked-out marbles returned');
+    expect(component['textPopups'].some(popup => popup.text === '-1')).toBe(true);
   });
 
   it('returns multiple marbles without overlaps when the shooter touches the boundary', () => {
@@ -183,7 +215,7 @@ describe('JolensBlast', () => {
     expect(component['currentShooter'].color).toBe('#f8fafc');
   });
 
-  it('loses the last shooter inside the circle and charges energy for a new game', () => {
+  it('loses the last shooter inside the circle without charging again for a new game', () => {
     component['currentShooter'] = {
       x: 225, y: 300, radius: 20, color: '#f8fafc', dx: 0, dy: 0, isMoving: false,
     };
@@ -213,15 +245,39 @@ describe('JolensBlast', () => {
     expect(component['shotInProgress']).toBe(true);
   });
 
-  it('pauses at zero energy and resumes the same board after a refill', () => {
-    const targets = component['marblesOnBoard'];
+  it('lets a paid round continue at zero juice without charging for shots', () => {
     const energy = TestBed.inject(Energy);
-    energy.consumeEnergy(100);
-    expect(component.showOutOfJuice).toBe(true);
-    component.updatePhysics();
-    energy.addEnergy(20);
+    energy.consumeEnergy(80);
+    expect(component.energyLevel).toBe(0);
     expect(component.showOutOfJuice).toBe(false);
-    expect(component['marblesOnBoard']).toBe(targets);
+    vi.spyOn(component.canvasRef.nativeElement, 'getBoundingClientRect').mockReturnValue({
+      left: 0, top: 0, width: 450, height: 800,
+    } as DOMRect);
+    component.onMouseDown(new MouseEvent('mousedown', { clientX: 225, clientY: 600 }));
+    component.onMouseMove(new MouseEvent('mousemove', { clientX: 225, clientY: 750 }));
+    component.onMouseUp();
+    component.updatePhysics();
+    expect(component['currentShooter'].isMoving).toBe(true);
+    expect(energy.getEnergyLevelValue()).toBe(0);
+  });
+
+  it('requires 20 juice per bet and allows the last 20 to buy a complete round', () => {
+    const energy = TestBed.inject(Energy);
+    energy.consumeEnergy(61);
+    component.showBetSetup = true;
+    const inventory = component.marbleInventory;
+    component.startRound();
+    expect(component.showOutOfJuice).toBe(true);
+    expect(component.marbleInventory).toBe(inventory);
+    expect(energy.getEnergyLevelValue()).toBe(19);
+    energy.addEnergy(1);
+    component.startRound();
+    expect(energy.getEnergyLevelValue()).toBe(0);
+    expect(component.showOutOfJuice).toBe(false);
+    expect(component.showBetSetup).toBe(false);
+    component.startRound();
+    expect(energy.getEnergyLevelValue()).toBe(0);
+    expect(component.marbleInventory).toBe(inventory - component.selectedBet);
   });
 
   it('supports fullscreen fallback, exit control, and Escape', async () => {
@@ -253,6 +309,27 @@ describe('JolensBlast', () => {
     expect(component.marbleInventory).toBe(7);
     expect(component['currentShooter'].dy).toBeLessThan(0);
     expect(component['currentShooter'].dy).toBe(-22.5);
+  });
+
+  it('collects outside marbles as soon as the next shooter is placed', () => {
+    const target = { x: 396, y: 300, radius: 20, color: '#ef4444', dx: 0, dy: 0, isMoving: false };
+    const inside = { ...target, x: 225, y: 300 };
+    component['marblesOnBoard'] = [target, inside];
+    component['shotInProgress'] = true;
+    const previousShooter = component['currentShooter'];
+    const inventory = component.marbleInventory;
+    component.updatePhysics();
+    expect(component['currentShooter']).not.toBe(previousShooter);
+    expect(component['currentShooter'].isMoving).toBe(false);
+    expect(component['outsideMarbles']).toHaveLength(0);
+    expect(component['pendingKnockouts']).toHaveLength(0);
+    expect(component['marblesOnBoard']).toEqual([inside]);
+    expect(component.marbleInventory).toBe(inventory + 1);
+    expect(component.showRoundWon).toBe(false);
+    const draw = vi.spyOn(component, 'drawMarble');
+    component.draw();
+    expect(draw).not.toHaveBeenCalledWith(target);
+    expect(draw).toHaveBeenCalledWith(inside);
   });
 
   it('leaves room for a full pull inside every edge and keeps targets above the shooter', () => {

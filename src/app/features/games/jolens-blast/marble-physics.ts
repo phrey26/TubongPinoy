@@ -12,13 +12,15 @@ export function stepMarbles(
   shooter: PhysicsMarble, targets: PhysicsMarble[],
   ring: { x: number; y: number; radius: number },
   board: { width: number; height: number },
+  onImpact?: (x: number, y: number, speed: number) => void,
+  outsideMarbles: PhysicsMarble[] = [],
 ): Set<PhysicsMarble> {
   const knockedOut = new Set<PhysicsMarble>();
-  const balls = [shooter, ...targets];
+  const balls = [shooter, ...targets, ...outsideMarbles];
   const speed = Math.max(...balls.map(ball => Math.hypot(ball.dx, ball.dy)));
   const steps = Math.max(1, Math.ceil(speed / 5));
   for (let step = 0; step < steps; step++) {
-    const active = balls.filter(ball => !knockedOut.has(ball));
+    const active = balls;
     for (const ball of active) {
       ball.x += ball.dx / steps;
       ball.y += ball.dy / steps;
@@ -38,6 +40,7 @@ export function stepMarbles(
           b.x += nx * separation; b.y += ny * separation;
           const approaching = (a.dx - b.dx) * nx + (a.dy - b.dy) * ny;
           if (approaching <= 0) continue;
+          if (approaching > 1) onImpact?.((a.x + b.x) / 2, (a.y + b.y) / 2, approaching);
           const impulse = approaching * 0.95;
           a.dx -= impulse * nx; a.dy -= impulse * ny;
           b.dx += impulse * nx; b.dy += impulse * ny;
@@ -51,9 +54,11 @@ export function stepMarbles(
       }
     }
     // The screen edge is not a cushion in a street marble game.
-    if (shooter.x < -shooter.radius || shooter.x > board.width + shooter.radius ||
-        shooter.y < -shooter.radius || shooter.y > board.height + shooter.radius) {
-      shooter.dx = shooter.dy = 0;
+    for (const ball of balls) {
+      if (ball.x < -ball.radius || ball.x > board.width + ball.radius ||
+          ball.y < -ball.radius || ball.y > board.height + ball.radius) {
+        ball.dx = ball.dy = 0;
+      }
     }
   }
   for (const ball of balls) {

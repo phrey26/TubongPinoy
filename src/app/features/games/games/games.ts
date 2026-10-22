@@ -20,7 +20,7 @@ export class Games {
 
   // Game images
   tumbangPresoImage = 'assets/tumbang-preso.png';
-  marbleMatchImage = 'assets/marble-match.png';
+  marbleMatchImage = 'assets/jolens-blast-assets/background/dirt_bg.png';
 
   // Show warning message when energy is insufficient
   showNoEnergyMessage = false;

@@ -23,10 +23,11 @@
           </button>
           <button type="button" (click)="endSession()" [disabled]="!canEndSession"
             class="px-3 py-2 border-2 border-blue-400 rounded-xl text-blue-800 font-bold disabled:opacity-40">End Session</button>
-          <span class="w-full text-center text-xs text-blue-900" aria-live="polite">{{ shotMessage }}</span>
         </div>
 
         <div class="board-space">
+        <img class="board-backdrop" src="assets/jolens-blast-assets/background/schoolyard-marbles.png"
+          alt="" aria-hidden="true" />
         <div class="game-board w-full aspect-[9/16] bg-blue-50 rounded-3xl border-4 border-dashed border-blue-200 relative overflow-hidden mx-auto">
           <canvas #gameCanvas width="450" height="800"
             class="block w-full h-full cursor-crosshair touch-none"
@@ -40,6 +41,8 @@
           <div *ngIf="showBetSetup" class="absolute inset-0 bg-blue-950/70 flex items-center justify-center z-30">
             <div class="bg-white p-6 rounded-3xl border-4 border-blue-400 text-center">
               <h2 class="text-2xl font-black text-blue-700">Place Your Marbles</h2>
+              <img [src]="assets.preview" alt="Preview of the dirt marble circle"
+                class="h-16 w-12 object-cover rounded-lg mx-auto my-2" />
               <p class="text-gray-700">You have {{ marbleInventory }} marbles. Bet 1–5; the circle gets twice your bet.</p>
               <div class="flex flex-wrap justify-center gap-2 my-4">
                 <button *ngFor="let bet of betOptions" type="button" (click)="selectBet(bet)"
@@ -49,8 +52,19 @@
               </div>
               <p class="text-gray-700">Bet {{ selectedBet }} → {{ selectedBet * 2 }} in the circle.<br />Keep at least one marble as your shooter.</p>
               <p class="text-sm text-gray-600">Valid knockouts become yours. A shooter that stays inside is lost, and the knocked-out marbles return.</p>
+              <fieldset class="my-3">
+                <legend class="text-sm font-bold text-blue-900">Choose your shooter</legend>
+                <div class="flex justify-center gap-3 mt-2">
+                  <button *ngFor="let shooter of assets.shooters" type="button"
+                    (click)="selectShooter(shooter.path)" [attr.aria-pressed]="selectedShooter === shooter.path"
+                    [attr.aria-label]="shooter.name + ' shooter'" [class.ring-4]="selectedShooter === shooter.path"
+                    class="border-2 border-blue-400 rounded-lg bg-amber-100">
+                    <img [src]="shooter.path" alt="" class="w-8 h-8" />
+                  </button>
+                </div>
+              </fieldset>
               <button type="button" (click)="startRound()" [disabled]="selectedBet > maxBet"
-                class="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold disabled:opacity-30">Place Bet &amp; Play</button>
+                class="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold disabled:opacity-30">Place Bet &amp; Play (-20🧃)</button>
             </div>
           </div>
 
@@ -77,7 +91,7 @@
               <p class="text-gray-600 mb-6 font-medium">{{ marbleInventory }} marbles × 50 = {{ currentScore }} points.</p>
               <div class="flex flex-col gap-3">
                 <button (click)="tryAgain()" class="px-10 py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a] active:translate-y-1 transition font-bold text-white">
-                  New Game (-20🧃)
+                  New Game
                 </button>
                 <button routerLink="/games" class="text-xs font-bold text-gray-400 hover:text-pink-500">
                   Back to Games
@@ -90,7 +104,7 @@
           <div *ngIf="showOutOfJuice" class="absolute inset-0 bg-purple-900/70 backdrop-blur-sm flex items-center justify-center z-40">
             <div class="bg-white p-8 rounded-3xl border-4 border-red-400 shadow-2xl text-center max-w-sm">
               <h2 class="text-3xl font-black text-red-600 mb-4">Out of Juice! 🧃</h2>
-              <p class="text-gray-700 mb-6 font-medium">You don’t have enough juice to continue playing.</p>
+              <p class="text-gray-700 mb-6 font-medium">You need 20 juice to place a new bet. Shots within a paid round are free.</p>
               <div class="flex flex-col gap-3">
                 <button (click)="goToShop()" class="px-10 py-3 bg-red-400 border-4 border-red-600 rounded-2xl shadow-[0_5px_0_#7f1d1d] hover:-translate-y-1 hover:shadow-[0_7px_0_#7f1d1d] active:translate-y-1 transition font-bold text-white">
                   Buy More Juice
