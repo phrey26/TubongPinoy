@@ -66,6 +66,44 @@ describe('JolensBlast', () => {
     expect(component.marbleInventory).toBe(1);
   });
 
+  it('settles marbles before showing the Juice prompt and preserves the settled score', () => {
+    const energy = TestBed.inject(Energy);
+    energy.consumeEnergy(80);
+    component.hasCompletedShot = true;
+    component.marbleInventory = 12;
+    component.showRoundWon = true;
+    component.chooseNextBet();
+    expect(component.showCashOut).toBe(true);
+    expect(component.showOutOfJuice).toBe(false);
+    component.endSession();
+    expect(component.currentScore).toBe(600);
+    expect(component.showGameOver).toBe(true);
+    expect(component.showCashOut).toBe(false);
+    component.tryAgain();
+    expect(component.showOutOfJuice).toBe(true);
+    expect(component.currentScore).toBe(600);
+    expect(component.marbleInventory).toBe(12);
+    energy.addEnergy(20);
+    component.tryAgain();
+    expect(component.showOutOfJuice).toBe(false);
+    expect(component.marbleInventory).toBe(10);
+    expect(component.showBetSetup).toBe(true);
+  });
+
+  it('awards no points for ending before a completed shot, including after a new game', () => {
+    component.marbleInventory = 10;
+    component.endSession();
+    expect(component.currentScore).toBe(0);
+    component.tryAgain();
+    component.hasCompletedShot = true;
+    component.endSession();
+    expect(component.currentScore).toBe(500);
+    component.tryAgain();
+    expect(component.hasCompletedShot).toBe(false);
+    component.endSession();
+    expect(component.currentScore).toBe(0);
+  });
+
   it('should create', () => {
     expect(component).toBeTruthy();
     expect(HTMLCanvasElement.prototype.getContext).toHaveBeenCalledWith('2d');
@@ -73,6 +111,7 @@ describe('JolensBlast', () => {
   });
 
   it.each([0, 1, 7, 10, 16])('scores %s owned marbles only when the session ends', inventory => {
+    component.hasCompletedShot = true;
     component.marbleInventory = inventory;
     expect(component.currentScore).toBe(0);
     component.endSession();
@@ -91,6 +130,7 @@ describe('JolensBlast', () => {
     expect(component.showGameOver).toBe(false);
     expect(component.currentScore).toBe(0);
     component['shotInProgress'] = false;
+    component.hasCompletedShot = true;
     component.endSession();
     expect(component.currentScore).toBe(component.marbleInventory * 50);
   });
@@ -296,7 +336,7 @@ describe('JolensBlast', () => {
     component.showBetSetup = true;
     const inventory = component.marbleInventory;
     component.startRound();
-    expect(component.showOutOfJuice).toBe(true);
+    expect(component.showCashOut).toBe(true);
     expect(component.marbleInventory).toBe(inventory);
     expect(energy.getEnergyLevelValue()).toBe(19);
     energy.addEnergy(1);

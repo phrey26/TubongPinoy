@@ -45,6 +45,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   selectedBet = 3;
   showBetSetup = false;
   hasStarted = false;
+  hasCompletedShot = false;
   showIntroduction = true;
   @ViewChild('introDialog') introDialog!: ElementRef<HTMLDialogElement>;
 
@@ -65,7 +66,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (this.showIntroduction || this.hasStarted) return;
     this.hasStarted = true;
     this.showBetSetup = true;
-    this.showOutOfJuice = this.energyLevel < 20;
+    this.showCashOut = this.energyLevel < 20;
   }
 
   changeBet(direction: number): void {
@@ -123,6 +124,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   showRoundWon = false;
   showGameOver = false;
   showOutOfJuice = false;
+  showCashOut = false;
 
   // Leaderboard
   highScores = [
@@ -177,7 +179,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.spawnShooter();
     this.energySub = this.energyService.getEnergyLevel().subscribe(level => {
       this.energyLevel = level;
-      this.showOutOfJuice = this.showBetSetup && level < 20 && !this.showGameOver;
+      this.showCashOut = this.showBetSetup && level < 20 && !this.showGameOver;
+      if (level >= 20) this.showOutOfJuice = false;
       this.changeDetector.markForCheck();
     });
     this.gameLoop();
@@ -199,11 +202,12 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (this.showIntroduction || !this.hasStarted || this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
         this.selectedBet < 1 || this.selectedBet > this.maxBet) return;
     if (this.energyLevel < 20) {
-      this.showOutOfJuice = true;
+      this.showCashOut = true;
       return;
     }
     this.marbleInventory -= this.selectedBet;
     this.showBetSetup = false;
+    this.showCashOut = false;
     this.energyService.consumeEnergy(20);
     this.showOutOfJuice = false;
     this.initRound();
@@ -361,6 +365,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
         marble.isMoving = false;
       }
       this.shotInProgress = false;
+      this.hasCompletedShot = true;
       // Collisions can send a provisional knockout back into the ring.
       const reentered = this.pendingKnockouts.filter(marble =>
         Math.hypot(marble.x - this.targetCenter.x, marble.y - this.targetCenter.y) - marble.radius <= this.playAreaRadius);
@@ -506,7 +511,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
 
   endSession(): void {
     if (!this.canEndSession) return;
-    this.currentScore = this.marbleInventory * 50;
+    this.showCashOut = false;
+    this.currentScore = this.hasCompletedShot ? this.marbleInventory * 50 : 0;
     this.showGameOver = true;
     this.showBetSetup = false;
     this.showRoundWon = false;
@@ -516,7 +522,12 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
 
   tryAgain() {
     if (!this.showGameOver) return;
+    if (this.energyLevel < 20) {
+      this.showOutOfJuice = true;
+      return;
+    }
     this.currentScore = 0;
+    this.hasCompletedShot = false;
     this.marbleInventory = 10;
     this.outsideMarbles = [];
     this.showGameOver = false;
@@ -535,7 +546,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (!this.showRoundWon) return;
     this.showRoundWon = false;
     this.showBetSetup = this.maxBet >= 1;
-    this.showOutOfJuice = this.showBetSetup && this.energyLevel < 20;
+    this.showCashOut = this.showBetSetup && this.energyLevel < 20;
     if (!this.showBetSetup) this.endSession();
     this.selectedBet = Math.min(this.selectedBet, this.maxBet);
     this.marblesOnBoard = [];
