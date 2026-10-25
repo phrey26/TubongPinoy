@@ -10,12 +10,36 @@
     <section class="play-section lg:col-span-2">
       <div #gamePanel [class.is-fullscreen]="isFullscreen" class="game-panel mx-auto bg-black p-4 rounded-3xl shadow-lg border-4 border-purple-300 relative overflow-hidden">
 
+        <dialog #introDialog class="intro-dialog" aria-labelledby="intro-title" aria-describedby="intro-description"
+          (cancel)="$event.preventDefault(); closeTutorial()">
+          <div class="flex justify-end mb-2">
+            <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus
+              class="game-action game-action-purple w-10 h-10 rounded-xl bg-purple-100 border-2 border-purple-400 text-purple-800 text-2xl font-bold">×</button>
+          </div>
+          <img src="assets/thumbnails/tumbang_preso_thumbnail.png" alt="A slipper knocking down a tin can"
+            width="1280" height="720" class="w-full rounded-2xl mb-4" />
+          <h2 id="intro-title" class="text-2xl font-black text-purple-700 mb-2">Welcome to Tumbang Preso!</h2>
+          <p id="intro-description" class="text-gray-700 mb-4">A slipper, a tin can, and a little diskarte—clever thinking. Bring the Filipino street-game spirit to this aiming challenge!</p>
+          <ol class="intro-steps">
+            <li><strong>Aim your slipper.</strong> Click and hold the pink slipper at the bottom of the board.</li>
+            <li><strong>Pull back, then release.</strong> Pull downward to shoot upward. Pull sideways to change your angle; a longer pull gives more power. Follow the dotted aiming guide.</li>
+            <li><strong>Find your way to the can.</strong> Rocks and sidewalks bounce your slipper. Use bank shots to reach the can; leaving the top or bottom, or stopping short, counts as a miss.</li>
+            <li><strong>Keep the game going.</strong> Each hit earns 100 points and unlocks the next level. A retry costs 20 Juice. Your last 20 buys a full attempt—even when the meter reaches zero.</li>
+          </ol>
+          <p class="mt-4 text-sm font-semibold text-purple-700">Starting this game is free. Juice is only spent when you choose Try Again after a miss.</p>
+          <button type="button" (click)="closeTutorial()"
+            class="game-action mt-5 w-full py-3 bg-green-400 border-4 border-green-600 rounded-2xl font-bold text-green-950">
+            Got it, back to the game
+          </button>
+        </dialog>
+
         <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-3 py-2 bg-purple-50 rounded-2xl border-2 border-purple-200">
           <div class="flex flex-wrap gap-3">
             <span class="font-bold text-purple-700"><img src="assets/icons/score.svg" alt="" aria-hidden="true" class="app-icon" /> Score: {{ currentScore }}</span>
             <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ energyLevel }}/100</span>
           </div>
           <span class="font-black text-purple-400">Level {{ currentLevel }}</span>
+          <button type="button" class="fullscreen-button" (click)="openTutorial()">How to Play</button>
           <button type="button" class="fullscreen-button" (click)="toggleFullscreen()"
             [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
             <img src="assets/icons/fullscreen.svg" alt="" aria-hidden="true" class="app-icon" />{{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
@@ -27,6 +51,17 @@
           alt="" aria-hidden="true" />
         <div class="game-board w-full aspect-[9/16] bg-green-50 rounded-2xl border-4 border-dashed border-green-200 relative overflow-hidden">
           <canvas #gameCanvas width="450" height="800" class="block w-full h-full cursor-crosshair"></canvas>
+
+          <div *ngIf="!hasStarted" class="absolute inset-0 bg-purple-950/60 backdrop-blur-sm flex items-center justify-center z-30">
+            <div class="bg-white p-6 rounded-3xl border-4 border-purple-300 text-center shadow-xl">
+              <h2 class="text-2xl font-black text-purple-700 mb-3">Ready to knock it down?</h2>
+              <p class="text-gray-600 mb-4">Your first attempt is free.</p>
+              <button type="button" (click)="startGame()"
+                class="game-action w-full py-3 bg-green-400 border-4 border-green-600 rounded-2xl font-bold text-green-950">
+                <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> Play
+              </button>
+            </div>
+          </div>
 
           <!-- Nice Shot Overlay -->
           <div *ngIf="showNiceShot" class="absolute inset-0 bg-green-900/60 backdrop-blur-sm flex items-center justify-center z-30">

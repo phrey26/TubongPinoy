@@ -24,6 +24,9 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   @ViewChild('gameCanvas') canvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('gamePanel') gamePanel!: ElementRef<HTMLDivElement>;
+  @ViewChild('introDialog') introDialog!: ElementRef<HTMLDialogElement>;
+  showIntroduction = true;
+  hasStarted = false;
   isFullscreen = false;
   private animationFrameId = 0;
   private energySub?: Subscription;
@@ -136,6 +139,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   obstacles: Obstacle[] = generateLevel(1).obstacles;
 
   ngAfterViewInit() {
+    this.introDialog.nativeElement.showModal?.();
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
     this.ctx.imageSmoothingEnabled = false;
     this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -159,6 +163,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     if (
+      this.showIntroduction ||
+      !this.hasStarted ||
       this.isLaunched ||
       this.showTryAgain ||
       this.showNiceShot ||
@@ -173,6 +179,24 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     if (Math.hypot(x - this.slipperPos.x, y - this.slipperPos.y) < 40) {
       this.isDragging = true;
     }
+  }
+
+  startGame(): void {
+    if (this.showIntroduction || this.hasStarted) return;
+    this.hasStarted = true;
+  }
+
+  openTutorial(): void {
+    if (this.showIntroduction) return;
+    this.isDragging = false;
+    this.showIntroduction = true;
+    this.introDialog.nativeElement.showModal?.();
+  }
+
+  closeTutorial(): void {
+    this.isDragging = false;
+    this.showIntroduction = false;
+    this.introDialog.nativeElement.close?.();
   }
 
   @HostListener('mousemove', ['$event'])
@@ -295,7 +319,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private render(timestamp = performance.now()) {
     const seconds = this.lastFrameTime === null ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
     this.lastFrameTime = timestamp;
-    if (this.isLaunched) this.updatePhysics();
+    if (this.isLaunched && !this.showIntroduction) this.updatePhysics();
     for (const popup of this.bankPopups) popup.age += seconds;
     this.bankPopups = this.bankPopups.filter(popup => popup.age < 0.6);
     this.impacts.update(seconds);

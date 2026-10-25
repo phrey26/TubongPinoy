@@ -112,20 +112,17 @@ describe('JolensBlast', () => {
     expect(component['marblesOnBoard'].every(marble => JOLENS_ASSETS.marbles.includes(marble.sprite!))).toBe(true);
   });
 
-  it('lets players choose a shooter before betting and draws its loaded sprite', () => {
+  it('uses the default shooter and draws its loaded sprite', () => {
     component.showBetSetup = true;
-    component.selectShooter(JOLENS_ASSETS.shooters[1].path);
     component.startRound();
     const shooter = component['currentShooter'];
-    expect(shooter.sprite).toBe(JOLENS_ASSETS.shooters[1].path);
+    expect(shooter.sprite).toBe(JOLENS_ASSETS.shooters[0].path);
     const sprite = component['sprites'].get(shooter.sprite!)!;
     Object.defineProperty(sprite, 'complete', { value: true });
     Object.defineProperty(sprite, 'naturalWidth', { value: 16 });
     component.drawMarble(shooter);
     expect(component.canvasRef.nativeElement.getContext('2d')!.drawImage)
       .toHaveBeenCalledWith(sprite, 205, 580, 40, 40);
-    component.selectShooter(JOLENS_ASSETS.shooters[2].path);
-    expect(component.selectedShooter).toBe(JOLENS_ASSETS.shooters[1].path);
   });
 
   it('places nonoverlapping targets inside the ring even when randomness repeats', () => {

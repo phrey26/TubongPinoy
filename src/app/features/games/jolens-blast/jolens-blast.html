@@ -52,17 +52,6 @@
               </div>
               <p class="text-gray-700">Bet {{ selectedBet }} → {{ selectedBet * 2 }} in the circle.<br />Keep at least one marble as your shooter.</p>
               <p class="text-sm text-gray-600">Valid knockouts become yours. A shooter that stays inside is lost, and the knocked-out marbles return.</p>
-              <fieldset class="my-3">
-                <legend class="text-sm font-bold text-blue-900">Choose your shooter</legend>
-                <div class="flex justify-center gap-3 mt-2">
-                  <button *ngFor="let shooter of assets.shooters" type="button"
-                    (click)="selectShooter(shooter.path)" [attr.aria-pressed]="selectedShooter === shooter.path"
-                    [attr.aria-label]="shooter.name + ' shooter'" [class.ring-4]="selectedShooter === shooter.path"
-                    class="border-2 border-blue-400 rounded-lg bg-amber-100">
-                    <img [src]="shooter.path" alt="" class="w-8 h-8" />
-                  </button>
-                </div>
-              </fieldset>
               <button type="button" (click)="startRound()" [disabled]="selectedBet > maxBet"
                 class="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold disabled:opacity-30">Place Bet &amp; Play (-20<img src="assets/icons/juice.svg" alt="Juice" class="app-icon" />)</button>
             </div>

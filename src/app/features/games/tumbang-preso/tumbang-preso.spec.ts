@@ -31,12 +31,36 @@ describe('TumbangPreso', () => {
     fixture = TestBed.createComponent(TumbangPreso);
     component = fixture.componentInstance;
     await fixture.whenStable();
+    component.closeTutorial();
+    component.startGame();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
     expect(HTMLCanvasElement.prototype.getContext).toHaveBeenCalledWith('2d');
     expect(window.requestAnimationFrame).toHaveBeenCalled();
+  });
+
+  it('can dismiss and reopen the tutorial while keeping Play as a separate step', () => {
+    component.hasStarted = false;
+    component.openTutorial();
+    expect(component.showIntroduction).toBe(true);
+    component.startGame();
+    expect(component.hasStarted).toBe(false);
+    component.closeTutorial();
+    component.onMouseDown(new MouseEvent('mousedown', { clientX: 225, clientY: 680 }));
+    expect(component['isDragging']).toBe(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Ready to knock it down?');
+    component.startGame();
+    expect(component.hasStarted).toBe(true);
+    component.currentScore = 100;
+    component.openTutorial();
+    component.closeTutorial();
+    expect(component.hasStarted).toBe(true);
+    expect(component.currentScore).toBe(100);
+    expect(TestBed.inject(Energy).getEnergyLevelValue()).toBe(100);
   });
 
   it('lets the final 20 Juice buy a playable retry and only blocks the following retry', () => {
@@ -122,12 +146,12 @@ describe('TumbangPreso', () => {
     await component.toggleFullscreen();
     fixture.detectChanges();
     expect(panel.classList.contains('is-fullscreen')).toBe(true);
-    expect(panel.querySelector('button')?.getAttribute('aria-label')).toBe('Exit fullscreen');
+    expect(panel.querySelector('[aria-label$="fullscreen"]')?.getAttribute('aria-label')).toBe('Exit fullscreen');
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     fixture.detectChanges();
     expect(panel.classList.contains('is-fullscreen')).toBe(false);
-    expect(panel.querySelector('button')?.getAttribute('aria-label')).toBe('Enter fullscreen');
+    expect(panel.querySelector('[aria-label$="fullscreen"]')?.getAttribute('aria-label')).toBe('Enter fullscreen');
   });
 
   it('hits the can above the slipper after pulling downward on the portrait canvas', () => {

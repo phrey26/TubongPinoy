@@ -109,15 +109,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   private marblesOnBoard: Marble[] = [];
   private currentShooter!: Marble;
   readonly assets = JOLENS_ASSETS;
-  selectedShooter = JOLENS_ASSETS.shooters[0].path;
   private readonly sprites = new Map<string, HTMLImageElement>();
   private readonly effects = new MarbleEffects();
-
-  selectShooter(path: string): void {
-    if (!this.showBetSetup || !JOLENS_ASSETS.shooters.some(shooter => shooter.path === path)) return;
-    this.selectedShooter = path;
-    this.spawnShooter();
-  }
 
   // Canvas
   private canvasWidth = 450;
@@ -219,7 +212,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
       y: this.shooterHome.y,
       radius: this.marbleRadius,
       color: '#f8fafc',
-      sprite: this.selectedShooter,
+      sprite: JOLENS_ASSETS.shooters[0].path,
       dx: 0,
       dy: 0,
       isMoving: false
