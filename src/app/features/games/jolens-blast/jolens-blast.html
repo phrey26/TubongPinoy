@@ -13,7 +13,7 @@
         <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-6 py-2 bg-blue-50 rounded-2xl border-2 border-blue-200">
           <div class="flex flex-wrap gap-3">
             <span class="font-bold text-blue-700"><img src="assets/icons/score.svg" alt="" aria-hidden="true" class="app-icon" /> Final score: {{ showGameOver ? currentScore : 'At session end' }}</span>
-            <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ energyLevel }}%</span>
+            <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ energyLevel }}/100</span>
             <span class="font-bold text-gray-800"><img src="assets/icons/marble.svg" alt="" aria-hidden="true" class="app-icon" /> Your marbles: {{ marbleInventory }}</span>
           </div>
           <span class="font-black text-blue-400">Bet: {{ selectedBet }} · Circle: {{ selectedBet * 2 }}</span>
