@@ -12,7 +12,10 @@
 
         <dialog #introDialog class="intro-dialog" aria-labelledby="intro-title" aria-describedby="intro-description"
           (cancel)="$event.preventDefault(); closeTutorial()">
-          <div class="flex justify-end mb-2">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <a routerLink="/games" (click)="closeTutorial()" class="game-return">
+              <img src="assets/icons/back.svg" alt="" aria-hidden="true" class="app-icon" /> Back to Games
+            </a>
             <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus
               class="game-action game-action-purple w-10 h-10 rounded-xl bg-purple-100 border-2 border-purple-400 text-purple-800 text-2xl font-bold">×</button>
           </div>
@@ -39,6 +42,9 @@
             <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ energyLevel }}/100</span>
           </div>
           <span class="font-black text-purple-400">Level {{ currentLevel }}</span>
+          <a routerLink="/games" class="game-return">
+            <img src="assets/icons/back.svg" alt="" aria-hidden="true" class="app-icon" /> Back to Games
+          </a>
           <button type="button" class="fullscreen-button" (click)="openTutorial()">How to Play</button>
           <button type="button" class="fullscreen-button" (click)="toggleFullscreen()"
             [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">

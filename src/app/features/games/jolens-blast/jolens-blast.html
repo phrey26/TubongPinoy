@@ -10,13 +10,38 @@
     <section class="play-section lg:col-span-2">
       <div #gamePanel [class.is-fullscreen]="isFullscreen" class="game-panel bg-black p-4 rounded-3xl shadow-lg border-4 border-blue-300 relative overflow-hidden">
 
+        <dialog #introDialog class="intro-dialog" aria-labelledby="jolens-intro-title" aria-describedby="jolens-intro-description"
+          (cancel)="$event.preventDefault(); closeTutorial()">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <a routerLink="/games" (click)="closeTutorial()" class="game-return">
+              <img src="assets/icons/back.svg" alt="" aria-hidden="true" class="app-icon" /> Back to Games
+            </a>
+            <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus class="jolens-action tutorial-close">×</button>
+          </div>
+          <img src="assets/thumbnails/jolens_blast_thumbnail.png" alt="Colorful marbles being knocked out of a circle"
+            width="1280" height="720" class="w-full rounded-2xl mb-4" />
+          <h2 id="jolens-intro-title" class="text-2xl font-black text-blue-700 mb-2">Welcome to Jolens Blast!</h2>
+          <p id="jolens-intro-description" class="text-gray-700 mb-4">Jolens are glass marbles. Bring a little Filipino playground rivalry to the circle—aim carefully and grow your collection!</p>
+          <ol class="intro-steps">
+            <li><strong>Choose your stake.</strong> Start with 10 marbles. After pressing Play, use the arrows to stake 1–5 marbles. Keep one as your shooter; the circle receives twice your stake.</li>
+            <li><strong>Aim and release.</strong> Press and hold the shooter below the circle, pull back, then release. A longer pull makes a stronger shot. You can use a mouse or touch.</li>
+            <li><strong>Knock them clear.</strong> A target must leave the circle completely. Wait for everything to stop: keep your shooter outside to collect your knockouts. If it stays inside, you lose one marble and your knockouts return.</li>
+            <li><strong>Choose when to finish.</strong> Clear the circle to place another stake, or end your session between shots. Each marble you own at session end is worth 50 points.</li>
+          </ol>
+          <p class="mt-4 font-semibold text-blue-700">Each confirmed round costs 20 Juice. Shots within that round are free, even at zero Juice. Opening Play or adjusting your stake costs nothing.</p>
+          <button type="button" (click)="closeTutorial()" class="jolens-action mt-5 w-full">Got it, back to the game</button>
+        </dialog>
+
         <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-6 py-2 bg-blue-50 rounded-2xl border-2 border-blue-200">
           <div class="flex flex-wrap gap-3">
             <span class="font-bold text-blue-700"><img src="assets/icons/score.svg" alt="" aria-hidden="true" class="app-icon" /> Final score: {{ showGameOver ? currentScore : 'At session end' }}</span>
             <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ energyLevel }}/100</span>
             <span class="font-bold text-gray-800"><img src="assets/icons/marble.svg" alt="" aria-hidden="true" class="app-icon" /> Your marbles: {{ marbleInventory }}</span>
           </div>
-          <span class="font-black text-blue-400">Bet: {{ selectedBet }} · Circle: {{ selectedBet * 2 }}</span>
+          <a routerLink="/games" class="game-return">
+            <img src="assets/icons/back.svg" alt="" aria-hidden="true" class="app-icon" /> Back to Games
+          </a>
+          <button type="button" class="fullscreen-button" (click)="openTutorial()">How to Play</button>
           <button type="button" class="fullscreen-button" (click)="toggleFullscreen()"
             [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
             <img src="assets/icons/fullscreen.svg" alt="" aria-hidden="true" class="app-icon" />{{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
@@ -38,22 +63,35 @@
             (lostpointercapture)="onPointerCancel()">
           </canvas>
 
+          <div *ngIf="!hasStarted" class="absolute inset-0 bg-blue-950/70 backdrop-blur-sm flex items-center justify-center z-30">
+            <div class="bg-white p-6 rounded-3xl border-4 border-blue-400 text-center">
+              <h2 class="text-2xl font-black text-blue-700 mb-3">Ready to enter the circle?</h2>
+              <p class="text-gray-700">Choose your stake after pressing Play.</p>
+              <button type="button" (click)="play()" class="jolens-action mt-4 w-full">
+                <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> Play
+              </button>
+            </div>
+          </div>
+
           <div *ngIf="showBetSetup" class="absolute inset-0 bg-blue-950/70 flex items-center justify-center z-30">
             <div class="bg-white p-6 rounded-3xl border-4 border-blue-400 text-center">
-              <h2 class="text-2xl font-black text-blue-700">Place Your Marbles</h2>
-              <img [src]="assets.preview" alt="Preview of the dirt marble circle"
-                class="h-16 w-12 object-cover rounded-lg mx-auto my-2" />
-              <p class="text-gray-700">You have {{ marbleInventory }} marbles. Bet 1–5; the circle gets twice your bet.</p>
-              <div class="flex flex-wrap justify-center gap-2 my-4">
-                <button *ngFor="let bet of betOptions" type="button" (click)="selectBet(bet)"
-                  [disabled]="bet > maxBet" [attr.aria-pressed]="selectedBet === bet"
-                  [class.ring-4]="selectedBet === bet"
-                  class="px-4 py-2 rounded-xl border-2 border-blue-500 bg-blue-100 font-bold disabled:opacity-30">{{ bet }}</button>
+              <h2 class="text-2xl font-black text-blue-700">Place Your Bet</h2>
+              <p class="text-gray-700 mt-3">Your collection: <strong>{{ marbleInventory }} marbles</strong></p>
+              <div class="bet-selector" role="group" aria-label="Marble stake">
+                <button type="button" (click)="changeBet(-1)" [disabled]="selectedBet <= 1"
+                  aria-label="Decrease bet" class="jolens-action bet-arrow">‹</button>
+                <div aria-live="polite" aria-atomic="true" class="bet-value">
+                  <img src="assets/icons/marble.svg" alt="" aria-hidden="true" width="64" height="64" class="mx-auto" />
+                  <strong>{{ selectedBet }}</strong><span>marbles</span>
+                </div>
+                <button type="button" (click)="changeBet(1)" [disabled]="selectedBet >= maxBet"
+                  aria-label="Increase bet" class="jolens-action bet-arrow">›</button>
               </div>
-              <p class="text-gray-700">Bet {{ selectedBet }} → {{ selectedBet * 2 }} in the circle.<br />Keep at least one marble as your shooter.</p>
-              <p class="text-sm text-gray-600">Valid knockouts become yours. A shooter that stays inside is lost, and the knocked-out marbles return.</p>
-              <button type="button" (click)="startRound()" [disabled]="selectedBet > maxBet"
-                class="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold disabled:opacity-30">Place Bet &amp; Play (-20<img src="assets/icons/juice.svg" alt="Juice" class="app-icon" />)</button>
+              <p class="text-gray-700">{{ selectedBet * 2 }} targets in the circle.<br />{{ marbleInventory - selectedBet }} marbles stay with you.</p>
+              <p class="text-sm text-gray-600">Stake 1–5 and keep at least one shooter.</p>
+              <button type="button" (click)="startRound()" [disabled]="selectedBet < 1 || selectedBet > maxBet"
+                class="jolens-action mt-4 w-full">Confirm Bet &amp; Play</button>
+              <p class="mt-3 text-sm font-semibold text-pink-700">20 <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> per round · Shots are free</p>
             </div>
           </div>
 

@@ -31,7 +31,39 @@ describe('JolensBlast', () => {
     fixture = TestBed.createComponent(JolensBlast);
     component = fixture.componentInstance;
     await fixture.whenStable();
+    component.closeTutorial();
+    component.play();
     component.startRound();
+  });
+
+  it('keeps the tutorial, Play, and paid bet confirmation separate', () => {
+    component.hasStarted = false;
+    component.showBetSetup = false;
+    const energy = TestBed.inject(Energy);
+    const balance = energy.getEnergyLevelValue();
+    component.openTutorial();
+    component.play();
+    expect(component.hasStarted).toBe(false);
+    component.closeTutorial();
+    component.play();
+    expect(component.showBetSetup).toBe(true);
+    expect(energy.getEnergyLevelValue()).toBe(balance);
+    component.selectBet(1);
+    component.changeBet(-1);
+    expect(component.selectedBet).toBe(1);
+    for (let i = 0; i < 8; i++) component.changeBet(1);
+    expect(component.selectedBet).toBe(component.maxBet);
+    component.marbleInventory = 3;
+    component.selectBet(2);
+    component.changeBet(1);
+    expect(component.selectedBet).toBe(2);
+    component.openTutorial();
+    component.startRound();
+    expect(energy.getEnergyLevelValue()).toBe(balance);
+    component.closeTutorial();
+    component.startRound();
+    expect(energy.getEnergyLevelValue()).toBe(balance - 20);
+    expect(component.marbleInventory).toBe(1);
   });
 
   it('should create', () => {
@@ -283,7 +315,7 @@ describe('JolensBlast', () => {
     await component.toggleFullscreen();
     fixture.detectChanges();
     expect(panel.classList.contains('is-fullscreen')).toBe(true);
-    expect(panel.querySelector('.fullscreen-button')?.getAttribute('aria-pressed')).toBe('true');
+    expect(panel.querySelector('[aria-label$="fullscreen"]')?.getAttribute('aria-pressed')).toBe('true');
     await component.toggleFullscreen();
     expect(component.isFullscreen).toBe(false);
     await component.toggleFullscreen();

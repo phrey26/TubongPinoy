@@ -43,8 +43,36 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   private outsideMarbles: Marble[] = [];
   private textPopups: { text: string; x: number; y: number; color: string; age: number }[] = [];
   selectedBet = 3;
-  readonly betOptions = [1, 2, 3, 4, 5];
-  showBetSetup = true;
+  showBetSetup = false;
+  hasStarted = false;
+  showIntroduction = true;
+  @ViewChild('introDialog') introDialog!: ElementRef<HTMLDialogElement>;
+
+  openTutorial(): void {
+    if (this.showIntroduction) return;
+    this.isDragging = false;
+    this.showIntroduction = true;
+    this.introDialog.nativeElement.showModal?.();
+  }
+
+  closeTutorial(): void {
+    this.isDragging = false;
+    this.showIntroduction = false;
+    this.introDialog.nativeElement.close?.();
+  }
+
+  play(): void {
+    if (this.showIntroduction || this.hasStarted) return;
+    this.hasStarted = true;
+    this.showBetSetup = true;
+    this.showOutOfJuice = this.energyLevel < 20;
+  }
+
+  changeBet(direction: number): void {
+    if (direction !== -1 && direction !== 1) return;
+    this.selectBet(this.selectedBet + direction);
+  }
+
 
   async toggleFullscreen(): Promise<void> {
     this.isDragging = false;
@@ -135,6 +163,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   constructor(private energyService: Energy, private changeDetector: ChangeDetectorRef, private router: Router) {}
 
   ngAfterViewInit(): void {
+    this.introDialog.nativeElement.showModal?.();
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
 
@@ -163,11 +192,11 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   get maxBet(): number { return Math.max(0, Math.min(5, this.marbleInventory - 1)); }
 
   selectBet(bet: number): void {
-    if (this.showBetSetup && Number.isInteger(bet) && bet >= 1 && bet <= this.maxBet) this.selectedBet = bet;
+    if (!this.showIntroduction && this.showBetSetup && Number.isInteger(bet) && bet >= 1 && bet <= this.maxBet) this.selectedBet = bet;
   }
 
   startRound(): void {
-    if (this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
+    if (this.showIntroduction || !this.hasStarted || this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
         this.selectedBet < 1 || this.selectedBet > this.maxBet) return;
     if (this.energyLevel < 20) {
       this.showOutOfJuice = true;
@@ -221,6 +250,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
 
   onMouseDown(event: MouseEvent) {
     if (
+      this.showIntroduction ||
+      !this.hasStarted ||
       this.showBetSetup ||
       this.marbleInventory < 1 ||
       !this.currentShooter ||
@@ -268,7 +299,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (!this.isDragging) return;
     this.isDragging = false;
 
-    if (this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) {
+    if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) {
       return;
     }
 
@@ -306,7 +337,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   }
 
   updatePhysics() {
-    if (this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) return;
+    if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) return;
     if (!this.shotInProgress && !this.currentShooter.isMoving &&
         !this.marblesOnBoard.some(marble => marble.isMoving)) return;
     this.shotInProgress = true;
@@ -470,7 +501,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   }
 
   get canEndSession(): boolean {
-    return !this.showGameOver && !this.shotInProgress && !this.isDragging;
+    return this.hasStarted && !this.showIntroduction && !this.showGameOver && !this.shotInProgress && !this.isDragging;
   }
 
   endSession(): void {
