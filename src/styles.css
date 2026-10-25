@@ -2,6 +2,50 @@
 
 @import 'tailwindcss';
 
+.return-to-games {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  padding: 14px 20px;
+  border: 4px solid #7e22ce;
+  border-radius: 16px;
+  background: #e9d5ff;
+  color: #581c87;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #581c87;
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.return-to-games:hover {
+  background: #d8b4fe;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 #581c87;
+}
+.return-to-games:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #581c87;
+}
+.return-to-games:focus-visible {
+  outline: 3px solid #a855f7;
+  outline-offset: 4px;
+}
+.tutorial-return {
+  width: auto;
+  margin-bottom: 0;
+  padding: 6px 10px;
+  border-width: 2px;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .return-to-games { transition: none; }
+  .return-to-games:hover, .return-to-games:active { transform: none; }
+}
+
 /* Shared illustrated icons follow the surrounding control or heading size. */
 .app-icon {
   display: inline-block;

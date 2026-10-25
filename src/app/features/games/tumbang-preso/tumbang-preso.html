@@ -13,7 +13,7 @@
         <dialog #introDialog class="intro-dialog" aria-labelledby="intro-title" aria-describedby="intro-description"
           (cancel)="$event.preventDefault(); closeTutorial()">
           <div class="flex items-center justify-between gap-3 mb-2">
-            <a routerLink="/games" (click)="closeTutorial()" class="game-return">
+            <a routerLink="/games" (click)="closeTutorial()" class="return-to-games tutorial-return">
               <img src="assets/icons/back.svg" alt="" aria-hidden="true" class="app-icon" /> Back to Games
             </a>
             <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus
@@ -42,9 +42,6 @@
             <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ energyLevel }}/100</span>
           </div>
           <span class="font-black text-purple-400">Level {{ currentLevel }}</span>
-          <a routerLink="/games" class="game-return">
-            <img src="assets/icons/back.svg" alt="" aria-hidden="true" class="app-icon" /> Back to Games
-          </a>
           <button type="button" class="fullscreen-button" (click)="openTutorial()">How to Play</button>
           <button type="button" class="fullscreen-button" (click)="toggleFullscreen()"
             [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
@@ -137,8 +134,9 @@
           </div>
         </div>
       </div>
-      <button routerLink="/games" class="font-bold text-purple-600 hover:text-purple-800 transition py-2 text-center">
-        ← Back to Games
+      <button routerLink="/games" class="return-to-games">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m10 5-7 7 7 7M3 12h18" /></svg>
+        Back to Games
       </button>
     </aside>
 
