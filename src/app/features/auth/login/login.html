@@ -6,7 +6,7 @@
   <section class="max-w-md w-full bg-white p-8 rounded-[2.5rem] shadow-2xl border-4 border-purple-300 relative z-10">
 
     <a routerLink="/" class="absolute -top-5 -left-5 bg-yellow-400 border-4 border-yellow-600 p-3 rounded-2xl shadow-[0_4px_0_#92400e] hover:-translate-y-1 transition active:translate-y-0.5 flex items-center justify-center text-xl" title="Back to Home">
-      🏠
+      <img src="assets/icons/home.svg" alt="" aria-hidden="true" class="app-icon" />
     </a>
 
     <div class="text-center mb-8">
@@ -28,7 +28,7 @@
           class="w-full px-5 py-4 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
 
         <div *ngIf="f.identity.invalid && f.identity.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">
-          ⚠️ Username is required (min 3 chars).
+          <img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Username is required (min 3 chars).
         </div>
       </div>
 
@@ -46,12 +46,12 @@
             type="button"
             (click)="togglePassword()"
             class="absolute right-4 top-1/2 -translate-y-1/2 text-xl hover:scale-110 transition active:scale-95">
-            {{ showPassword ? '🙈' : '👁️' }}
+            <img [src]="showPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showPassword ? 'Hide password' : 'Show password'" class="app-icon" />
           </button>
         </div>
 
         <div *ngIf="f.password.invalid && f.password.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">
-          ⚠️ Password must be at least 6 characters.
+          <img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Password must be at least 6 characters.
         </div>
       </div>
 
@@ -59,7 +59,7 @@
         <label class="flex items-center cursor-pointer group">
           <input type="checkbox" formControlName="rememberMe" class="hidden peer">
           <div class="w-6 h-6 border-4 border-purple-200 rounded-lg bg-white peer-checked:bg-purple-500 peer-checked:border-purple-700 transition flex items-center justify-center text-white text-xs">
-            ✔
+            <img src="assets/icons/check.svg" alt="" aria-hidden="true" class="app-icon" />
           </div>
           <span class="ml-2 text-sm font-bold text-gray-600 group-hover:text-purple-700 transition">Remember Me</span>
         </label>
@@ -72,7 +72,7 @@
         shadow-[0_6px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_8px_0_#14532d]
         active:translate-y-1 active:shadow-[0_2px_0_#14532d] transition-all font-bold text-xl text-white tracking-widest
         disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none mt-2">
-        🕹️ START PLAYING
+        <img src="assets/icons/games.svg" alt="" aria-hidden="true" class="app-icon" /> START PLAYING
       </button>
 
     </form>

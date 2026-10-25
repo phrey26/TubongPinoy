@@ -1,3 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+/* Shared illustrated icons follow the surrounding control or heading size. */
+.app-icon {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  flex-shrink: 0;
+  object-fit: contain;
+  vertical-align: middle;
+}

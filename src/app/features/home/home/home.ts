@@ -32,10 +32,8 @@ export class Home implements OnInit, OnDestroy{
   );
 
   //images
-  heroImage = ''; // Example: 'assets/images/hero.jpg'
-  aboutImage = ''; // Example: 'assets/images/about.jpg'
-  ctaImage = ''; // Example: 'assets/images/cta.jpg'
-  featureImages = ['', '', '']; // Example: ['assets/images/f1.jpg', 'assets/images/f2.jpg', 'assets/images/f3.jpg']
+  heroImage = 'assets/images/tubong-pinoy-hero-branded.png';
+  aboutImage = 'assets/images/about-image-bw.png';
 
 
 }

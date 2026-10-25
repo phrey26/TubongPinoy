@@ -5,9 +5,11 @@ shadow-lg border-b-4 border-purple-600 z-50">
 
     <!-- LEFT (Logo) -->
     <div class="flex items-center">
-      <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black font-bold shadow-md">
-        LOGO
-      </div>
+      <a routerLink="/" aria-label="Tubong Pinoy home"
+         class="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+        <img src="assets/icon/tubong-pinoy-icon-192.png" alt="Tubong Pinoy"
+             width="40" height="40" class="w-10 h-10 object-contain" />
+      </a>
     </div>
 
     <!-- CENTER (Navigation) -->
@@ -18,7 +20,7 @@ shadow-lg border-b-4 border-purple-600 z-50">
          class="px-5 py-2 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
          shadow-[0_4px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_6px_0_#92400e]
          active:translate-y-1 active:shadow-[0_2px_0_#92400e] transition">
-         🏠 Home
+         <img src="assets/icons/home.svg" alt="" aria-hidden="true" class="app-icon" /> Home
       </a>
 
       <a routerLink="/games"
@@ -26,7 +28,7 @@ shadow-lg border-b-4 border-purple-600 z-50">
          class="px-5 py-2 bg-orange-400 border-4 border-orange-600 rounded-2xl
          shadow-[0_4px_0_#7c2d12] hover:-translate-y-1 hover:shadow-[0_6px_0_#7c2d12]
          active:translate-y-1 active:shadow-[0_2px_0_#7c2d12] transition">
-         🎮 Games
+         <img src="assets/icons/games.svg" alt="" aria-hidden="true" class="app-icon" /> Games
       </a>
 
       <a routerLink="/shop"
@@ -34,7 +36,7 @@ shadow-lg border-b-4 border-purple-600 z-50">
          class="px-5 py-2 bg-green-400 border-4 border-green-600 rounded-2xl
          shadow-[0_4px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_6px_0_#14532d]
          active:translate-y-1 active:shadow-[0_2px_0_#14532d] transition">
-         🛒 Shop
+         <img src="assets/icons/shop.svg" alt="" aria-hidden="true" class="app-icon" /> Shop
       </a>
 
       <a routerLink="/topup"
@@ -42,7 +44,7 @@ shadow-lg border-b-4 border-purple-600 z-50">
          class="px-5 py-2 bg-blue-400 border-4 border-blue-600 rounded-2xl
          shadow-[0_4px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_6px_0_#1e3a8a]
          active:translate-y-1 active:shadow-[0_2px_0_#1e3a8a] transition">
-         💎 Top Up
+         <img src="assets/icons/wallet.svg" alt="" aria-hidden="true" class="app-icon" /> Top Up
       </a>
 
       <a routerLink="/contact"
@@ -50,7 +52,7 @@ shadow-lg border-b-4 border-purple-600 z-50">
          class="px-5 py-2 bg-pink-400 border-4 border-pink-600 rounded-2xl
          shadow-[0_4px_0_#831843] hover:-translate-y-1 hover:shadow-[0_6px_0_#831843]
          active:translate-y-1 active:shadow-[0_2px_0_#831843] transition">
-         📩 Contact
+         <img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /> Contact
       </a>
     </div>
 

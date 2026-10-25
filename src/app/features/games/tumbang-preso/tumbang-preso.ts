@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
+import { Subscription } from 'rxjs';
 import { ImpactEffects } from './impact-effects';
 import { drawPixelText } from './pixel-text';
 import { generateLevel } from './level-generation';
@@ -25,6 +26,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('gamePanel') gamePanel!: ElementRef<HTMLDivElement>;
   isFullscreen = false;
   private animationFrameId = 0;
+  private energySub?: Subscription;
   private ctx!: CanvasRenderingContext2D;
   private readonly changeDetector = inject(ChangeDetectorRef);
   private reducedMotion = false;
@@ -84,6 +86,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.energySub?.unsubscribe();
     cancelAnimationFrame(this.animationFrameId);
     this.impacts.clear();
     this.obstacleFlashes.clear();
@@ -97,7 +100,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   shotBounces = 0;
   showTryAgain = false;
   showNiceShot = false;
-  showOutOfJuice = false; // Reactive modal
+  showOutOfJuice = false;
 
   highScores: HighScore[] = [
     { username: 'JuanDelaCruz', points: 1500 },
@@ -106,11 +109,12 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   ];
 
   ngOnInit() {
-    // Watch energy level
-    this.energyService.getEnergyLevel().subscribe(value => {
+    this.energySub = this.energyService.getEnergyLevel().subscribe(value => {
       this.energyLevel = value;
-      this.showOutOfJuice = this.energyLevel <= 0; // Show modal automatically
+      // Spending the last Juice must not interrupt an attempt already purchased.
+      if (value >= 20) this.showOutOfJuice = false;
     });
+    this.showOutOfJuice = this.energyLevel <= 0;
   }
 
   private readonly CANVAS_WIDTH = 450;
@@ -257,11 +261,14 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   tryAgain() {
-    if (this.energyLevel >= 20) {
-      this.energyService.consumeEnergy(20);
-      this.resetSlipper();
+    if (!this.showTryAgain) return;
+    if (this.energyLevel < 20) {
+      this.showOutOfJuice = true;
+      return;
     }
-    // No else needed; modal shows automatically when energy reaches 0
+    this.resetSlipper();
+    this.showOutOfJuice = false;
+    this.energyService.consumeEnergy(20);
   }
 
   resetSlipper() {

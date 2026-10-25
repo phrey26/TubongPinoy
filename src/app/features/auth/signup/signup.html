@@ -6,7 +6,7 @@
   <section class="max-w-2xl w-full bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl border-4 border-purple-300 relative z-10">
 
     <a routerLink="/" class="absolute -top-5 -left-5 bg-yellow-400 border-4 border-yellow-600 p-3 rounded-2xl shadow-[0_4px_0_#92400e] hover:-translate-y-1 transition active:translate-y-0.5 text-xl">
-      🏠
+      <img src="assets/icons/home.svg" alt="" aria-hidden="true" class="app-icon" />
     </a>
 
     <div class="text-center mb-10">
@@ -22,7 +22,7 @@
           <input formControlName="username" type="text" placeholder="GamerName"
             [class.border-red-400]="f.username.invalid && f.username.touched"
             class="w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
-          <p *ngIf="f.username.invalid && f.username.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">⚠️ Min 3 characters.</p>
+          <p *ngIf="f.username.invalid && f.username.touched" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Min 3 characters.</p>
         </div>
 
         <div>
@@ -30,7 +30,7 @@
           <input formControlName="email" type="email" placeholder="hello@pinoy.com"
             [class.border-red-400]="f.email.invalid && f.email.touched"
             class="w-full px-5 py-3 rounded-2xl border-4 border-green-200 focus:border-green-400 focus:outline-none transition bg-green-50 text-gray-700 font-medium placeholder-green-300" />
-          <p *ngIf="f.email.invalid && f.email.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">⚠️ Enter a valid email.</p>
+          <p *ngIf="f.email.invalid && f.email.touched" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter a valid email.</p>
         </div>
       </div>
 
@@ -42,10 +42,10 @@
               [class.border-red-400]="f.password.invalid && f.password.touched"
               class="w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
             <button type="button" (click)="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
-              {{ showPassword ? '🙈' : '👁️' }}
+              <img [src]="showPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
-          <p *ngIf="f.password.invalid && f.password.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">⚠️ Min 6 characters.</p>
+          <p *ngIf="f.password.invalid && f.password.touched" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Min 6 characters.</p>
         </div>
 
         <div class="relative">
@@ -55,10 +55,10 @@
               [class.border-red-400]="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched"
               class="w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
             <button type="button" (click)="toggleConfirmPassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
-              {{ showConfirmPassword ? '🙈' : '👁️' }}
+              <img [src]="showConfirmPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showConfirmPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
-          <p *ngIf="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">⚠️ Passwords do not match!</p>
+          <p *ngIf="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Passwords do not match!</p>
         </div>
       </div>
 
@@ -66,13 +66,13 @@
         <label class="flex items-start cursor-pointer group">
           <input type="checkbox" formControlName="terms" class="hidden peer">
           <div class="mt-1 w-6 h-6 shrink-0 border-4 border-purple-200 rounded-lg bg-white peer-checked:bg-purple-500 peer-checked:border-purple-700 transition flex items-center justify-center text-white text-xs">
-            ✔
+            <img src="assets/icons/check.svg" alt="" aria-hidden="true" class="app-icon" />
           </div>
           <span class="ml-3 text-sm font-bold text-gray-600 group-hover:text-purple-700 transition">
-            I agree to play fair and respect the community guidelines. 🇵🇭
+            I agree to play fair and respect the community guidelines.
           </span>
         </label>
-        <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-500 text-[10px] font-bold mt-1 ml-9">⚠️ You must agree to continue.</p>
+        <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-500 text-[10px] font-bold mt-1 ml-9"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> You must agree to continue.</p>
       </div>
 
       <button type="submit" [disabled]="signupForm.invalid"
@@ -80,7 +80,7 @@
         shadow-[0_6px_0_#831843] hover:-translate-y-1 hover:shadow-[0_8px_0_#831843]
         active:translate-y-1 active:shadow-[0_2px_0_#831843] transition-all font-bold text-xl text-white tracking-widest
         disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none">
-        🚀 CREATE ACCOUNT
+        <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="app-icon" /> CREATE ACCOUNT
       </button>
 
     </form>

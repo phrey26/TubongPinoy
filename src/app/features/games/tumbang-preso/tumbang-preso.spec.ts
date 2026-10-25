@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TumbangPreso } from './tumbang-preso';
 import { generateLevel } from './level-generation';
+import { Energy } from '../../../core/services/energy';
 
 describe('TumbangPreso', () => {
   let component: TumbangPreso;
@@ -36,6 +37,49 @@ describe('TumbangPreso', () => {
     expect(component).toBeTruthy();
     expect(HTMLCanvasElement.prototype.getContext).toHaveBeenCalledWith('2d');
     expect(window.requestAnimationFrame).toHaveBeenCalled();
+  });
+
+  it('lets the final 20 Juice buy a playable retry and only blocks the following retry', () => {
+    const energy = TestBed.inject(Energy);
+    energy.consumeEnergy(80);
+    component.showTryAgain = true;
+    component.tryAgain();
+    expect(energy.getEnergyLevelValue()).toBe(0);
+    expect(component.showOutOfJuice).toBe(false);
+    expect(component.showTryAgain).toBe(false);
+    const canvas = component.canvas.nativeElement;
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0, top: 0, width: 450, height: 800,
+    } as DOMRect);
+    component.onMouseDown(new MouseEvent('mousedown', { clientX: 225, clientY: 680 }));
+    component.onMouseMove(new MouseEvent('mousemove', { clientX: 225, clientY: 760 }));
+    component.onMouseUp();
+    for (let frame = 0; frame < 100 && !component.showNiceShot; frame++) {
+      vi.mocked(window.requestAnimationFrame).mock.lastCall![0](frame * 16);
+    }
+    expect(component.currentScore).toBe(100);
+    expect(component.showOutOfJuice).toBe(false);
+    component.nextLevel();
+    component.showTryAgain = true;
+    component.tryAgain();
+    expect(component.showOutOfJuice).toBe(true);
+    expect(energy.getEnergyLevelValue()).toBe(0);
+    energy.addEnergy(20);
+    expect(component.showOutOfJuice).toBe(false);
+  });
+
+  it('charges once for a retry and rejects insufficient positive Juice', () => {
+    const energy = TestBed.inject(Energy);
+    component.showTryAgain = true;
+    component.tryAgain();
+    component.tryAgain();
+    expect(energy.getEnergyLevelValue()).toBe(80);
+    energy.consumeEnergy(61);
+    component.showTryAgain = true;
+    component.tryAgain();
+    expect(component.showOutOfJuice).toBe(true);
+    expect(component.showTryAgain).toBe(true);
+    expect(energy.getEnergyLevelValue()).toBe(19);
   });
 
   it.each([3, 8, 20, 100])('can beat generated level %s through the actual mouse controls', (level) => {

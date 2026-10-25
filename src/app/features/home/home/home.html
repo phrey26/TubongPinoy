@@ -4,9 +4,9 @@
   <section class="max-w-6xl mx-auto text-center mb-16">
 
     <!-- IMAGE -->
-    <div class="w-full h-64 rounded-3xl mb-6 flex items-center justify-center shadow-lg border-4 border-purple-300 overflow-hidden">
-      <img [src]="heroImage" alt="Hero Image" class="w-full h-full object-cover" />
-      <span *ngIf="!heroImage" class="text-gray-600 absolute">Hero Image Placeholder</span>
+    <div class="w-full aspect-[3/1] rounded-3xl mb-6 flex items-center justify-center shadow-lg border-4 border-purple-300 overflow-hidden">
+      <img [src]="heroImage" alt="Tubong Pinoy — Larong Pinoy, Saya ng Lahat! Slippers, a tin can, and colorful jolens in a Filipino neighborhood"
+           width="2172" height="724" fetchpriority="high" class="w-full h-full object-cover" />
     </div>
 
     <h1 class="text-5xl font-extrabold text-purple-700 drop-shadow-md mb-4">
@@ -25,27 +25,32 @@
         class="px-6 py-3 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
         shadow-[0_5px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_7px_0_#92400e]
         active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold">
-        🎮 Explore Games
+        <img src="assets/icons/games.svg" alt="" aria-hidden="true" class="inline-block w-7 h-7 mr-2 align-middle" />Explore Games
       </button>
 
       <button routerLink="/signup"
         class="px-6 py-3 bg-green-400 border-4 border-green-600 rounded-2xl
         shadow-[0_5px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_7px_0_#14532d]
         active:translate-y-1 active:shadow-[0_3px_0_#14532d] transition font-bold">
-        🚀 Create Account
+        <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="inline-block w-7 h-7 mr-2 align-middle" />Create Account
       </button>
 
     </div>
   </section>
 
   <!-- ABOUT SECTION -->
-  <section class="max-w-6xl mx-auto mb-16 grid md:grid-cols-2 gap-10 items-center">
+  <section class="max-w-6xl mx-auto mb-16 grid md:grid-cols-2 gap-10 items-stretch">
 
     <!-- IMAGE -->
-    <div class="w-full h-72 rounded-3xl flex items-center justify-center shadow-lg border-4 border-pink-300 overflow-hidden">
-      <img [src]="aboutImage" alt="About Image" class="w-full h-full object-cover" />
-      <span *ngIf="!aboutImage" class="text-gray-600 absolute">About Image Placeholder</span>
-    </div>
+    <figure class="about-photo w-full">
+      <div class="about-photo-frame rounded-3xl shadow-lg border-4 border-pink-300 overflow-hidden">
+        <img [src]="aboutImage" alt="Children playing Tumbang Preso in a neighborhood street, photographed in black and white"
+             width="1543" height="1019" loading="lazy" decoding="async" />
+      </div>
+      <figcaption class="mt-3 text-center text-sm text-gray-600">
+        Photo credit: <span class="font-semibold">Daily Tribune</span> · Enhanced and converted to black and white.
+      </figcaption>
+    </figure>
 
     <!-- TEXT -->
     <div>
@@ -54,18 +59,31 @@
       </h2>
 
       <p class="text-gray-700 mb-4">
-        Tubong Pinoy is a web-based casual gaming platform designed to bring traditional Filipino-inspired games into the modern digital space.
-        Built using Angular and MongoDB, the platform allows users to instantly play games directly from their browser.
+        Before a screen became a playground, an afternoon could begin with a pair of slippers, a handful of marbles,
+        and someone calling you outside. There were dusty feet, cheers over a lucky shot, and pleas for one more round
+        before it was time to go home. Tubong Pinoy is a little love letter to those afternoons.
       </p>
 
       <p class="text-gray-700 mb-4">
-        The system focuses on accessibility, simplicity, and engagement—making it suitable for both children and adults.
-        Players can create accounts, track their progress, and enjoy interactive drag-and-shoot gameplay mechanics.
+        For adults, we hope each shot brings back a familiar feeling—and perhaps the memory of an old playmate.
+        For a new generation, this is a small window into the games their parents and grandparents grew up with:
+        a chance to discover the fun, ask about the stories, and maybe try a round together outside.
+      </p>
+
+      <p class="text-gray-700 mb-4">
+        New to Filipino street games? You’re welcome here. <strong>Tumbang Preso</strong> centers on knocking down
+        a tin can with a thrown slipper. Our version turns that challenge into an aiming puzzle: pull back, release,
+        and find a path past the rocks to hit the can. <strong>Jolens</strong> means glass marbles. In Jolens Blast,
+        aim your shooter marble to knock the others out of the circle. Keep your shooter outside the ring to collect
+        your knockouts; if it stays inside, you lose a marble and the knocked-out targets return.
       </p>
 
       <p class="text-gray-700">
-        By blending cultural inspiration with modern web technologies, Tubong Pinoy preserves classic gameplay experiences
-        while adapting them for today’s digital generation.
+        Choose a game and play right in your browser—no download needed. Drag farther for a stronger shot, adjust
+        your angle, and release when you’re ready. Keep an eye on your “Juice,” the energy used for Tumbang Preso
+        retries and new Jolens Blast rounds. These are playful adaptations of outdoor games, with a little of that
+        old neighborhood spirit waiting in every round. Whether you remember the street or are discovering it
+        for the first time, tara, laro tayo—come on, let’s play!
       </p>
     </div>
 
@@ -75,7 +93,7 @@
   <section class="max-w-6xl mx-auto text-center mb-16">
 
     <h2 class="text-3xl font-extrabold text-purple-700 mb-10">
-      ✨ Platform Features
+      Platform Features
     </h2>
 
     <div class="grid md:grid-cols-3 gap-6">
@@ -83,10 +101,9 @@
       <!-- FEATURE 1 -->
       <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-green-300">
         <div class="w-full h-32 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-          <img [src]="featureImages[0]" alt="Feature 1" class="w-full h-full object-cover" />
-          <span *ngIf="!featureImages[0]" class="text-gray-500 text-sm absolute">Image</span>
+          <img src="assets/icons/energy.svg" alt="" aria-hidden="true" width="128" height="128" class="w-28 h-28 object-contain" />
         </div>
-        <h3 class="font-bold text-lg mb-2">⚡ Energy System</h3>
+        <h3 class="font-bold text-lg mb-2">Energy System</h3>
         <p class="text-gray-600">
           Gameplay is managed through an energy system that encourages balanced play sessions.
         </p>
@@ -95,10 +112,9 @@
       <!-- FEATURE 2 -->
       <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-yellow-300">
         <div class="w-full h-32 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-          <img [src]="featureImages[1]" alt="Feature 2" class="w-full h-full object-cover" />
-          <span *ngIf="!featureImages[1]" class="text-gray-500 text-sm absolute">Image</span>
+          <img src="assets/icons/customization.svg" alt="" aria-hidden="true" width="128" height="128" class="w-28 h-28 object-contain" />
         </div>
-        <h3 class="font-bold text-lg mb-2">🎨 Customization</h3>
+        <h3 class="font-bold text-lg mb-2">Customization</h3>
         <p class="text-gray-600">
           Personalize your experience with skins, effects, and visual enhancements.
         </p>
@@ -107,10 +123,9 @@
       <!-- FEATURE 3 -->
       <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-blue-300">
         <div class="w-full h-32 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-          <img [src]="featureImages[2]" alt="Feature 3" class="w-full h-full object-cover" />
-          <span *ngIf="!featureImages[2]" class="text-gray-500 text-sm absolute">Image</span>
+          <img src="assets/icons/browser-play.svg" alt="" aria-hidden="true" width="128" height="128" class="w-28 h-28 object-contain" />
         </div>
-        <h3 class="font-bold text-lg mb-2">🌐 Browser-Based</h3>
+        <h3 class="font-bold text-lg mb-2">Browser-Based</h3>
         <p class="text-gray-600">
           No installation needed—play instantly on desktop or mobile browsers.
         </p>
@@ -124,9 +139,10 @@
   <section class="text-center">
 
     <!-- IMAGE -->
-    <div class="w-full max-w-3xl mx-auto h-48 rounded-3xl mb-6 flex items-center justify-center shadow-lg border-4 border-blue-300 overflow-hidden">
-      <img [src]="ctaImage" alt="CTA Image" class="w-full h-full object-cover" />
-      <span *ngIf="!ctaImage" class="text-gray-600 absolute">CTA Image Placeholder</span>
+    <div class="w-full max-w-6xl mx-auto aspect-[3/1] rounded-3xl mb-6 flex items-center justify-center shadow-lg border-4 border-blue-300 overflow-hidden">
+      <img src="assets/images/tubong-pinoy-cta.png"
+           alt="Tara, laro tayo! Illustrated previews of Tumbang Preso and Jolens Blast surrounded by flying slippers, a tin can, and colorful marbles"
+           width="2172" height="724" loading="lazy" decoding="async" class="block w-full h-full object-cover" />
     </div>
 
     <h2 class="text-3xl font-extrabold text-purple-700 mb-4">
@@ -148,7 +164,7 @@
 
   <!-- LIVE CLOCK -->
   <div class="absolute top-24 right-10 bg-white px-4 py-2 rounded-xl shadow-md border-2 border-purple-300 font-bold text-purple-700">
-    🕒 {{ currentTime$ | async | time }}
+    <img src="assets/icons/clock.svg" alt="" aria-hidden="true" class="inline-block w-6 h-6 mr-1 align-middle" />{{ currentTime$ | async | time }}
   </div>
 
 </main>

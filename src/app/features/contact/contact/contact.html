@@ -16,7 +16,7 @@
     <section class="bg-white p-8 rounded-3xl shadow-xl border-4 border-teal-300">
 
       <h2 class="text-2xl font-bold text-teal-600 mb-6">
-        📩 Send us a Message
+        <img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /> Send us a Message
       </h2>
 
       <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-5">
@@ -83,7 +83,7 @@
           @if (isLoading) {
             Sending...
           } @else {
-            🚀 Send Message
+            <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="app-icon" /> Send Message
           }
 
         </button>
@@ -98,7 +98,7 @@
       <section class="bg-white p-8 rounded-3xl shadow-lg border-4 border-purple-300">
 
         <h2 class="text-2xl font-bold text-purple-700 mb-6">
-          👨‍💻 The Developer
+          <img src="assets/icons/developer.svg" alt="" aria-hidden="true" class="app-icon" /> The Developer
         </h2>
 
         <!-- Developer Image -->
@@ -123,7 +123,7 @@
       <!-- 📍 LOCATION -->
       <section class="bg-white p-8 rounded-3xl shadow-lg border-4 border-blue-300 flex-grow">
 
-        <h2 class="text-2xl font-bold text-blue-700 mb-4">📍 Location</h2>
+        <h2 class="text-2xl font-bold text-blue-700 mb-4"><img src="assets/icons/location.svg" alt="" aria-hidden="true" class="app-icon" /> Location</h2>
 
         <p class="text-gray-700 font-bold">Holy Angel University</p>
         <p class="text-gray-600 mb-4 text-sm uppercase tracking-wide">
@@ -152,12 +152,12 @@
         <div class="mt-6 space-y-3">
 
           <div class="flex items-center gap-3 text-gray-700">
-            <span>📧</span>
+            <span><img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /></span>
             <span class="text-sm">support&#64;tubongpinoy.ph</span>
           </div>
 
           <div class="flex items-center gap-3 text-gray-700">
-            <span>📅</span>
+            <span><img src="assets/icons/calendar.svg" alt="" aria-hidden="true" class="app-icon" /></span>
             <span class="text-sm">Project Submission: March 2026</span>
           </div>
 

@@ -19,8 +19,8 @@ export class Games {
   energyLevel$: Observable<number> = this.energyService.getEnergyLevel();
 
   // Game images
-  tumbangPresoImage = 'assets/tumbang-preso.png';
-  marbleMatchImage = 'assets/jolens-blast-assets/background/dirt_bg.png';
+  tumbangPresoImage = 'assets/thumbnails/tumbang_preso_thumbnail.png';
+  marbleMatchImage = 'assets/thumbnails/jolens_blast_thumbnail.png';
 
   // Show warning message when energy is insufficient
   showNoEnergyMessage = false;
