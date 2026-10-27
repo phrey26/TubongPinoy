@@ -12,10 +12,7 @@
 
         <dialog #introDialog class="intro-dialog" aria-labelledby="intro-title" aria-describedby="intro-description"
           (cancel)="$event.preventDefault(); closeTutorial()">
-          <div class="flex items-center justify-between gap-3 mb-2">
-            <a routerLink="/games" (click)="closeTutorial()" class="return-to-games tutorial-return">
-              <img src="assets/icons/back.svg" alt="" aria-hidden="true" class="app-icon" /> Back to Games
-            </a>
+          <div class="flex items-center justify-end gap-3 mb-2">
             <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus
               class="game-action game-action-purple w-10 h-10 rounded-xl bg-purple-100 border-2 border-purple-400 text-purple-800 text-2xl font-bold">×</button>
           </div>

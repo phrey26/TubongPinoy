@@ -33,14 +33,6 @@
   outline: 3px solid #a855f7;
   outline-offset: 4px;
 }
-.tutorial-return {
-  width: auto;
-  margin-bottom: 0;
-  padding: 6px 10px;
-  border-width: 2px;
-  font-size: 0.875rem;
-  text-decoration: none;
-}
 @media (prefers-reduced-motion: reduce) {
   .return-to-games { transition: none; }
   .return-to-games:hover, .return-to-games:active { transform: none; }
