@@ -22,16 +22,7 @@
 
   </header>
 
-  @if (errorMessage()) {
-    <p role="alert" class="max-w-4xl mx-auto mb-6 rounded-xl bg-red-50 p-4 text-red-700">{{ errorMessage() }}</p>
-  }
-  @if (message()) {
-    <p role="status" class="max-w-4xl mx-auto mb-6 rounded-xl bg-green-50 p-4 text-green-800">{{ message() }}</p>
-  }
-  <p class="max-w-4xl mx-auto mb-6 text-center font-semibold text-orange-700">Demo top-ups only. No real payment is processed.</p>
-  @if (!enabled()) {
-    <p class="text-center text-gray-600">Simulated top-ups are currently unavailable.</p>
-  }
+  <p role="status" class="max-w-4xl mx-auto mb-6 text-center font-semibold text-orange-700">Tansan top-ups are coming soon.</p>
   <!-- HERO -->
   <section class="max-w-4xl mx-auto text-center mb-20">
 
@@ -69,11 +60,11 @@
         100 Tansans
       </div>
 
-      <button (click)="selectPackage(100, 49)"
+      <button type="button" disabled
         class="w-full px-6 py-3 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
         shadow-[0_5px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_7px_0_#92400e]
-        active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold">
-        ₱49.00
+        active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+        ₱49.00 · Coming Soon
       </button>
 
     </div>
@@ -94,11 +85,11 @@
         500 Tansans
       </div>
 
-      <button (click)="selectPackage(500, 199)"
+      <button type="button" disabled
         class="w-full px-6 py-3 bg-orange-400 border-4 border-orange-600 rounded-2xl
         shadow-[0_5px_0_#9a3412] hover:-translate-y-1 hover:shadow-[0_7px_0_#9a3412]
-        active:translate-y-1 active:shadow-[0_3px_0_#9a3412] transition font-bold text-white">
-        ₱199.00
+        active:translate-y-1 active:shadow-[0_3px_0_#9a3412] transition font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+        ₱199.00 · Coming Soon
       </button>
 
     </div>
@@ -115,11 +106,11 @@
         1500 Tansans
       </div>
 
-      <button (click)="selectPackage(1500, 499)"
+      <button type="button" disabled
         class="w-full px-6 py-3 bg-purple-400 border-4 border-purple-600 rounded-2xl
         shadow-[0_5px_0_#581c87] hover:-translate-y-1 hover:shadow-[0_7px_0_#581c87]
-        active:translate-y-1 active:shadow-[0_3px_0_#581c87] transition font-bold text-white">
-        ₱499.00
+        active:translate-y-1 active:shadow-[0_3px_0_#581c87] transition font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+        ₱499.00 · Coming Soon
       </button>
 
     </div>
@@ -130,7 +121,7 @@
   <section class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-lg border-4 border-pink-200">
 
     <h2 class="text-2xl font-extrabold text-pink-600 mb-6">
-      <img src="assets/icons/wallet.svg" alt="" aria-hidden="true" class="app-icon" /> Payment Method <span class="text-sm font-normal text-gray-400">(Simulated)</span>
+      <img src="assets/icons/wallet.svg" alt="" aria-hidden="true" class="app-icon" /> Payment Method <span class="text-sm font-normal text-gray-400">(Coming Soon)</span>
     </h2>
 
     <div class="grid grid-cols-2 gap-4 mb-6">
@@ -140,7 +131,7 @@
         bg-blue-50 hover:bg-blue-100 transition
         has-[:checked]:border-blue-600 has-[:checked]:bg-blue-100">
 
-        <input type="radio" name="payment" class="accent-blue-600" checked>
+        <input type="radio" name="payment" disabled class="accent-blue-600" checked>
 
         <span class="font-bold text-blue-700"><img src="assets/icons/wallet.svg" alt="" aria-hidden="true" class="app-icon" /> GCash</span>
 
@@ -151,7 +142,7 @@
         bg-green-50 hover:bg-green-100 transition
         has-[:checked]:border-green-600 has-[:checked]:bg-green-100">
 
-        <input type="radio" name="payment" class="accent-green-600">
+        <input type="radio" name="payment" disabled class="accent-green-600">
 
         <span class="font-bold text-green-700"><img src="assets/icons/wallet.svg" alt="" aria-hidden="true" class="app-icon" /> Maya</span>
 
@@ -175,11 +166,11 @@
     </div>
 
     <!-- BUTTON -->
-    <button [disabled]="pending() || !enabled()" (click)="processPayment()"
+    <button type="button" disabled
       class="w-full py-4 bg-green-400 border-4 border-green-600 rounded-2xl
       shadow-[0_6px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_8px_0_#14532d]
-      active:translate-y-1 active:shadow-[0_3px_0_#14532d] transition font-bold text-lg">
-      {{ pending() ? 'Saving…' : 'Simulate Top-up' }}
+      active:translate-y-1 active:shadow-[0_3px_0_#14532d] transition font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+      Coming Soon
     </button>
 
   </section>
