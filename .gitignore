@@ -42,3 +42,7 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Local backend credentials and PHP sessions
+/backend/config.local.php
+/backend/var/

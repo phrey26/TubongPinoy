@@ -3,6 +3,9 @@
 A gaming website made to represent the Tradinional Filipino Games 
 This project targets Angular and Angular CLI 22.2.3 with TypeScript 6.0.
 
+PHP/MySQL authentication setup and SQL are documented in [backend/README.md](backend/README.md).
+The lobby is public; playing games, shopping, and top-ups require login.
+
 ## Requirements
 
 - Node.js 24.22.0 (or a later compatible Node.js 24 release)

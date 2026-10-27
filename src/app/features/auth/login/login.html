@@ -13,30 +13,35 @@
       <h1 class="text-4xl font-extrabold text-purple-700 drop-shadow-sm mb-2">
         Welcome Back!
       </h1>
-      <p class="text-gray-600 font-medium italic">Ready for another round of Tubong Pinoy?</p>
+      <p class="text-gray-600 font-medium italic">Log in to play games and visit the shop. Browsing the lobby is free.</p>
     </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+      @if (errorMessage()) {
+        <p role="alert" class="rounded-xl bg-red-50 p-3 font-semibold text-red-700">{{ errorMessage() }}</p>
+      }
 
       <div class="relative">
-        <label class="block text-purple-700 font-bold mb-2 ml-1">Username or Email</label>
+        <label for="login-identity" class="block text-purple-700 font-bold mb-2 ml-1">Username or Email</label>
         <input
           formControlName="identity"
+          id="login-identity" autocomplete="username" maxlength="254"
           type="text"
           placeholder="Enter username"
           [class.border-red-400]="f.identity.invalid && f.identity.touched"
           class="w-full px-5 py-4 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
 
         <div *ngIf="f.identity.invalid && f.identity.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">
-          <img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Username is required (min 3 chars).
+          <img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter your username or email.
         </div>
       </div>
 
       <div class="relative">
-        <label class="block text-purple-700 font-bold mb-2 ml-1">Password</label>
+        <label for="login-password" class="block text-purple-700 font-bold mb-2 ml-1">Password</label>
         <div class="relative">
           <input
             formControlName="password"
+            id="login-password" autocomplete="current-password"
             [type]="showPassword ? 'text' : 'password'"
             placeholder="••••••••"
             [class.border-red-400]="f.password.invalid && f.password.touched"
@@ -51,28 +56,27 @@
         </div>
 
         <div *ngIf="f.password.invalid && f.password.touched" class="text-red-500 text-xs font-bold mt-1 ml-2">
-          <img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Password must be at least 6 characters.
+          <img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter your password.
         </div>
       </div>
 
       <div class="flex items-center justify-between px-1">
         <label class="flex items-center cursor-pointer group">
-          <input type="checkbox" formControlName="rememberMe" class="hidden peer">
+          <input type="checkbox" formControlName="rememberMe" class="sr-only peer">
           <div class="w-6 h-6 border-4 border-purple-200 rounded-lg bg-white peer-checked:bg-purple-500 peer-checked:border-purple-700 transition flex items-center justify-center text-white text-xs">
             <img src="assets/icons/check.svg" alt="" aria-hidden="true" class="app-icon" />
           </div>
           <span class="ml-2 text-sm font-bold text-gray-600 group-hover:text-purple-700 transition">Remember Me</span>
         </label>
-        <a href="#" class="text-sm text-pink-600 font-bold hover:underline">Forgot?</a>
       </div>
 
       <button type="submit"
-        [disabled]="loginForm.invalid"
+        [disabled]="loginForm.invalid || isSubmitting()"
         class="w-full py-4 bg-green-400 border-4 border-green-600 rounded-2xl
         shadow-[0_6px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_8px_0_#14532d]
         active:translate-y-1 active:shadow-[0_2px_0_#14532d] transition-all font-bold text-xl text-white tracking-widest
         disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none mt-2">
-        <img src="assets/icons/games.svg" alt="" aria-hidden="true" class="app-icon" /> START PLAYING
+        <img src="assets/icons/games.svg" alt="" aria-hidden="true" class="app-icon" /> {{ isSubmitting() ? 'LOGGING IN…' : 'LOG IN & CONTINUE' }}
       </button>
 
     </form>
@@ -80,7 +84,7 @@
     <div class="mt-8 text-center border-t-4 border-dashed border-gray-100 pt-6">
       <p class="text-gray-600 font-medium">
         New to the game?
-        <a routerLink="/signup" class="text-purple-700 font-extrabold hover:underline ml-1">Create Account</a>
+        <a routerLink="/signup" [queryParams]="{ returnUrl: returnUrl }" class="text-purple-700 font-extrabold hover:underline ml-1">Create Account</a>
       </p>
     </div>
 

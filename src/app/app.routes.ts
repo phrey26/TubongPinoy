@@ -8,6 +8,7 @@ import { JolensBlast } from './features/games/jolens-blast/jolens-blast';
 import { Shop } from './features/shop/shop/shop';
 import { Topup } from './features/topup/topup/topup';
 import { Contact } from './features/contact/contact/contact';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -15,12 +16,17 @@ export const routes: Routes = [
   { path: 'login', component: Login },
   { path: 'signup', component: Signup },
 
-  { path: 'games', component: Games },
-  { path: 'games/tumbang-preso', component: TumbangPreso },
-  { path: 'games/jolens-blast', component: JolensBlast },
+  { path: 'games', children: [
+    { path: '', pathMatch: 'full', component: Games },
+    // Add future playable games here to inherit the login requirement.
+    { path: '', canActivateChild: [authGuard], children: [
+      { path: 'tumbang-preso', component: TumbangPreso },
+      { path: 'jolens-blast', component: JolensBlast },
+    ] },
+  ] },
 
-  { path: 'shop', component: Shop },
-  { path: 'topup', component: Topup },
+  { path: 'shop', component: Shop, canActivate: [authGuard] },
+  { path: 'topup', component: Topup, canActivate: [authGuard] },
 
   { path: 'contact', component: Contact },
 

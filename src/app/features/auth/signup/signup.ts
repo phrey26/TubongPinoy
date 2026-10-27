@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validators, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { Auth } from '../../../core/services/auth';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
+import { Auth, authErrorMessage, safeReturnUrl } from '../../../core/services/auth';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -15,6 +16,11 @@ export class Signup {
 
   showPassword = false;
   showConfirmPassword = false;
+  readonly isSubmitting = signal(false);
+  readonly errorMessage = signal('');
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  readonly returnUrl = safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
 
   constructor(private auth: Auth) {}
 
@@ -27,9 +33,9 @@ export class Signup {
   };
 
   signupForm = new FormGroup({
-    username: new FormControl('', [Validators.required, Validators.minLength(3)]),
-    email: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+    username: new FormControl('', [Validators.required, Validators.pattern(/^[A-Za-z0-9_]{3,50}$/)]),
+    email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(254)]),
+    password: new FormControl('', [Validators.required, Validators.minLength(8), Validators.maxLength(72)]),
     confirmPassword: new FormControl('', [Validators.required]),
     terms: new FormControl(false, [Validators.requiredTrue])
   }, { validators: this.passwordMatchValidator });
@@ -38,15 +44,16 @@ export class Signup {
   toggleConfirmPassword() { this.showConfirmPassword = !this.showConfirmPassword; }
 
   onSubmit() {
+    if (this.isSubmitting()) return;
+    this.errorMessage.set('');
     if (this.signupForm.valid) {
-      const { username, email, password } = this.signupForm.value;
-      this.auth.signup({ username: username!, email: email!, password: password! })
+      const { username, email, password, terms } = this.signupForm.getRawValue();
+      this.isSubmitting.set(true);
+      this.auth.signup({ username: username!.trim(), email: email!.trim(), password: password!, terms: !!terms })
+        .pipe(finalize(() => this.isSubmitting.set(false)))
         .subscribe({
-          next: () => {
-            alert('🎉 Account created!');
-            this.signupForm.reset();
-          },
-          error: (err) => alert(err.error.message || 'Signup failed')
+          next: () => void this.router.navigateByUrl(this.returnUrl),
+          error: (error: unknown) => this.errorMessage.set(authErrorMessage(error)),
         });
     } else {
       this.signupForm.markAllAsTouched();

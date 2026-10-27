@@ -58,6 +58,13 @@ shadow-lg border-b-4 border-purple-600 z-50">
 
     <!-- RIGHT (Auth) -->
     <div class="flex items-center gap-3">
+      @if (auth.user(); as user) {
+        <span class="max-w-28 truncate text-sm" [title]="user.username">{{ user.username }}</span>
+        <button type="button" (click)="logout()" [disabled]="loggingOut()"
+          class="px-3 py-1 text-sm bg-indigo-400 border-2 border-indigo-600 rounded-xl disabled:opacity-50">
+          {{ loggingOut() ? 'Logging out…' : 'Logout' }}
+        </button>
+      } @else {
       <a routerLink="/login"
          routerLinkActive="ring-2 ring-white"
          class="px-3 py-1 text-sm bg-indigo-400 border-2 border-indigo-600 rounded-xl
@@ -73,9 +80,13 @@ shadow-lg border-b-4 border-purple-600 z-50">
          active:translate-y-0.5 active:shadow-[0_2px_0_#134e4a] transition">
          Signup
       </a>
+      }
     </div>
 
   </div>
+  @if (logoutError()) {
+    <p role="alert" class="bg-red-50 p-2 text-center text-sm text-red-700">{{ logoutError() }}</p>
+  }
 </nav>
 
 <!-- ADD TOP PADDING TO MAIN CONTENT TO AVOID NAV OVERLAP -->
