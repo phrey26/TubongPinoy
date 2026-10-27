@@ -1,3 +1,5 @@
+import { MemoryEnergy } from '../../../testing/energy-stub';
+import { Subject } from 'rxjs';
 import { vi, afterEach } from 'vitest';
 import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -24,7 +26,7 @@ describe('JolensBlast', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 
     await TestBed.configureTestingModule({
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
       imports: [JolensBlast],
     }).compileComponents();
 
@@ -39,7 +41,7 @@ describe('JolensBlast', () => {
   it('keeps the tutorial, Play, and paid bet confirmation separate', () => {
     component.hasStarted = false;
     component.showBetSetup = false;
-    const energy = TestBed.inject(Energy);
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
     const balance = energy.getEnergyLevelValue();
     component.openTutorial();
     component.play();
@@ -67,7 +69,7 @@ describe('JolensBlast', () => {
   });
 
   it('settles marbles before showing the Juice prompt and preserves the settled score', () => {
-    const energy = TestBed.inject(Energy);
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
     energy.consumeEnergy(80);
     component.hasCompletedShot = true;
     component.marbleInventory = 12;
@@ -108,6 +110,23 @@ describe('JolensBlast', () => {
     expect(component).toBeTruthy();
     expect(HTMLCanvasElement.prototype.getContext).toHaveBeenCalledWith('2d');
     expect(window.requestAnimationFrame).toHaveBeenCalled();
+  });
+
+  it('does not stake marbles or start a round while the Juice payment is pending or fails', () => {
+    const pending = new Subject<never>();
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
+    vi.spyOn(energy, 'consumeEnergy').mockReturnValue(pending);
+    component.showBetSetup = true;
+    const inventory = component.marbleInventory;
+    component.startRound();
+    component.startRound();
+    expect(energy.consumeEnergy).toHaveBeenCalledTimes(1);
+    expect(component.marbleInventory).toBe(inventory);
+    expect(component.showBetSetup).toBe(true);
+    pending.error(new Error('Connection lost'));
+    expect(component.marbleInventory).toBe(inventory);
+    expect(component.showBetSetup).toBe(true);
+    expect(component.savingJuice()).toBe(false);
   });
 
   it.each([0, 1, 7, 10, 16])('scores %s owned marbles only when the session ends', inventory => {
@@ -315,7 +334,7 @@ describe('JolensBlast', () => {
   });
 
   it('lets a paid round continue at zero juice without charging for shots', () => {
-    const energy = TestBed.inject(Energy);
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
     energy.consumeEnergy(80);
     expect(component.energyLevel).toBe(0);
     expect(component.showOutOfJuice).toBe(false);
@@ -331,7 +350,7 @@ describe('JolensBlast', () => {
   });
 
   it('requires 20 juice per bet and allows the last 20 to buy a complete round', () => {
-    const energy = TestBed.inject(Energy);
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
     energy.consumeEnergy(61);
     component.showBetSetup = true;
     const inventory = component.marbleInventory;

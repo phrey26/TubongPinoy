@@ -1,31 +1,18 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, Injector, inject } from '@angular/core';
+import { distinctUntilChanged, map } from 'rxjs';
+import { AccountState } from './account-state';
+import { Wallet } from './wallet';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class Energy {
-
-  private energySubject = new BehaviorSubject<number>(100);
-  private maxEnergy = 100;
-
-  getEnergyLevel(): Observable<number> {
-    return this.energySubject.asObservable();
+  private readonly account = inject(AccountState);
+  private readonly injector = inject(Injector);
+  getEnergyLevel() {
+    return this.account.changes$.pipe(map(user => user?.juice ?? 0), distinctUntilChanged());
   }
-
-  getEnergyLevelValue(): number {
-    return this.energySubject.value;
-  }
-
-  consumeEnergy(amount: number) {
-    const current = this.energySubject.value;
-    if (current >= amount) {
-      this.energySubject.next(current - amount);
-    }
-  }
-
-  addEnergy(amount: number) {
-    const current = this.energySubject.value;
-    this.energySubject.next(Math.min(current + amount, this.maxEnergy));
+  getEnergyLevelValue(): number { return this.account.user()?.juice ?? 0; }
+  hasUnlimited(): boolean { return (this.account.user()?.unlimitedJuiceUntil ?? 0) > Date.now(); }
+  consumeEnergy(reason: 'tumbang_retry' | 'jolens_round') {
+    return this.injector.get(Wallet).change('consume_juice', reason);
   }
 }

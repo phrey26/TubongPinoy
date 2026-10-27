@@ -42,6 +42,9 @@
           </button>
           <button type="button" (click)="endSession()" [disabled]="!canEndSession"
             class="px-3 py-2 border-2 border-blue-400 rounded-xl text-blue-800 font-bold disabled:opacity-40">End Session</button>
+          @if (accountError()) {
+            <p role="alert" class="w-full text-sm text-red-700">{{ accountError() }}</p>
+          }
         </div>
 
         <div class="board-space">
@@ -83,7 +86,7 @@
               </div>
               <p class="text-gray-700">{{ selectedBet * 2 }} targets in the circle.<br />{{ marbleInventory - selectedBet }} marbles stay with you.</p>
               <p class="text-sm text-gray-600">Stake 1–5 and keep at least one shooter.</p>
-              <button type="button" (click)="startRound()" [disabled]="selectedBet < 1 || selectedBet > maxBet"
+              <button type="button" (click)="startRound()" [disabled]="savingJuice() || selectedBet < 1 || selectedBet > maxBet"
                 class="jolens-action mt-4 w-full">Confirm Bet &amp; Play</button>
               <p class="mt-3 text-sm font-semibold text-pink-700">20 <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> per round · Shots are free</p>
             </div>

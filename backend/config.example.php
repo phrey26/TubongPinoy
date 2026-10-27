@@ -6,4 +6,6 @@ return [
     'database' => 'tubongpinoy_db',
     'username' => 'root',
     'password' => '',
+    // Local testing only. Real payments must be verified by a payment provider.
+    'allow_demo_topups' => false,
 ];

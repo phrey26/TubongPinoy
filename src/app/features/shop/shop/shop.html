@@ -30,6 +30,15 @@
     </div>
   </header>
 
+  @if (errorMessage()) {
+    <p role="alert" class="max-w-6xl mx-auto mb-6 rounded-xl bg-red-50 p-4 text-red-700">{{ errorMessage() }}</p>
+  }
+  @if (message()) {
+    <p role="status" class="max-w-6xl mx-auto mb-6 rounded-xl bg-green-50 p-4 text-green-800">{{ message() }}</p>
+  }
+  @if (unlimitedUntil > 0) {
+    <p class="max-w-6xl mx-auto mb-6 text-purple-700">Unlimited Juice expiry: {{ unlimitedUntil | date:'medium' }}</p>
+  }
   <!-- JUICE SECTION -->
   <section class="max-w-6xl mx-auto mb-16">
 
@@ -45,9 +54,9 @@
         <div class="text-5xl mb-4"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /></div>
 
         <h3 class="font-bold text-lg mb-2">Quick Snack</h3>
-        <p class="text-gray-600 mb-6">Restore +20 Juice (1 game)</p>
+        <p class="text-gray-600 mb-6">Restore up to +20 Juice (maximum 100)</p>
 
-        <button (click)="buyItem('energy_small')"
+        <button [disabled]="pending()" (click)="buyItem('energy_small')"
           class="w-full py-3 bg-green-400 border-4 border-green-600 rounded-2xl
           shadow-[0_5px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_7px_0_#14532d]
           active:translate-y-1 active:shadow-[0_3px_0_#14532d] transition font-bold">
@@ -65,9 +74,9 @@
         </div>
 
         <h3 class="font-bold text-lg mb-2">Full Meal</h3>
-        <p class="text-gray-600 mb-6">Restore +50 Juice</p>
+        <p class="text-gray-600 mb-6">Restore up to +50 Juice (maximum 100)</p>
 
-        <button (click)="buyItem('energy_med')"
+        <button [disabled]="pending()" (click)="buyItem('energy_med')"
           class="w-full py-3 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
           shadow-[0_5px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_7px_0_#92400e]
           active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold">
@@ -84,7 +93,7 @@
         <h3 class="font-bold text-lg mb-2">Unlimited Feast</h3>
         <p class="text-gray-600 mb-6">Unlimited Juice for 1 Hour</p>
 
-        <button (click)="buyItem('energy_unli')"
+        <button [disabled]="pending()" (click)="buyItem('energy_unli')"
           class="w-full py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl
           shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a]
           active:translate-y-1 active:shadow-[0_3px_0_#1e3a8a] transition font-bold">
@@ -105,21 +114,21 @@
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
 
-      <div *ngFor="let skin of cosmeticSkins"
+      <div *ngFor="let skin of cosmeticSkins()"
         class="bg-white p-4 rounded-2xl shadow-lg border-4 border-purple-300 text-center">
 
         <div class="w-full h-32 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-          <img [src]="skin.imageUrl" class="w-full h-full object-contain" />
+          <img [src]="skin.imageUrl" [alt]="skin.name" class="w-full h-full object-contain" />
         </div>
 
         <h4 class="font-bold mb-1">{{ skin.name }}</h4>
         <p class="text-sm text-gray-500 mb-3">{{ skin.type }}</p>
 
-        <button (click)="buyCosmetic(skin.id)"
+        <button [disabled]="pending() || owns(skin.id)" (click)="buyCosmetic(skin.id)"
           class="w-full py-2 bg-purple-400 border-4 border-purple-600 rounded-xl
           shadow-[0_4px_0_#581c87] hover:-translate-y-1 hover:shadow-[0_6px_0_#581c87]
           active:translate-y-1 active:shadow-[0_2px_0_#581c87] transition font-bold text-sm">
-          {{ skin.price }} <img src="assets/icons/tansan.svg" alt="Tansans" class="app-icon" />
+          {{ owns(skin.id) ? 'Owned' : skin.price }} <img src="assets/icons/tansan.svg" alt="Tansans" class="app-icon" />
         </button>
 
       </div>
@@ -129,11 +138,11 @@
 
   <!-- BACK BUTTON -->
   <footer class="text-center">
-    <button routerLink="/dashboard"
+    <button routerLink="/games"
       class="px-6 py-3 bg-pink-400 border-4 border-pink-600 rounded-2xl
       shadow-[0_5px_0_#831843] hover:-translate-y-1 hover:shadow-[0_7px_0_#831843]
       active:translate-y-1 active:shadow-[0_3px_0_#831843] transition font-bold">
-      ← Back to Dashboard
+      ← Back to Games
     </button>
   </footer>
 

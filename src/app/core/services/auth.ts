@@ -1,6 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, finalize, shareReplay, switchMap, tap, throwError, timeout } from 'rxjs';
+import { AccountState } from './account-state';
 
 export interface AuthUser {
   id: number;
@@ -8,6 +9,9 @@ export interface AuthUser {
   email: string;
   tansans: number;
   juice: number;
+  ownedSkins?: string[];
+  unlimitedJuiceUntil?: number;
+  walletVersion?: number;
 }
 
 export interface AuthSession {
@@ -17,8 +21,8 @@ export interface AuthSession {
 
 @Injectable({ providedIn: 'root' })
 export class Auth {
-  private readonly currentUser = signal<AuthUser | null>(null);
-  readonly user = this.currentUser.asReadonly();
+  private readonly account = inject(AccountState);
+  readonly user = this.account.user;
   private sessionRequest?: Observable<AuthSession>;
 
   constructor(private http: HttpClient) {}
@@ -28,9 +32,9 @@ export class Auth {
     if (!this.sessionRequest) {
       this.sessionRequest = this.http.get<AuthSession>('/api/session.php').pipe(
         timeout(8000),
-        tap(session => this.currentUser.set(session.user)),
+        tap(session => this.account.set(session.user)),
         catchError(error => {
-          this.currentUser.set(null);
+          this.account.set(null);
           return throwError(() => error);
         }),
         finalize(() => this.sessionRequest = undefined),
@@ -54,7 +58,7 @@ export class Auth {
         headers: { 'X-CSRF-Token': session.csrfToken },
       })),
       timeout(8000),
-      tap(() => this.currentUser.set(null)),
+      tap(() => this.account.set(null)),
     );
   }
 
@@ -64,7 +68,7 @@ export class Auth {
         headers: { 'X-CSRF-Token': session.csrfToken },
       })),
       timeout(8000),
-      tap(session => this.currentUser.set(session.user)),
+      tap(session => this.account.set(session.user)),
     );
   }
 }

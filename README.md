@@ -5,6 +5,7 @@ This project targets Angular and Angular CLI 22.2.3 with TypeScript 6.0.
 
 PHP/MySQL authentication setup and SQL are documented in [backend/README.md](backend/README.md).
 The lobby is public; playing games, shopping, and top-ups require login.
+Tansans, Juice, and purchased skin ownership are saved separately for each account.
 
 ## Requirements
 

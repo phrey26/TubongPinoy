@@ -1,3 +1,6 @@
+import { signal } from '@angular/core';
+import { finalize } from 'rxjs';
+import { authErrorMessage } from '../../../core/services/auth';
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, ChangeDetectionStrategy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
@@ -66,11 +69,11 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (this.showIntroduction || this.hasStarted) return;
     this.hasStarted = true;
     this.showBetSetup = true;
-    this.showCashOut = this.energyLevel < 20;
+    this.showCashOut = (this.energyLevel < 20 && !this.energyService.hasUnlimited());
   }
 
   changeBet(direction: number): void {
-    if (direction !== -1 && direction !== 1) return;
+    if (this.savingJuice() || (direction !== -1 && direction !== 1)) return;
     this.selectBet(this.selectedBet + direction);
   }
 
@@ -114,6 +117,9 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   }
 
   onPointerCancel(): void { this.isDragging = false; }
+
+  readonly savingJuice = signal(false);
+  readonly accountError = signal('');
 
   // Game State
   currentScore: number = 0;
@@ -179,8 +185,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.spawnShooter();
     this.energySub = this.energyService.getEnergyLevel().subscribe(level => {
       this.energyLevel = level;
-      this.showCashOut = this.showBetSetup && level < 20 && !this.showGameOver;
-      if (level >= 20) this.showOutOfJuice = false;
+      this.showCashOut = this.showBetSetup && (level < 20 && !this.energyService.hasUnlimited()) && !this.showGameOver;
+      if (level >= 20 || this.energyService.hasUnlimited()) this.showOutOfJuice = false;
       this.changeDetector.markForCheck();
     });
     this.gameLoop();
@@ -195,22 +201,31 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   get maxBet(): number { return Math.max(0, Math.min(5, this.marbleInventory - 1)); }
 
   selectBet(bet: number): void {
-    if (!this.showIntroduction && this.showBetSetup && Number.isInteger(bet) && bet >= 1 && bet <= this.maxBet) this.selectedBet = bet;
+    if (!this.savingJuice() && !this.showIntroduction && this.showBetSetup && Number.isInteger(bet) && bet >= 1 && bet <= this.maxBet) this.selectedBet = bet;
   }
 
   startRound(): void {
-    if (this.showIntroduction || !this.hasStarted || this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
+    if (this.savingJuice() || this.showIntroduction || !this.hasStarted || this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
         this.selectedBet < 1 || this.selectedBet > this.maxBet) return;
-    if (this.energyLevel < 20) {
+    if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
       this.showCashOut = true;
       return;
     }
-    this.marbleInventory -= this.selectedBet;
-    this.showBetSetup = false;
-    this.showCashOut = false;
-    this.energyService.consumeEnergy(20);
-    this.showOutOfJuice = false;
-    this.initRound();
+    this.savingJuice.set(true);
+    this.accountError.set('');
+    const bet = this.selectedBet;
+    this.energyService.consumeEnergy('jolens_round').pipe(
+      finalize(() => this.savingJuice.set(false)),
+    ).subscribe({
+      next: () => {
+        this.marbleInventory -= bet;
+        this.showBetSetup = false;
+        this.showCashOut = false;
+        this.showOutOfJuice = false;
+        this.initRound();
+      },
+      error: (error: unknown) => this.accountError.set(authErrorMessage(error)),
+    });
   }
 
   private initRound() {
@@ -506,7 +521,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   }
 
   get canEndSession(): boolean {
-    return this.hasStarted && !this.showIntroduction && !this.showGameOver && !this.shotInProgress && !this.isDragging;
+    return !this.savingJuice() && this.hasStarted && !this.showIntroduction && !this.showGameOver && !this.shotInProgress && !this.isDragging;
   }
 
   endSession(): void {
@@ -522,7 +537,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
 
   tryAgain() {
     if (!this.showGameOver) return;
-    if (this.energyLevel < 20) {
+    if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
       this.showOutOfJuice = true;
       return;
     }
@@ -531,7 +546,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.marbleInventory = 10;
     this.outsideMarbles = [];
     this.showGameOver = false;
-    this.showOutOfJuice = this.energyLevel < 20;
+    this.showOutOfJuice = (this.energyLevel < 20 && !this.energyService.hasUnlimited());
     this.showRoundWon = false;
     this.showBetSetup = true;
     this.selectedBet = 3;
@@ -546,7 +561,7 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     if (!this.showRoundWon) return;
     this.showRoundWon = false;
     this.showBetSetup = this.maxBet >= 1;
-    this.showCashOut = this.showBetSetup && this.energyLevel < 20;
+    this.showCashOut = this.showBetSetup && (this.energyLevel < 20 && !this.energyService.hasUnlimited());
     if (!this.showBetSetup) this.endSession();
     this.selectedBet = Math.min(this.selectedBet, this.maxBet);
     this.marblesOnBoard = [];

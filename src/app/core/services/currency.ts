@@ -1,33 +1,10 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { distinctUntilChanged, map } from 'rxjs';
+import { AccountState } from './account-state';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class Currency {
-
-  private coinsSubject = new BehaviorSubject<number>(1000);
-
-  // Observable for components to subscribe to
-  coins$ = this.coinsSubject.asObservable();
-
-  getCoins(): number {
-    return this.coinsSubject.value;
-  }
-
-  add(amount: number): void {
-    const current = this.coinsSubject.value;
-    this.coinsSubject.next(current + amount);
-  }
-
-  spend(amount: number): boolean {
-    const current = this.coinsSubject.value;
-
-    if (current < amount) {
-      return false;
-    }
-
-    this.coinsSubject.next(current - amount);
-    return true;
-  }
+  private readonly account = inject(AccountState);
+  readonly coins$ = this.account.changes$.pipe(map(user => user?.tansans ?? 0), distinctUntilChanged());
+  getCoins(): number { return this.account.user()?.tansans ?? 0; }
 }

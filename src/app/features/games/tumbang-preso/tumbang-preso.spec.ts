@@ -1,3 +1,5 @@
+import { MemoryEnergy } from '../../../testing/energy-stub';
+import { Subject } from 'rxjs';
 import { vi, afterEach } from 'vitest';
 import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -24,7 +26,7 @@ describe('TumbangPreso', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 
     await TestBed.configureTestingModule({
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
       imports: [TumbangPreso],
     }).compileComponents();
 
@@ -40,6 +42,22 @@ describe('TumbangPreso', () => {
     expect(component).toBeTruthy();
     expect(HTMLCanvasElement.prototype.getContext).toHaveBeenCalledWith('2d');
     expect(window.requestAnimationFrame).toHaveBeenCalled();
+  });
+
+  it('waits for a confirmed Juice deduction before granting a retry', () => {
+    const pending = new Subject<never>();
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
+    vi.spyOn(energy, 'consumeEnergy').mockReturnValue(pending);
+    component.showTryAgain = true;
+    component.tryAgain();
+    component.tryAgain();
+    expect(energy.consumeEnergy).toHaveBeenCalledTimes(1);
+    expect(component.showTryAgain).toBe(true);
+    expect(component.savingJuice()).toBe(true);
+    pending.error(new Error('Connection lost'));
+    expect(component.showTryAgain).toBe(true);
+    expect(component.savingJuice()).toBe(false);
+    expect(component.accountError()).toContain('could not reach');
   });
 
   it('can dismiss and reopen the tutorial while keeping Play as a separate step', () => {
@@ -64,7 +82,7 @@ describe('TumbangPreso', () => {
   });
 
   it('lets the final 20 Juice buy a playable retry and only blocks the following retry', () => {
-    const energy = TestBed.inject(Energy);
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
     energy.consumeEnergy(80);
     component.showTryAgain = true;
     component.tryAgain();
@@ -93,7 +111,7 @@ describe('TumbangPreso', () => {
   });
 
   it('charges once for a retry and rejects insufficient positive Juice', () => {
-    const energy = TestBed.inject(Energy);
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
     component.showTryAgain = true;
     component.tryAgain();
     component.tryAgain();

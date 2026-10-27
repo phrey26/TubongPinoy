@@ -81,8 +81,25 @@ function input_string(array $body, string $key): string
 
 function public_user(array $row): array
 {
-    return ['id' => (int) $row['id'], 'username' => $row['username'], 'email' => $row['email'],
-        'tansans' => (int) $row['tansans'], 'juice' => (int) $row['juice']];
+    $db = database();
+    $ownTransaction = !$db->inTransaction();
+    if ($ownTransaction) $db->beginTransaction();
+    $query = $db->prepare('SELECT id, username, email, tansans, juice FROM users WHERE id = ? FOR UPDATE');
+    $query->execute([$row['id']]);
+    $row = $query->fetch();
+    $db->prepare('INSERT IGNORE INTO account_state (user_id) VALUES (?)')->execute([$row['id']]);
+    $query = $db->prepare('SELECT unlimited_until, version FROM account_state WHERE user_id = ?');
+    $query->execute([$row['id']]);
+    $state = $query->fetch();
+    $query = $db->prepare('SELECT skin_id FROM user_skins WHERE user_id = ? ORDER BY skin_id');
+    $query->execute([$row['id']]);
+    $result = ['id' => (int) $row['id'], 'username' => $row['username'], 'email' => $row['email'],
+        'tansans' => (int) $row['tansans'], 'juice' => (int) $row['juice'],
+        'ownedSkins' => $query->fetchAll(PDO::FETCH_COLUMN),
+        'unlimitedJuiceUntil' => (int) $state['unlimited_until'] * 1000,
+        'walletVersion' => (int) $state['version']];
+    if ($ownTransaction) $db->commit();
+    return $result;
 }
 
 function current_user(): ?array

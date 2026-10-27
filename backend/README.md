@@ -40,6 +40,8 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
 | POST | `/api/login.php` | Sign in with username/email and password |
 | POST | `/api/logout.php` | Destroy the session and expire its cookie |
 | GET | `/api/me.php` | Authenticated profile; returns 401 to guests |
+| GET | `/api/catalog.php` | Available skins and whether simulated top-ups are enabled |
+| POST | `/api/wallet.php` | Authenticated Juice consumption, shop purchases, or demo top-ups |
 
 POST requests require JSON and the `X-CSRF-Token` from the session endpoint.
 Signup accepts `username`, `email`, `password`, and `terms: true`.
@@ -60,11 +62,37 @@ account data. Angular guards control navigation, not database authorization.
 
 ## Scope
 
-This first backend implements accounts and authentication. The database has initial
-balance columns, but gameplay scores, Juice spending, shop purchases, and simulated
-top-ups still use the existing frontend logic. They are not yet persisted or
-validated by the backend. Email verification and password recovery are not
-implemented; the inactive Forgot link has been removed from the login form.
+Accounts own their Tansans, Juice, purchased skins, and unlimited-Juice entitlement.
+They are returned by login/session/profile endpoints, cleared from frontend state
+on logout, and restored on a new login. Existing balances are preserved by setup.
+Each newly created account starts with 1,000 Tansans, 100 Juice, and no purchased skins.
+
+`wallet.php` accepts `action`, `item`, and a UUID `requestId`. Supported actions:
+
+- `consume_juice`: `tumbang_retry` or `jolens_round`, each costing 20 Juice unless
+  the account has an active unlimited pass. A paid attempt can finish at zero Juice.
+- `purchase`: `energy_small` (50 Tansans, up to 20 Juice), `energy_med` (100 Tansans,
+  up to 50 Juice), `energy_unli` (500 Tansans, one hour), or an active skin ID.
+  Full refills, duplicate skins, and duplicate active unlimited passes are rejected.
+- `demo_topup`: `starter` (100 Tansans), `special` (500), or `piyesta` (1,500).
+  This is a development simulation, not a verified real-money payment. It is
+  disabled by default. Set `allow_demo_topups => true` in local config or
+  `TUBONG_ALLOW_DEMO_TOPUPS=1` to enable the existing demo flow. This Mac's local
+  config enables it; deployment must leave it disabled until real payment
+  verification is implemented.
+
+Identity always comes from the server session. Client-supplied account IDs, prices,
+and balances are ignored. Transactions lock the account row, so purchases from
+multiple sessions cannot overspend. `wallet_operations` records balance deltas
+and deduplicates retried requests. `account_state.version` prevents older responses
+from overwriting newer frontend balances. `user_skins` has one row per account and
+skin, with a unique composite key to prevent double purchases.
+
+Future skins can be added to the `skins` table (`id`, `name`, `type`, `price`,
+`image_url`, `active`); the shop reads that catalog automatically. The current
+skin catalog uses placeholder artwork. Ownership is implemented; applying a skin
+to a game's visuals is a separate feature. Game scores/leaderboards, email
+verification, and password recovery are not implemented in this backend.
 
 ## Verification
 
@@ -75,11 +103,15 @@ password verification, session rotation, Remember Me, and logout:
 
 ```sh
 python3 backend/tests/auth_smoke.py
+python3 backend/tests/wallet_smoke.py
 ```
 
 The test uses MAMP directly by default. Set `TUBONG_TEST_API_URL` to
 `http://localhost:4200/api` to exercise the Angular development proxy too.
 It also requires MAMP's PHP CLI (override `TUBONG_PHP_BIN` if necessary).
+The wallet test creates two temporary accounts, checks account switching and
+saved inventory, and submits concurrent purchases from different sessions.
+It deletes only those test accounts and their related records afterward.
 
 For deployment, serve `backend/public/api` at `/api` on the same origin as the
 Angular build, use HTTPS and deployment-specific database credentials, and make

@@ -1,16 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
-import { Currency } from '../../../core/services/currency';
-import { Energy } from '../../../core/services/energy';
-
-interface Skin {
-  id: string;
-  name: string;
-  type: string;
-  price: number;
-  imageUrl: string;
-}
+import { finalize } from 'rxjs';
+import { AccountState } from '../../../core/services/account-state';
+import { authErrorMessage } from '../../../core/services/auth';
+import { Skin, Wallet } from '../../../core/services/wallet';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -19,93 +14,39 @@ interface Skin {
   templateUrl: './shop.html',
   styleUrl: './shop.css',
 })
-export class Shop {
+export class Shop implements OnInit {
+  private readonly wallet = inject(Wallet);
+  private readonly account = inject(AccountState);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly cosmeticSkins = signal<Skin[]>([]);
+  readonly pending = signal(false);
+  readonly errorMessage = signal('');
+  readonly message = signal('');
+  get userCoins(): number { return this.account.user()?.tansans ?? 0; }
+  get userEnergy(): number { return this.account.user()?.juice ?? 0; }
+  get unlimitedUntil(): number { return this.account.user()?.unlimitedJuiceUntil ?? 0; }
 
-  userCoins: number = 0;
-  userEnergy: number = 0;
-
-  cosmeticSkins: Skin[] = [
-    {
-      id: 'skin_1',
-      name: 'Dragon Armor',
-      type: 'Legendary Skin',
-      price: 300,
-      imageUrl: 'assets/skins/dragon.png'
-    },
-    {
-      id: 'skin_2',
-      name: 'Shadow Ninja',
-      type: 'Epic Skin',
-      price: 200,
-      imageUrl: 'assets/skins/ninja.png'
-    },
-    {
-      id: 'skin_3',
-      name: 'Cyber Suit',
-      type: 'Rare Skin',
-      price: 150,
-      imageUrl: 'assets/skins/cyber.png'
-    },
-    {
-      id: 'skin_4',
-      name: 'Classic Outfit',
-      type: 'Common Skin',
-      price: 50,
-      imageUrl: 'assets/skins/classic.png'
-    }
-  ];
-
-  constructor(
-    private currency: Currency,
-    private energy: Energy
-  ) {}
-
-  ngOnInit() {
-    // ✅ reactive juice (updates UI automatically)
-    this.energy.getEnergyLevel().subscribe(value => {
-      this.userEnergy = value;
-    });
-
-    // ✅ initial coins
-    this.userCoins = this.currency.getCoins();
-  }
-
-  buyItem(type: string) {
-    switch (type) {
-      case 'energy_small':
-        this.purchase(50, () => this.energy.addEnergy(20));
-        break;
-
-      case 'energy_med':
-        this.purchase(100, () => this.energy.addEnergy(50));
-        break;
-
-      case 'energy_unli':
-        this.purchase(500, () => {
-          alert('Unlimited juice for 1 hour!');
-        });
-        break;
-    }
-  }
-
-  buyCosmetic(id: string) {
-    const skin = this.cosmeticSkins.find(s => s.id === id);
-    if (!skin) return;
-
-    this.purchase(skin.price, () => {
-      alert(`You bought ${skin.name}!`);
+  ngOnInit(): void {
+    this.wallet.catalog().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: catalog => this.cosmeticSkins.set(catalog.skins),
+      error: (error: unknown) => this.errorMessage.set(authErrorMessage(error)),
     });
   }
 
-  private purchase(cost: number, success: () => void) {
-    if (!this.currency.spend(cost)) {
-      alert('Not enough coins!');
-      return;
-    }
+  owns(id: string): boolean { return this.account.user()?.ownedSkins?.includes(id) ?? false; }
+  buyItem(id: string): void { this.purchase(id); }
+  buyCosmetic(id: string): void { if (!this.owns(id)) this.purchase(id); }
 
-    // refresh coins in UI
-    this.userCoins = this.currency.getCoins();
-
-    success();
+  private purchase(id: string): void {
+    if (this.pending()) return;
+    this.pending.set(true);
+    this.message.set('');
+    this.errorMessage.set('');
+    this.wallet.change('purchase', id).pipe(
+      takeUntilDestroyed(this.destroyRef), finalize(() => this.pending.set(false)),
+    ).subscribe({
+      next: () => this.message.set('Purchase saved to your account.'),
+      error: (error: unknown) => this.errorMessage.set(authErrorMessage(error)),
+    });
   }
 }

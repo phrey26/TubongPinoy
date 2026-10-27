@@ -1,3 +1,6 @@
+import { signal } from '@angular/core';
+import { finalize } from 'rxjs';
+import { authErrorMessage } from '../../../core/services/auth';
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
@@ -96,6 +99,9 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.bankPopups = [];
   }
 
+  readonly savingJuice = signal(false);
+  readonly accountError = signal('');
+
   // Game State
   currentScore = 0;
   energyLevel = 100;
@@ -115,9 +121,10 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.energySub = this.energyService.getEnergyLevel().subscribe(value => {
       this.energyLevel = value;
       // Spending the last Juice must not interrupt an attempt already purchased.
-      if (value >= 20) this.showOutOfJuice = false;
+      if (value >= 20 || this.energyService.hasUnlimited()) this.showOutOfJuice = false;
     });
-    this.showOutOfJuice = this.energyLevel <= 0;
+    // The first attempt is free, including for accounts returning with zero Juice.
+    this.showOutOfJuice = false;
   }
 
   private readonly CANVAS_WIDTH = 450;
@@ -285,14 +292,19 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   tryAgain() {
-    if (!this.showTryAgain) return;
-    if (this.energyLevel < 20) {
+    if (!this.showTryAgain || this.savingJuice()) return;
+    if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
       this.showOutOfJuice = true;
       return;
     }
-    this.resetSlipper();
-    this.showOutOfJuice = false;
-    this.energyService.consumeEnergy(20);
+    this.savingJuice.set(true);
+    this.accountError.set('');
+    this.energyService.consumeEnergy('tumbang_retry').pipe(
+      finalize(() => this.savingJuice.set(false)),
+    ).subscribe({
+      next: () => { this.resetSlipper(); this.showOutOfJuice = false; },
+      error: (error: unknown) => this.accountError.set(authErrorMessage(error)),
+    });
   }
 
   resetSlipper() {
