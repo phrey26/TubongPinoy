@@ -102,6 +102,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   readonly savingJuice = signal(false);
   readonly accountError = signal('');
 
+  get unlimitedJuice(): boolean { return this.energyService.hasUnlimited(); }
+
   // Game State
   currentScore = 0;
   energyLevel = 100;

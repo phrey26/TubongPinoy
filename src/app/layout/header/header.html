@@ -1,95 +1,41 @@
-<!-- NAVIGATION -->
-<nav class="fixed top-0 left-0 w-full bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400
-shadow-lg border-b-4 border-purple-600 z-50">
-  <div class="flex items-center justify-between px-6 py-3 text-white font-extrabold h-16">
+<header class="site-header">
+  <div class="header-inner">
+    <a routerLink="/" class="header-logo" aria-label="Tubong Pinoy home" (click)="closeMenu()">
+      <img src="assets/icon/tubong-pinoy-icon-192.png" alt="Tubong Pinoy" width="40" height="40" />
+    </a>
 
-    <!-- LEFT (Logo) -->
-    <div class="flex items-center">
-      <a routerLink="/" aria-label="Tubong Pinoy home"
-         class="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
-        <img src="assets/icon/tubong-pinoy-icon-192.png" alt="Tubong Pinoy"
-             width="40" height="40" class="w-10 h-10 object-contain" />
+    <nav id="primary-navigation" class="primary-nav" [class.is-open]="menuOpen()" aria-label="Main navigation">
+      <a routerLink="/" routerLinkActive="nav-active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" class="nav-link nav-home" (click)="closeMenu()">
+        <img src="assets/icons/home.svg" alt="" aria-hidden="true" /> Home
       </a>
-    </div>
-
-    <!-- CENTER (Navigation) -->
-    <div class="flex gap-4 justify-center flex-1">
-      <a routerLink="/"
-         routerLinkActive="ring-4 ring-white"
-         [routerLinkActiveOptions]="{ exact: true }"
-         class="px-5 py-2 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
-         shadow-[0_4px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_6px_0_#92400e]
-         active:translate-y-1 active:shadow-[0_2px_0_#92400e] transition">
-         <img src="assets/icons/home.svg" alt="" aria-hidden="true" class="app-icon" /> Home
+      <a routerLink="/games" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="nav-link nav-games" (click)="closeMenu()">
+        <img src="assets/icons/games.svg" alt="" aria-hidden="true" /> Games
       </a>
-
-      <a routerLink="/games"
-         routerLinkActive="ring-4 ring-white"
-         class="px-5 py-2 bg-orange-400 border-4 border-orange-600 rounded-2xl
-         shadow-[0_4px_0_#7c2d12] hover:-translate-y-1 hover:shadow-[0_6px_0_#7c2d12]
-         active:translate-y-1 active:shadow-[0_2px_0_#7c2d12] transition">
-         <img src="assets/icons/games.svg" alt="" aria-hidden="true" class="app-icon" /> Games
+      <a routerLink="/shop" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="nav-link nav-shop" (click)="closeMenu()">
+        <img src="assets/icons/shop.svg" alt="" aria-hidden="true" /> Shop
       </a>
-
-      <a routerLink="/shop"
-         routerLinkActive="ring-4 ring-white"
-         class="px-5 py-2 bg-green-400 border-4 border-green-600 rounded-2xl
-         shadow-[0_4px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_6px_0_#14532d]
-         active:translate-y-1 active:shadow-[0_2px_0_#14532d] transition">
-         <img src="assets/icons/shop.svg" alt="" aria-hidden="true" class="app-icon" /> Shop
+      <a routerLink="/topup" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="nav-link nav-topup" (click)="closeMenu()">
+        <img src="assets/icons/wallet.svg" alt="" aria-hidden="true" /> Top Up <span class="nav-soon">Soon</span>
       </a>
-
-      <a routerLink="/topup"
-         routerLinkActive="ring-4 ring-white"
-         class="px-5 py-2 bg-blue-400 border-4 border-blue-600 rounded-2xl
-         shadow-[0_4px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_6px_0_#1e3a8a]
-         active:translate-y-1 active:shadow-[0_2px_0_#1e3a8a] transition">
-         <img src="assets/icons/wallet.svg" alt="" aria-hidden="true" class="app-icon" /> Top Up
+      <a routerLink="/contact" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="nav-link nav-contact" (click)="closeMenu()">
+        <img src="assets/icons/mail.svg" alt="" aria-hidden="true" /> Contact
       </a>
+    </nav>
 
-      <a routerLink="/contact"
-         routerLinkActive="ring-4 ring-white"
-         class="px-5 py-2 bg-pink-400 border-4 border-pink-600 rounded-2xl
-         shadow-[0_4px_0_#831843] hover:-translate-y-1 hover:shadow-[0_6px_0_#831843]
-         active:translate-y-1 active:shadow-[0_2px_0_#831843] transition">
-         <img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /> Contact
-      </a>
-    </div>
-
-    <!-- RIGHT (Auth) -->
-    <div class="flex items-center gap-3">
+    <div class="header-account">
       @if (auth.user(); as user) {
-        <span class="max-w-28 truncate text-sm" [title]="user.username">{{ user.username }}</span>
-        <button type="button" (click)="logout()" [disabled]="loggingOut()"
-          class="px-3 py-1 text-sm bg-indigo-400 border-2 border-indigo-600 rounded-xl disabled:opacity-50">
-          {{ loggingOut() ? 'Logging out…' : 'Logout' }}
-        </button>
+        <span class="header-username" [title]="user.username"><img src="assets/icons/account.svg" alt="" aria-hidden="true" /> {{ user.username }}</span>
+        <button type="button" class="account-button" (click)="logout()" [disabled]="loggingOut()">{{ loggingOut() ? 'Logging out…' : 'Logout' }}</button>
       } @else {
-      <a routerLink="/login"
-         routerLinkActive="ring-2 ring-white"
-         class="px-3 py-1 text-sm bg-indigo-400 border-2 border-indigo-600 rounded-xl
-         shadow-[0_3px_0_#312e81] hover:-translate-y-0.5 hover:shadow-[0_4px_0_#312e81]
-         active:translate-y-0.5 active:shadow-[0_2px_0_#312e81] transition">
-         Login
-      </a>
-
-      <a routerLink="/signup"
-         routerLinkActive="ring-2 ring-white"
-         class="px-3 py-1 text-sm bg-teal-400 border-2 border-teal-600 rounded-xl
-         shadow-[0_3px_0_#134e4a] hover:-translate-y-0.5 hover:shadow-[0_4px_0_#134e4a]
-         active:translate-y-0.5 active:shadow-[0_2px_0_#134e4a] transition">
-         Signup
-      </a>
+        <a routerLink="/login" routerLinkActive="account-active" class="account-button" (click)="closeMenu()">Login</a>
+        <a routerLink="/signup" routerLinkActive="account-active" class="account-button signup-button" (click)="closeMenu()">Signup</a>
       }
     </div>
-
+    <button type="button" class="menu-button" [attr.aria-expanded]="menuOpen()" aria-controls="primary-navigation" (click)="toggleMenu()">
+      <span aria-hidden="true">☰</span> {{ menuOpen() ? 'Close' : 'Menu' }}
+    </button>
   </div>
-  @if (logoutError()) {
-    <p role="alert" class="bg-red-50 p-2 text-center text-sm text-red-700">{{ logoutError() }}</p>
-  }
-</nav>
-
-<!-- ADD TOP PADDING TO MAIN CONTENT TO AVOID NAV OVERLAP -->
-<main class="pt-16">
-  <!-- Your page content here -->
-</main>
+  @if (logoutError()) { <p role="alert" class="header-error">{{ logoutError() }}</p> }
+</header>
+@if (menuOpen()) { <button type="button" class="menu-backdrop" aria-label="Close navigation menu" (click)="closeMenu()"></button> }
+<div class="header-spacer" aria-hidden="true"></div>

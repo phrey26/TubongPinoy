@@ -1,0 +1,4 @@
+:host { display: flex; flex-direction: column; min-height: 100dvh; }
+.app-content { flex: 1; min-width: 0; outline: none; }
+.skip-link { position: fixed; top: 8px; left: 12px; z-index: 200; padding: 12px 20px; border: 3px solid #7e22ce; border-radius: 12px; background: #fff; color: #581c87; font-weight: 800; transform: translateY(-160%); }
+.skip-link:focus { transform: translateY(0); }

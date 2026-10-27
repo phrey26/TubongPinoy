@@ -1,85 +1,51 @@
-<main class="pt-20 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen relative">
-
-  <!-- Energy Display -->
-  <div class="absolute top-6 right-6 md:top-10 md:right-10 flex gap-4">
-    <div class="bg-white px-4 py-2 rounded-xl shadow-md border-2 border-yellow-400 font-bold text-yellow-600">
-      <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> juice: {{ energyLevel$ | async }} / 100
+<main class="ui-page lobby-page bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100">
+  <div class="ui-container">
+    <div class="ui-meta">
+      <span>The neighborhood playground</span>
+      @if (account.user()) {
+        <span class="ui-chip"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /> Your Juice: {{ unlimitedJuice ? 'Unlimited' : (energyLevel$ | async) + ' / 100' }}</span>
+      } @else {
+        <span class="ui-chip">Browse freely · Log in to play</span>
+      }
     </div>
-  </div>
+    <header class="ui-heading text-center">
+      <h1 class="font-extrabold text-purple-700 drop-shadow-md mb-3"><img src="assets/icons/games.svg" alt="" aria-hidden="true" class="app-icon" /> Choose Your Game</h1>
+      <p class="text-gray-700">A familiar street game or a new challenge? Pick your playground and make your next shot count.</p>
+    </header>
 
-  <!-- Header Section -->
-  <section class="max-w-6xl mx-auto text-center mb-16 pt-8">
-    <h1 class="text-5xl font-extrabold text-purple-700 drop-shadow-md mb-4">
-      <img src="assets/icons/games.svg" alt="" aria-hidden="true" class="app-icon" /> Choose Your Game
-    </h1>
-    <p class="text-lg text-gray-700 max-w-2xl mx-auto mb-6">
-      Browse the games and log in to play. Juice is used for Tumbang Preso retries and new Jolens Blast rounds.
-    </p>
-  </section>
+    <section class="lobby-grid" aria-label="Available games">
+      <article class="lobby-card border-yellow-400">
+        <img class="lobby-thumbnail border-yellow-200" [src]="tumbangPresoImage" alt="Tumbang Preso gameplay" width="1280" height="720" />
+        <div class="lobby-card-body">
+          <span class="lobby-tag bg-yellow-50 text-yellow-900">Aiming challenge · Free first attempt</span>
+          <h2 class="font-extrabold text-yellow-700">Tumbang Preso</h2>
+          <p>Pull back, release your slipper, and find a path past the rocks to knock down the can.</p>
+          <p class="lobby-cost"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /> Retries cost 20 Juice.</p>
+          <a routerLink="/games/tumbang-preso" class="lobby-play bg-yellow-400 border-yellow-600 text-yellow-950">
+            <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> {{ account.user() ? 'Play Now' : 'Log in to Play' }}
+          </a>
+        </div>
+      </article>
+      <article class="lobby-card border-pink-400">
+        <img class="lobby-thumbnail border-pink-200" [src]="marbleMatchImage" alt="Jolens Blast gameplay" width="1280" height="720" />
+        <div class="lobby-card-body">
+          <span class="lobby-tag bg-pink-50 text-pink-900">Marble challenge · 20 Juice per round</span>
+          <h2 class="font-extrabold text-pink-700">Jolens Blast</h2>
+          <p>Aim your shooter, knock marbles out of the circle, and grow your collection one shot at a time.</p>
+          <p class="lobby-cost"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /> Shots within a paid round are free.</p>
+          <a routerLink="/games/jolens-blast" class="lobby-play bg-pink-400 border-pink-600 text-pink-950">
+            <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> {{ account.user() ? 'Play Now' : 'Log in to Play' }}
+          </a>
+        </div>
+      </article>
+    </section>
 
-  <!-- Game Cards -->
-  <section class="max-w-5xl mx-auto grid md:grid-cols-2 gap-10 items-stretch mb-16">
-
-    <!-- Tumbang Preso (No juice deduction) -->
-    <div class="bg-white p-6 rounded-3xl shadow-lg border-4 border-yellow-400 flex flex-col items-center text-center transform transition duration-300 hover:scale-[1.02]">
-      <div class="w-full h-64 rounded-2xl mb-6 flex items-center justify-center shadow-inner border-4 border-yellow-200 overflow-hidden relative bg-yellow-50">
-        <img [src]="tumbangPresoImage" alt="Tumbang Preso Gameplay" class="w-full h-full object-cover" />
-        <span *ngIf="!tumbangPresoImage" class="text-yellow-600 font-bold absolute text-lg"><img src="assets/icons/games.svg" alt="" aria-hidden="true" class="app-icon" /> Tumbang Preso Image</span>
+    <section class="lobby-store bg-white border-blue-300" aria-labelledby="store-heading">
+      <div>
+        <h2 id="store-heading" class="font-extrabold text-blue-700 mb-2"><img src="assets/icons/shop.svg" alt="" aria-hidden="true" class="app-icon" /> A boost for your next round</h2>
+        <p class="text-gray-600">Refill your Juice or add a skin to your collection at the Sari-Sari Store.</p>
       </div>
-      <h2 class="text-3xl font-extrabold text-yellow-600 mb-3">Tumbang Preso</h2>
-      <p class="text-gray-600 mb-8 flex-grow">
-        A digital twist on the classic street game! Use drag-and-shoot mechanics to navigate through tricky obstacles and knock down the can to score points.
-      </p>
-      <button
-        routerLink="/games/tumbang-preso"
-        class="w-full px-6 py-4 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
-               shadow-[0_6px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_8px_0_#92400e]
-               active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold text-xl text-yellow-900">
-        <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> Play Now
-      </button>
-    </div>
-
-    <!-- Jolens Blast (No juice deduction) -->
-    <div class="bg-white p-6 rounded-3xl shadow-lg border-4 border-pink-400 flex flex-col items-center text-center transform transition duration-300 hover:scale-[1.02]">
-      <div class="w-full h-64 rounded-2xl mb-6 flex items-center justify-center shadow-inner border-4 border-pink-200 overflow-hidden relative bg-pink-50">
-        <img [src]="marbleMatchImage" alt="Jolens Blast Gameplay" class="w-full h-full object-cover" />
-        <span *ngIf="!marbleMatchImage" class="text-pink-600 font-bold absolute text-lg"><img src="assets/icons/marble.svg" alt="" aria-hidden="true" class="app-icon" /> Jolens Blast Image</span>
-      </div>
-      <h2 class="text-3xl font-extrabold text-pink-600 mb-3">Jolens Blast</h2>
-      <p class="text-gray-600 mb-8 flex-grow">
-        Test your aim in this circular play area! Drag and release your shooter, collide with the marbles, and knock them outside the circle to score.
-      </p>
-      <button
-        routerLink="/games/jolens-blast"
-        class="w-full px-6 py-4 bg-pink-400 border-4 border-pink-600 rounded-2xl
-               shadow-[0_6px_0_#831843] hover:-translate-y-1 hover:shadow-[0_8px_0_#831843]
-               active:translate-y-1 active:shadow-[0_3px_0_#831843] transition font-bold text-xl text-pink-950">
-        <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> Play Now
-      </button>
-    </div>
-
-  </section>
-
-  <!-- Store Section -->
-  <section class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-lg border-4 border-blue-400 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-    <div>
-      <h3 class="text-2xl font-extrabold text-blue-700 mb-2"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Need more juice or cosmetics?</h3>
-      <p class="text-gray-600">
-        Visit the Tubong Pinoy store to refill your energy or purchase custom skins and visual effects for your gameplay!
-      </p>
-    </div>
-    <button routerLink="/shop"
-      class="shrink-0 px-8 py-4 bg-blue-400 border-4 border-blue-600 rounded-2xl
-             shadow-[0_6px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_8px_0_#1e3a8a]
-             active:translate-y-1 active:shadow-[0_3px_0_#1e3a8a] transition font-bold text-white text-lg">
-      <img src="assets/icons/shop.svg" alt="" aria-hidden="true" class="app-icon" /> Visit Store
-    </button>
-  </section>
-
-  <!-- No energy message -->
-  <div *ngIf="showNoEnergyMessage"
-       class="fixed top-20 left-1/2 -translate-x-1/2 bg-red-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg z-50 transition-opacity duration-500">
-    <img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /> You have no more juice!
+      <a routerLink="/shop" class="lobby-play bg-blue-400 border-blue-600 text-blue-950">Visit Store</a>
+    </section>
   </div>
-
 </main>

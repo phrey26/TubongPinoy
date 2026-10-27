@@ -121,6 +121,8 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   readonly savingJuice = signal(false);
   readonly accountError = signal('');
 
+  get unlimitedJuice(): boolean { return this.energyService.hasUnlimited(); }
+
   // Game State
   currentScore: number = 0;
   energyLevel: number = 100;

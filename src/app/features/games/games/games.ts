@@ -1,3 +1,4 @@
+import { AccountState } from '../../../core/services/account-state';
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
@@ -14,6 +15,8 @@ import { RouterModule } from '@angular/router';
 export class Games {
 
   private energyService = inject(Energy);
+  readonly account = inject(AccountState);
+  get unlimitedJuice(): boolean { return this.energyService.hasUnlimited(); }
 
   // Observable for energy level
   energyLevel$: Observable<number> = this.energyService.getEnergyLevel();

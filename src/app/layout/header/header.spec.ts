@@ -25,4 +25,20 @@ describe('Header', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('opens navigation and closes it with Escape or after choosing a destination', () => {
+    const button = fixture.nativeElement.querySelector('.menu-button') as HTMLButtonElement;
+    button.click();
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.querySelector('.primary-nav').classList.contains('is-open')).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    button.click();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.nav-home') as HTMLAnchorElement).click();
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+  });
 });

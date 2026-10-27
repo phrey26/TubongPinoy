@@ -1,151 +1,123 @@
-<main class="pt-20 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen">
+<main class="shop-page">
+  <div class="shop-container">
+    <a routerLink="/games" class="shop-back">
+      <img src="assets/icons/back.svg" alt="" aria-hidden="true" /> Back to Games
+    </a>
 
-  <!-- HEADER -->
-  <header class="max-w-6xl mx-auto mb-16 flex flex-col md:flex-row justify-between items-end gap-6">
-
-    <div>
-      <h1 class="text-5xl font-extrabold text-purple-700 drop-shadow-md mb-2">
-        Sari-Sari Store
-      </h1>
-      <p class="text-lg text-gray-700">
-        Power up your gameplay and personalize your experience.
-      </p>
-    </div>
-
-    <!-- STATS -->
-    <div class="flex gap-4">
-
-      <!-- Coins -->
-      <div class="bg-white px-6 py-3 rounded-2xl shadow-lg border-4 border-yellow-300 flex items-center gap-3">
-        <span class="text-2xl"><img src="assets/icons/tansan.svg" alt="Tansans" class="app-icon" /></span>
-        <span class="font-black text-yellow-700 text-xl">{{ userCoins }}</span>
+    <header class="shop-heading">
+      <div>
+        <span class="shop-eyebrow">YOUR NEIGHBORHOOD SHOP</span>
+        <h1>Sari-Sari Store</h1>
+        <p>A little boost for your next round.</p>
       </div>
+      <img class="shop-heading-icon" src="assets/icons/shop.svg" alt="" aria-hidden="true" />
+    </header>
 
-      <!-- Juice -->
-      <div class="bg-white px-6 py-3 rounded-2xl shadow-lg border-4 border-green-300 flex items-center gap-3">
-        <span class="text-2xl"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /></span>
-        <span class="font-black text-green-700 text-xl">{{ userEnergy }}/100</span>
-      </div>
-
-    </div>
-  </header>
-
-  @if (errorMessage()) {
-    <p role="alert" class="max-w-6xl mx-auto mb-6 rounded-xl bg-red-50 p-4 text-red-700">{{ errorMessage() }}</p>
-  }
-  @if (message()) {
-    <p role="status" class="max-w-6xl mx-auto mb-6 rounded-xl bg-green-50 p-4 text-green-800">{{ message() }}</p>
-  }
-  @if (permanentJuice) {
-    <p class="max-w-6xl mx-auto mb-6 text-purple-700">Permanent unlimited Juice</p>
-  } @else if (unlimitedUntil > 0) {
-    <p class="max-w-6xl mx-auto mb-6 text-purple-700">Unlimited Juice expiry: {{ unlimitedUntil | date:'medium' }}</p>
-  }
-  <!-- JUICE SECTION -->
-  <section class="max-w-6xl mx-auto mb-16">
-
-    <h2 class="text-3xl font-extrabold text-purple-700 mb-10 text-center">
-      <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice Refills
-    </h2>
-
-    <div class="grid md:grid-cols-3 gap-6">
-
-      <!-- SMALL -->
-      <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-green-300 text-center">
-
-        <div class="text-5xl mb-4"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /></div>
-
-        <h3 class="font-bold text-lg mb-2">Quick Snack</h3>
-        <p class="text-gray-600 mb-6">Restore up to +20 Juice (maximum 100)</p>
-
-        <button [disabled]="pending()" (click)="buyItem('energy_small')"
-          class="w-full py-3 bg-green-400 border-4 border-green-600 rounded-2xl
-          shadow-[0_5px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_7px_0_#14532d]
-          active:translate-y-1 active:shadow-[0_3px_0_#14532d] transition font-bold">
-          50 <img src="assets/icons/tansan.svg" alt="Tansans" class="app-icon" />
-        </button>
-
-      </div>
-
-      <!-- MEDIUM -->
-      <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-yellow-300 text-center">
-
-        <div class="text-5xl mb-4 flex items-center justify-center gap-2">
-          <img src="assets/icons/burger.svg" alt="" aria-hidden="true" class="app-icon" />
-          <img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" />
+    <section class="shop-wallet" aria-label="Your account balances">
+      <div class="wallet-item">
+        <div class="wallet-icon wallet-icon-gold"><img src="assets/icons/tansan.svg" alt="" aria-hidden="true" /></div>
+        <div>
+          <span class="wallet-label">Your Tansans</span>
+          <strong class="wallet-value">{{ userCoins | number }}</strong>
+          <span class="wallet-detail">Available to spend</span>
         </div>
-
-        <h3 class="font-bold text-lg mb-2">Full Meal</h3>
-        <p class="text-gray-600 mb-6">Restore up to +50 Juice (maximum 100)</p>
-
-        <button [disabled]="pending()" (click)="buyItem('energy_med')"
-          class="w-full py-3 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
-          shadow-[0_5px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_7px_0_#92400e]
-          active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold">
-          100 <img src="assets/icons/tansan.svg" alt="Tansans" class="app-icon" />
-        </button>
-
       </div>
-
-      <!-- UNLI -->
-      <div class="bg-white p-6 rounded-2xl shadow-lg border-4 border-blue-300 text-center">
-
-        <div class="text-5xl mb-4"><img src="assets/icons/unlimited.svg" alt="" aria-hidden="true" class="app-icon" /></div>
-
-        <h3 class="font-bold text-lg mb-2">Unlimited Feast</h3>
-        <p class="text-gray-600 mb-6">Unlimited Juice for 1 Hour</p>
-
-        <button [disabled]="pending()" (click)="buyItem('energy_unli')"
-          class="w-full py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl
-          shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a]
-          active:translate-y-1 active:shadow-[0_3px_0_#1e3a8a] transition font-bold">
-          500 <img src="assets/icons/tansan.svg" alt="Tansans" class="app-icon" />
-        </button>
-
-      </div>
-
-    </div>
-  </section>
-
-  <!-- SKINS -->
-  <section class="max-w-6xl mx-auto mb-16">
-
-    <h2 class="text-3xl font-extrabold text-purple-700 mb-10 text-center">
-      <img src="assets/icons/customization.svg" alt="" aria-hidden="true" class="app-icon" /> Customization
-    </h2>
-
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-
-      <div *ngFor="let skin of cosmeticSkins()"
-        class="bg-white p-4 rounded-2xl shadow-lg border-4 border-purple-300 text-center">
-
-        <div class="w-full h-32 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-          <img [src]="skin.imageUrl" [alt]="skin.name" class="w-full h-full object-contain" />
+      <div class="wallet-item">
+        <div class="wallet-icon wallet-icon-green"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" /></div>
+        <div>
+          <span class="wallet-label">Your Juice</span>
+          <strong class="wallet-value">{{ unlimitedActive ? 'Unlimited' : userEnergy + ' / 100' }}</strong>
+          <span class="wallet-detail">
+            @if (permanentJuice) {
+              <span class="shop-badge shop-badge-green">No expiry</span>
+            } @else if (unlimitedActive) {
+              Active until {{ unlimitedUntil | date:'shortTime' }} · {{ unlimitedUntil | date:'MMM d' }}
+            } @else {
+              {{ userEnergy >= 100 ? 'Fully refreshed and ready to play' : 'Refill below to keep playing' }}
+            }
+          </span>
         </div>
+      </div>
+    </section>
 
-        <h4 class="font-bold mb-1">{{ skin.name }}</h4>
-        <p class="text-sm text-gray-500 mb-3">{{ skin.type }}</p>
+    @if (errorMessage() || message()) {
+      <div class="shop-feedback" [class.shop-feedback-error]="errorMessage()" [attr.role]="errorMessage() ? 'alert' : 'status'">
+        <img [src]="errorMessage() ? 'assets/icons/warning.svg' : 'assets/icons/check.svg'" alt="" aria-hidden="true" />
+        <p>{{ errorMessage() || message() }}</p>
+        <button type="button" aria-label="Dismiss message" (click)="dismissMessage()">×</button>
+      </div>
+    }
 
-        <button [disabled]="pending() || owns(skin.id)" (click)="buyCosmetic(skin.id)"
-          class="w-full py-2 bg-purple-400 border-4 border-purple-600 rounded-xl
-          shadow-[0_4px_0_#581c87] hover:-translate-y-1 hover:shadow-[0_6px_0_#581c87]
-          active:translate-y-1 active:shadow-[0_2px_0_#581c87] transition font-bold text-sm">
-          {{ owns(skin.id) ? 'Owned' : skin.price }} <img src="assets/icons/tansan.svg" alt="Tansans" class="app-icon" />
-        </button>
-
+    <section class="shop-section" aria-labelledby="refills-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="refills-heading">Juice Refills</h2>
+          <p>Choose a boost. Your Juice meter holds up to 100.</p>
+        </div>
+        @if (unlimitedActive) { <span class="shop-badge shop-badge-green">Unlimited Juice active</span> }
       </div>
 
-    </div>
-  </section>
+      <div class="product-grid refill-grid">
+        @for (item of refills; track item.id) {
+          <article class="product-card">
+            <div class="product-art" [class.product-art-gold]="item.id === 'energy_med'" [class.product-art-blue]="item.id === 'energy_unli'">
+              <img [src]="item.icon" alt="" aria-hidden="true" />
+            </div>
+            <span class="product-benefit">{{ item.benefit }}</span>
+            <h3>{{ item.name }}</h3>
+            <p class="product-description">{{ item.description }}</p>
+            <div class="product-footer">
+              <p class="product-price"><img src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ item.price | number }} <span>Tansans</span></p>
+              <button type="button" class="shop-button" [disabled]="refillUnavailable(item)" (click)="buyItem(item.id)"
+                [attr.aria-label]="item.name + ': ' + refillButtonLabel(item)">
+                {{ refillButtonLabel(item) }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
 
-  <!-- BACK BUTTON -->
-  <footer class="text-center">
-    <button routerLink="/games"
-      class="px-6 py-3 bg-pink-400 border-4 border-pink-600 rounded-2xl
-      shadow-[0_5px_0_#831843] hover:-translate-y-1 hover:shadow-[0_7px_0_#831843]
-      active:translate-y-1 active:shadow-[0_3px_0_#831843] transition font-bold">
-      ← Back to Games
-    </button>
-  </footer>
+    <section class="shop-section" aria-labelledby="skins-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="skins-heading">Skin Collection</h2>
+          <p>Collect skins for your account. Equipping them in games is coming soon.</p>
+        </div>
+        <span class="shop-badge">{{ ownedCount }} owned</span>
+      </div>
 
+      @if (loadingSkins()) {
+        <div class="shop-empty" role="status">Loading the collection…</div>
+      } @else if (catalogError()) {
+        <div class="shop-empty" role="alert">
+          <p>We couldn’t load the collection. Please try again.</p>
+          <button type="button" class="shop-button" (click)="loadCatalog()">Try again</button>
+        </div>
+      } @else if (cosmeticSkins().length === 0) {
+        <div class="shop-empty">New skins are on their way. Check back soon!</div>
+      } @else {
+        <div class="product-grid skin-grid">
+          @for (skin of cosmeticSkins(); track skin.id) {
+            <article class="product-card skin-card" [class.product-owned]="owns(skin.id)">
+              <div class="product-art product-art-purple">
+                <img [src]="skin.imageUrl" [alt]="skin.name" />
+                @if (owns(skin.id)) { <span class="shop-badge shop-badge-green owned-badge">Owned</span> }
+              </div>
+              <span class="product-benefit">{{ skin.type }}</span>
+              <h3>{{ skin.name }}</h3>
+              <div class="product-footer">
+                <p class="product-price"><img src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ skin.price | number }} <span>Tansans</span></p>
+                <button type="button" class="shop-button" [class.shop-button-owned]="owns(skin.id)"
+                  [disabled]="pending() || owns(skin.id) || userCoins < skin.price" (click)="buyCosmetic(skin.id)"
+                  [attr.aria-label]="skin.name + ': ' + skinButtonLabel(skin)">
+                  {{ skinButtonLabel(skin) }}
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </div>
 </main>

@@ -1,7 +1,9 @@
+import { inject } from '@angular/core';
+import { AccountState } from '../../../core/services/account-state';
 import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { TimePipe } from '../../../shared/pipes/time-pipe';
 import { CommonModule } from '@angular/common';
-import { interval, map } from 'rxjs';
+import { interval, map, startWith } from 'rxjs';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -12,6 +14,7 @@ import { RouterModule } from '@angular/router';
   styleUrl: './home.css',
 })
 export class Home implements OnInit, OnDestroy{
+  readonly account = inject(AccountState);
 
   currentTime: Date = new Date();
   interval: any;
@@ -28,7 +31,7 @@ export class Home implements OnInit, OnDestroy{
 
     // Emits a new Date every second
   currentTime$ = interval(1000).pipe(
-    map(() => new Date())
+    map(() => new Date()), startWith(new Date())
   );
 
   //images

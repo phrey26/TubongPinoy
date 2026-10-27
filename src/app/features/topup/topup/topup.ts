@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, ChangeDetectionStrategy, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Currency } from '../../../core/services/currency';
@@ -9,7 +10,7 @@ import { finalize } from 'rxjs';
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-topup',
-  imports: [RouterModule],
+  imports: [RouterModule, DecimalPipe],
   templateUrl: './topup.html',
   styleUrl: './topup.css',
 })

@@ -1,0 +1,22 @@
+:host { display: block; }
+.contact-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.contact-card { padding: 28px; border-width: 4px; border-style: solid; border-radius: 24px; background: #fff; box-shadow: 0 4px 0 #ccfbf144; min-width: 0; }
+.contact-card h2 { font-size: 24px; }
+.contact-details { display: grid; gap: 24px; }
+.contact-card label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 700; color: #374151; }
+.contact-card input, .contact-card textarea, .contact-card select { width: 100%; padding: 12px 14px; border: 3px solid #ccfbf1; border-radius: 14px; background: #f0fdfa; color: #374151; }
+.contact-card [aria-invalid="true"] { border-color: #f87171; }
+.field-error { margin-top: 6px; color: #b91c1c; font-size: 13px; }
+.contact-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.contact-submit { flex: 1; padding: 12px 18px; border: 3px solid #0f766e; border-radius: 14px; background: #5eead4; color: #134e4a; box-shadow: 0 4px 0 #115e59; font-weight: 800; }
+.contact-reset { padding: 12px 16px; border: 2px solid #99f6e4; border-radius: 14px; color: #115e59; font-weight: 700; }
+.contact-submit:hover { background: #2dd4bf; }
+.developer-profile { display: flex; align-items: center; gap: 16px; }
+.developer-avatar { display: grid; place-items: center; width: 72px; height: 72px; flex: none; border-radius: 20px; background: #f3e8ff; }
+.developer-avatar img { width: 48px; height: 48px; }
+.developer-profile h3 { color: #581c87; font-weight: 800; line-height: 1.4; }
+.developer-profile p { color: #6b7280; font-size: 13px; margin-top: 4px; }
+.contact-card iframe { display: block; border: 2px solid #dbeafe; border-radius: 16px; background: #eff6ff; }
+.contact-info { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 20px; font-size: 14px; color: #4b5563; overflow-wrap: anywhere; }
+@media (max-width: 799px) { .contact-grid { grid-template-columns: 1fr; } }
+@media (max-width: 419px) { .contact-card { padding: 20px; } .developer-profile { align-items: flex-start; } .developer-avatar { width: 48px; height: 48px; border-radius: 14px; } .developer-avatar img { width: 32px; height: 32px; } }

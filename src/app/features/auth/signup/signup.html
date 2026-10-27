@@ -1,13 +1,11 @@
-<main class="pt-20 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen flex items-center justify-center relative overflow-hidden">
+<main class="ui-page auth-page pt-20 px-6 pb-16 bg-gradient-to-b from-purple-100 via-pink-100 to-blue-100 min-h-screen flex items-center justify-center relative overflow-hidden">
 
   <div class="absolute -top-10 -right-10 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40"></div>
   <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40"></div>
 
-  <section class="max-w-2xl w-full bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl border-4 border-purple-300 relative z-10">
+  <section class="auth-card max-w-2xl w-full bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl border-4 border-purple-300 relative z-10">
 
-    <a routerLink="/" class="absolute -top-5 -left-5 bg-yellow-400 border-4 border-yellow-600 p-3 rounded-2xl shadow-[0_4px_0_#92400e] hover:-translate-y-1 transition active:translate-y-0.5 text-xl">
-      <img src="assets/icons/home.svg" alt="" aria-hidden="true" class="app-icon" />
-    </a>
+    <a routerLink="/" class="auth-back"><img src="assets/icons/back.svg" alt="" aria-hidden="true" class="app-icon" /> Back to Home</a>
 
     <div class="text-center mb-10">
       <h1 class="text-4xl font-extrabold text-purple-700 drop-shadow-sm mb-2">Join the Tribe!</h1>
@@ -16,24 +14,24 @@
 
     <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-6">
       @if (errorMessage()) {
-        <p role="alert" class="rounded-xl bg-red-50 p-3 font-semibold text-red-700">{{ errorMessage() }}</p>
+        <p role="alert" class="ui-feedback ui-feedback-error">{{ errorMessage() }}</p>
       }
 
       <div class="grid md:grid-cols-2 gap-6">
         <div>
           <label for="signup-username" class="block text-purple-700 font-bold mb-2 ml-1">Username</label>
           <input id="signup-username" autocomplete="username" maxlength="50" formControlName="username" type="text" placeholder="GamerName"
-            [class.border-red-400]="f.username.invalid && f.username.touched"
-            class="w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
-          <p *ngIf="f.username.invalid && f.username.touched" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 3–50 letters, numbers or underscores.</p>
+            [class.border-red-400]="f.username.invalid && f.username.touched" [attr.aria-invalid]="!!(f.username.invalid && f.username.touched)" [attr.aria-describedby]="f.username.invalid && f.username.touched ? 'signup-username-error' : null"
+            class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
+          <p *ngIf="f.username.invalid && f.username.touched" id="signup-username-error" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 3–50 letters, numbers or underscores.</p>
         </div>
 
         <div>
           <label for="signup-email" class="block text-purple-700 font-bold mb-2 ml-1">Email Address</label>
           <input id="signup-email" autocomplete="email" maxlength="254" formControlName="email" type="email" placeholder="hello@pinoy.com"
-            [class.border-red-400]="f.email.invalid && f.email.touched"
-            class="w-full px-5 py-3 rounded-2xl border-4 border-green-200 focus:border-green-400 focus:outline-none transition bg-green-50 text-gray-700 font-medium placeholder-green-300" />
-          <p *ngIf="f.email.invalid && f.email.touched" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter a valid email.</p>
+            [class.border-red-400]="f.email.invalid && f.email.touched" [attr.aria-invalid]="!!(f.email.invalid && f.email.touched)" [attr.aria-describedby]="f.email.invalid && f.email.touched ? 'signup-email-error' : null"
+            class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-green-200 focus:border-green-400 focus:outline-none transition bg-green-50 text-gray-700 font-medium placeholder-green-300" />
+          <p *ngIf="f.email.invalid && f.email.touched" id="signup-email-error" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter a valid email.</p>
         </div>
       </div>
 
@@ -42,46 +40,38 @@
           <label for="signup-password" class="block text-purple-700 font-bold mb-2 ml-1">Password</label>
           <div class="relative">
             <input id="signup-password" autocomplete="new-password" maxlength="72" formControlName="password" [type]="showPassword ? 'text' : 'password'" placeholder="••••••••"
-              [class.border-red-400]="f.password.invalid && f.password.touched"
-              class="w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
-            <button type="button" (click)="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
+              [class.border-red-400]="f.password.invalid && f.password.touched" [attr.aria-invalid]="!!(f.password.invalid && f.password.touched)" [attr.aria-describedby]="f.password.invalid && f.password.touched ? 'signup-password-error' : null"
+              class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
+            <button type="button" (click)="togglePassword()" class="password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
               <img [src]="showPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
-          <p *ngIf="f.password.invalid && f.password.touched" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 8–72 characters.</p>
+          <p *ngIf="f.password.invalid && f.password.touched" id="signup-password-error" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 8–72 characters.</p>
         </div>
 
         <div class="relative">
           <label for="signup-confirm" class="block text-purple-700 font-bold mb-2 ml-1">Confirm Password</label>
           <div class="relative">
             <input id="signup-confirm" autocomplete="new-password" formControlName="confirmPassword" [type]="showConfirmPassword ? 'text' : 'password'" placeholder="••••••••"
-              [class.border-red-400]="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched"
-              class="w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
-            <button type="button" (click)="toggleConfirmPassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
+              [class.border-red-400]="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" [attr.aria-invalid]="!!(signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched)" [attr.aria-describedby]="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched ? 'signup-confirmPassword-error' : null"
+              class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
+            <button type="button" (click)="toggleConfirmPassword()" class="password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
               <img [src]="showConfirmPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showConfirmPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
-          <p *ngIf="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Passwords do not match!</p>
+          <p *ngIf="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" id="signup-confirmPassword-error" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Passwords do not match!</p>
         </div>
       </div>
 
       <div class="px-1">
-        <label class="flex items-start cursor-pointer group">
-          <input type="checkbox" formControlName="terms" class="sr-only peer">
-          <div class="mt-1 w-6 h-6 shrink-0 border-4 border-purple-200 rounded-lg bg-white peer-checked:bg-purple-500 peer-checked:border-purple-700 transition flex items-center justify-center text-white text-xs">
-            <img src="assets/icons/check.svg" alt="" aria-hidden="true" class="app-icon" />
-          </div>
-          <span class="ml-3 text-sm font-bold text-gray-600 group-hover:text-purple-700 transition">
-            I agree to play fair and respect the community guidelines.
-          </span>
-        </label>
-        <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-500 text-[10px] font-bold mt-1 ml-9"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> You must agree to continue.</p>
+        <label class="ui-check-label"><input type="checkbox" formControlName="terms" class="ui-check" /> <span>I agree to play fair and respect the community guidelines.</span></label>
+        <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-500 text-xs font-bold mt-1 ml-9"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> You must agree to continue.</p>
       </div>
 
       <button type="submit" [disabled]="signupForm.invalid || isSubmitting()"
         class="w-full py-4 bg-pink-400 border-4 border-pink-600 rounded-2xl
         shadow-[0_6px_0_#831843] hover:-translate-y-1 hover:shadow-[0_8px_0_#831843]
-        active:translate-y-1 active:shadow-[0_2px_0_#831843] transition-all font-bold text-xl text-white tracking-widest
+        active:translate-y-1 active:shadow-[0_2px_0_#831843] transition-all font-bold text-base text-purple-950 tracking-wide
         disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none">
         <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="app-icon" /> {{ isSubmitting() ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT' }}
       </button>

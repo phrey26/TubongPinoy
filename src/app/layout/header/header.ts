@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { Auth, authErrorMessage } from '../../core/services/auth';
@@ -15,6 +15,11 @@ export class Header implements OnInit {
   private readonly router = inject(Router);
   readonly loggingOut = signal(false);
   readonly logoutError = signal('');
+  readonly menuOpen = signal(false);
+
+  toggleMenu(): void { this.menuOpen.update(open => !open); }
+  @HostListener('document:keydown.escape')
+  closeMenu(): void { this.menuOpen.set(false); }
 
   ngOnInit(): void {
     // The public lobby stays available even if the account server is offline.
@@ -22,6 +27,7 @@ export class Header implements OnInit {
   }
 
   logout(): void {
+    this.closeMenu();
     if (this.loggingOut()) return;
     this.loggingOut.set(true);
     this.logoutError.set('');

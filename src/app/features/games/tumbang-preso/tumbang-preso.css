@@ -73,12 +73,12 @@
 
 .game-page {
   /* The shared header spacer and footer each occupy 4rem. */
-  height: calc(100dvh - 8rem);
-  min-height: 0;
-  padding: 12px 20px;
+  height: calc(100dvh - var(--site-header-height) - var(--site-footer-height));
+  min-height: 560px;
+  padding: 16px 24px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .game-heading {
@@ -86,7 +86,7 @@
 }
 
 .game-heading h1 {
-  font-size: clamp(1.25rem, 3vh, 2rem);
+  font-size: clamp(1.5rem, 3vh, 2rem);
   margin-bottom: 4px;
 }
 
@@ -97,7 +97,7 @@
 .game-layout {
   width: 100%;
   min-height: 0;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
   gap: 20px;
 }
 
@@ -256,7 +256,7 @@
   font-size: clamp(0.75rem, 4cqw, 1rem);
 }
 
-@media (max-width: 639px) {
+@media (max-width: 799px) {
   .game-page {
     height: auto;
     padding: 12px;
@@ -268,10 +268,28 @@
   }
 
   .play-section {
-    height: max(240px, calc(100dvh - 13rem));
+    height: max(480px, calc(100dvh - var(--site-header-height) - 150px));
   }
 
   .game-sidebar {
     overflow: visible;
   }
 }
+
+/* Page controls stay separate from the unchanged canvas and game artwork. */
+.game-heading p { line-height: 1.5; }
+.game-stats { padding: 8px; gap: 8px 12px; }
+.game-values { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.game-values > span { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.game-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.game-tools button { min-height: 40px; font-size: 12px; }
+.game-account-error { padding: 8px 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; line-height: 1.5; }
+.game-sidebar .leaderboard-note { color: #6b7280; font-size: 12px; line-height: 1.5; margin: -4px 0 16px; }
+.game-sidebar .flex.justify-between { gap: 12px; }
+.game-sidebar .flex.justify-between > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.game-sidebar .flex.justify-between > span:last-child { flex: none; }
+.game-board button { min-height: 44px; }
+.intro-dialog { padding: clamp(16px, 4vw, 24px); }
+.intro-dialog p, .intro-steps { font-size: 14px; line-height: 1.65; }
+.intro-dialog button[aria-label="Close tutorial"] { min-width: 44px; min-height: 44px; }
+@media (max-width: 799px) { .game-page { min-height: 0; padding: 20px 16px 32px; } .game-heading p { font-size: 13px; } .game-tools { width: 100%; } .game-sidebar { margin-top: 8px; } }

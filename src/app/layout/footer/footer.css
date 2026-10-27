@@ -1,0 +1,10 @@
+:host { display: block; }
+.site-footer { border-top: 4px solid #9333ea; background: linear-gradient(to right, #f472b6, #c084fc, #60a5fa); color: #312e81; }
+.footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px 20px; max-width: 1440px; min-height: 60px; margin: auto; padding: 8px 24px; }
+.footer-brand { display: inline-flex; align-items: center; justify-self: start; gap: 8px; font-size: 13px; font-weight: 800; border-radius: 8px; }
+.footer-brand img { flex: none; }
+.footer-inner p { font-size: 12px; text-align: center; }
+.footer-socials { display: flex; flex-wrap: wrap; justify-content: flex-end; justify-self: end; gap: 8px; }
+.footer-socials button { display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 10px; border: 2px solid #6366f1; border-radius: 12px; background: #e0e7ff; color: #3730a3; font-size: 12px; font-weight: 700; cursor: not-allowed; }
+.footer-socials span { font-size: 10px; font-weight: 500; }
+@media (max-width: 979px) { .footer-inner { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; padding: 16px; text-align: center; } .footer-inner p { order: 3; width: 100%; } .footer-socials { justify-content: center; } }

@@ -1,0 +1,36 @@
+/* Shared layout and interaction rules keep each page's existing color palette. */
+:root { --site-header-height: 80px; --site-footer-height: 64px; }
+html { scroll-padding-top: calc(var(--site-header-height) + 16px); }
+body { margin: 0; color: #374151; background: #faf5ff; }
+.ui-page { min-height: calc(100dvh - var(--site-header-height) - var(--site-footer-height)); padding: 32px 24px 64px; }
+.ui-page > .ui-container, .ui-container { max-width: 1152px; margin-inline: auto; }
+.ui-page h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.2; }
+.ui-page h2 { font-size: clamp(22px, 3vw, 30px); line-height: 1.3; }
+.ui-page p { line-height: 1.65; }
+.ui-heading { margin-bottom: 32px; }
+.ui-heading p { max-width: 680px; margin-inline: auto; }
+.ui-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; max-width: 1152px; margin: 0 auto 24px; color: #7e22ce; font-size: 13px; font-weight: 700; }
+.ui-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 2px solid #e9d5ff; border-radius: 12px; background: #fff; font-size: 13px; font-weight: 700; color: #6b21a8; }
+.ui-feedback { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border: 2px solid #e9d5ff; border-radius: 14px; background: #faf5ff; color: #6b21a8; font-size: 14px; line-height: 1.6; }
+.ui-feedback-error { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+.ui-feedback-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+.ui-page button, .ui-page a[class*="border-"], .ui-page input, .ui-page select { min-height: 44px; }
+.ui-page button:not(:disabled) { cursor: pointer; }
+.ui-page button:disabled, .game-page button:disabled { cursor: not-allowed; filter: saturate(.55); opacity: .65; transform: none; box-shadow: none; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #9333ea; outline-offset: 3px; }
+.ui-page input::placeholder, .ui-page textarea::placeholder { color: #64748b; opacity: 1; }
+.ui-page input, .ui-page select, .ui-page textarea { font: inherit; font-size: 16px; }
+.ui-page textarea { resize: vertical; min-height: 144px; }
+.ui-check { width: 22px; height: 22px; min-height: 22px !important; flex: none; accent-color: #9333ea; }
+.ui-check-label { display: flex; align-items: flex-start; gap: 10px; padding-block: 8px; font-size: 14px; line-height: 1.6; cursor: pointer; }
+.ui-note { color: #6b7280; font-size: 13px; }
+@media (max-width: 979px) { :root { --site-header-height: 72px; } }
+@media (min-width: 800px) and (max-width: 979px) { :root { --site-footer-height: 106px; } }
+@media (max-width: 639px) {
+  .ui-page { padding: 24px 16px 40px; }
+  .ui-page > section[class*="mb-16"], .ui-page > .ui-container > section[class*="mb-16"] { margin-bottom: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-page *, .site-header *, .game-page button, .return-to-games { animation: none !important; transition: none !important; }
+  .ui-page button:hover, .ui-page button:active, .ui-page [class*="hover:scale"]:hover { transform: none !important; }
+}

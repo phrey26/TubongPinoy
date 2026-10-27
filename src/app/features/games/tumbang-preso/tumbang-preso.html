@@ -34,18 +34,20 @@
         </dialog>
 
         <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-3 py-2 bg-purple-50 rounded-2xl border-2 border-purple-200">
-          <div class="flex flex-wrap gap-3">
+          <div class="game-values">
             <span class="font-bold text-purple-700"><img src="assets/icons/score.svg" alt="" aria-hidden="true" class="app-icon" /> Score: {{ currentScore }}</span>
-            <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ energyLevel }}/100</span>
+            <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ unlimitedJuice ? 'Unlimited' : energyLevel + ' / 100' }}</span>
+            <span class="font-bold text-purple-700">Level {{ currentLevel }}</span>
           </div>
-          <span class="font-black text-purple-400">Level {{ currentLevel }}</span>
+          <div class="game-tools">
           <button type="button" class="fullscreen-button" (click)="openTutorial()">How to Play</button>
           <button type="button" class="fullscreen-button" (click)="toggleFullscreen()"
             [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
             <img src="assets/icons/fullscreen.svg" alt="" aria-hidden="true" class="app-icon" />{{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
           </button>
+          </div>
           @if (accountError()) {
-            <p role="alert" class="w-full text-sm text-red-700">{{ accountError() }}</p>
+            <p role="alert" class="game-account-error w-full text-sm text-red-700">{{ accountError() }}</p>
           }
         </div>
 
@@ -69,13 +71,13 @@
           <!-- Nice Shot Overlay -->
           <div *ngIf="showNiceShot" class="absolute inset-0 bg-green-900/60 backdrop-blur-sm flex items-center justify-center z-30">
             <div class="bg-white p-8 rounded-3xl border-4 border-green-400 shadow-2xl text-center scale-110">
-              <h2 class="text-4xl font-black text-green-600 mb-2">Nice Shot!</h2>
+              <h2 class="text-4xl font-black text-green-700 mb-2">Nice Shot!</h2>
               <p class="text-gray-600 mb-6 font-medium">You knocked it down!</p>
               <div class="flex flex-col gap-3">
                 <button (click)="nextLevel()"
                   class="px-10 py-3 bg-green-400 border-4 border-green-600 rounded-2xl
                   shadow-[0_5px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_7px_0_#14532d]
-                  active:translate-y-1 transition font-bold text-white">
+                  active:translate-y-1 transition font-bold text-gray-950">
                   Next Level
                 </button>
                 <button routerLink="/games" class="text-sm font-bold text-gray-400 hover:text-red-500">
@@ -94,7 +96,7 @@
                 <button (click)="tryAgain()" [disabled]="savingJuice()"
                   class="px-10 py-3 bg-green-400 border-4 border-green-600 rounded-2xl
                   shadow-[0_5px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_7px_0_#14532d]
-                  active:translate-y-1 transition font-bold text-white">
+                  active:translate-y-1 transition font-bold text-gray-950">
                   Try Again (-20<img src="assets/icons/juice.svg" alt="Juice" class="app-icon" />)
                 </button>
               </div>
@@ -108,7 +110,7 @@
               <p class="text-gray-700 mb-6 font-medium">You don’t have enough juice to continue playing.</p>
               <div class="flex flex-col gap-3">
                 <button (click)="goToShop()"
-                  class="px-10 py-3 bg-red-400 border-4 border-red-600 rounded-2xl shadow-[0_5px_0_#7f1d1d] hover:-translate-y-1 hover:shadow-[0_7px_0_#7f1d1d] active:translate-y-1 transition font-bold text-white">
+                  class="px-10 py-3 bg-red-400 border-4 border-red-600 rounded-2xl shadow-[0_5px_0_#7f1d1d] hover:-translate-y-1 hover:shadow-[0_7px_0_#7f1d1d] active:translate-y-1 transition font-bold text-gray-950">
                   Buy More Juice
                 </button>
                 <button routerLink="/games"
@@ -127,6 +129,7 @@
     <aside class="game-sidebar flex flex-col gap-6">
       <div class="bg-white p-6 rounded-3xl shadow-lg border-4 border-green-300">
         <h2 class="text-2xl font-extrabold text-green-700 mb-6"><img src="assets/icons/leaderboard.svg" alt="" aria-hidden="true" class="app-icon" /> Leaderboard</h2>
+        <p class="leaderboard-note">Sample scores · Live rankings are coming soon</p>
         <div class="space-y-3">
           <div *ngFor="let score of highScores; let i = index" class="flex justify-between p-3 rounded-xl bg-green-50 border-2 border-green-100">
             <span class="font-bold text-gray-700">{{ i + 1 }}. {{ score.username }}</span>

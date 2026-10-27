@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SafeUrlPipe } from '../../../shared/pipes/safe-url-pipe';
 
@@ -14,13 +14,7 @@ export class Contact {
   contactForm!: FormGroup;
 
   isSubmitted = false;
-  isLoading = false;
-
-  // 🖼️ Developer Image (make sure file exists in /assets)
-  developerImage: string = 'assets/developer.jpg';
-
-  // 🖼️ Location Image (optional)
-  locationImage: string = 'assets/location.jpg';
+  readonly feedback = signal('');
 
   // 🗺️ Google Maps embed URL
   mapUrl: string =
@@ -58,30 +52,15 @@ export class Contact {
   // ✅ Submit handler
   onSubmit(): void {
     this.isSubmitted = true;
-
-    if (this.contactForm.invalid) {
-      return;
-    }
-
-    this.isLoading = true;
-
-    console.log('Form Data:', this.contactForm.value);
-
-    // Simulated API call
-    setTimeout(() => {
-      alert('Message sent successfully!');
-
-      this.contactForm.reset({
-        subject: 'Game Feedback'
-      });
-
-      this.isSubmitted = false;
-      this.isLoading = false;
-    }, 1000);
+    this.feedback.set('');
+    this.contactForm.markAllAsTouched();
+    if (this.contactForm.invalid) return;
+    this.feedback.set('Your message is ready to preview. Delivery is coming soon; no message has been sent.');
   }
 
   // ✅ Reset form manually
   resetForm(): void {
+    this.feedback.set('');
     this.contactForm.reset({
       subject: 'Game Feedback'
     });

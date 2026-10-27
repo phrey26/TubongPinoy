@@ -1,176 +1,60 @@
-<main class="pt-24 px-6 pb-16 bg-gradient-to-b from-green-50 via-teal-50 to-blue-100 min-h-screen">
-
-  <!-- HEADER -->
-  <section class="max-w-4xl mx-auto text-center mb-12">
-    <h1 class="text-5xl font-extrabold text-teal-700 drop-shadow-md mb-4">
-      Kamusta, Player!
-    </h1>
-    <p class="text-lg text-gray-700 font-medium">
-      Have questions about our games or found a bug? The Tubong Pinoy team is here to help!
-    </p>
-  </section>
-
-  <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-10">
-
-    <!-- CONTACT FORM -->
-    <section class="bg-white p-8 rounded-3xl shadow-xl border-4 border-teal-300">
-
-      <h2 class="text-2xl font-bold text-teal-600 mb-6">
-        <img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /> Send us a Message
-      </h2>
-
-      <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-5">
-
-        <!-- FULL NAME -->
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
-          <input type="text"
-            formControlName="fullName"
-            placeholder="Juan Dela Cruz"
-            class="w-full px-4 py-3 rounded-2xl border-4 border-gray-100 focus:border-teal-400 outline-none transition-all" />
-
-          @if (isSubmitted && f['fullName'].invalid) {
-            <div class="text-red-500 text-sm">Full name is required.</div>
-          }
-        </div>
-
-        <!-- EMAIL -->
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
-          <input type="email"
-            formControlName="email"
-            placeholder="juan@email.com"
-            class="w-full px-4 py-3 rounded-2xl border-4 border-gray-100 focus:border-teal-400 outline-none transition-all" />
-
-          @if (isSubmitted && f['email'].invalid) {
-            <div class="text-red-500 text-sm">Valid email is required.</div>
-          }
-        </div>
-
-        <!-- SUBJECT -->
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Subject</label>
-          <select formControlName="subject"
-            class="w-full px-4 py-3 rounded-2xl border-4 border-gray-100 focus:border-teal-400 outline-none transition-all">
-
-            @for (s of subjects; track s) {
-              <option>{{ s }}</option>
-            }
-
-          </select>
-        </div>
-
-        <!-- MESSAGE -->
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Message</label>
-          <textarea rows="4"
-            formControlName="message"
-            placeholder="Tell us what's on your mind..."
-            class="w-full px-4 py-3 rounded-2xl border-4 border-gray-100 focus:border-teal-400 outline-none transition-all resize-none">
-          </textarea>
-
-          @if (isSubmitted && f['message'].invalid) {
-            <div class="text-red-500 text-sm">
-              Message must be at least 10 characters.
-            </div>
-          }
-        </div>
-
-        <!-- BUTTON -->
-        <button type="submit" [disabled]="isLoading"
-          class="w-full py-4 bg-teal-500 border-b-8 border-teal-700 text-white rounded-2xl font-black text-xl shadow-lg hover:-translate-y-1 active:translate-y-1 active:border-b-0 transition-all">
-
-          @if (isLoading) {
-            Sending...
-          } @else {
-            <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="app-icon" /> Send Message
-          }
-
-        </button>
-
-      </form>
-    </section>
-
-    <!-- INFO SECTION -->
-    <section class="flex flex-col gap-8">
-
-      <!-- 👨‍💻 DEVELOPER (FULL IMAGE SECTION) -->
-      <section class="bg-white p-8 rounded-3xl shadow-lg border-4 border-purple-300">
-
-        <h2 class="text-2xl font-bold text-purple-700 mb-6">
-          <img src="assets/icons/developer.svg" alt="" aria-hidden="true" class="app-icon" /> The Developer
-        </h2>
-
-        <!-- Developer Image -->
-        <div class="w-full h-64 rounded-2xl overflow-hidden border-2 border-purple-100 mb-6">
-          <img [src]="developerImage"
-               alt="Developer Image"
-               class="w-full h-full object-cover" />
-        </div>
-
-        <!-- Developer Info -->
-        <div class="bg-purple-50 p-6 rounded-2xl border-2 border-purple-100 text-center">
-          <p class="font-black text-gray-800 text-lg">
-            Sir Humphrey Huey M. Huet
-          </p>
-          <p class="text-sm text-gray-500 italic mt-1">
-            6AWEB Project Lead & Developer
-          </p>
-        </div>
-
+<main class="ui-page contact-page bg-gradient-to-b from-green-50 via-teal-50 to-blue-100">
+  <div class="ui-container">
+    <header class="ui-heading text-center">
+      <h1 class="font-extrabold text-teal-700 drop-shadow-md mb-3">Kamusta, Player!</h1>
+      <p class="text-gray-700">Have a game idea, found a bug, or just want to say hello? We’d love to hear from you.</p>
+    </header>
+    <div class="contact-grid">
+      <section class="contact-card border-teal-300" aria-labelledby="contact-form-heading">
+        <h2 id="contact-form-heading" class="font-extrabold text-teal-700 mb-3"><img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /> Send us a Message</h2>
+        <p class="ui-feedback mb-6">Message delivery is coming soon. You can fill in the form to preview your message.</p>
+        <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-5" novalidate>
+          @if (feedback()) { <p role="status" class="ui-feedback ui-feedback-success">{{ feedback() }}</p> }
+          <div>
+            <label for="contact-name">Full Name</label>
+            <input id="contact-name" type="text" formControlName="fullName" autocomplete="name" placeholder="Juan Dela Cruz"
+              [attr.aria-invalid]="isSubmitted && f['fullName'].invalid" [attr.aria-describedby]="isSubmitted && f['fullName'].invalid ? 'contact-name-error' : null" />
+            @if (isSubmitted && f['fullName'].invalid) { <p id="contact-name-error" class="field-error">Enter a name with at least 2 characters.</p> }
+          </div>
+          <div>
+            <label for="contact-email">Email Address</label>
+            <input id="contact-email" type="email" formControlName="email" autocomplete="email" placeholder="juan@email.com"
+              [attr.aria-invalid]="isSubmitted && f['email'].invalid" [attr.aria-describedby]="isSubmitted && f['email'].invalid ? 'contact-email-error' : null" />
+            @if (isSubmitted && f['email'].invalid) { <p id="contact-email-error" class="field-error">Enter a valid email address.</p> }
+          </div>
+          <div>
+            <label for="contact-subject">Subject</label>
+            <select id="contact-subject" formControlName="subject">@for (subject of subjects; track subject) { <option>{{ subject }}</option> }</select>
+          </div>
+          <div>
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" rows="5" formControlName="message" placeholder="Tell us what’s on your mind…"
+              [attr.aria-invalid]="isSubmitted && f['message'].invalid" [attr.aria-describedby]="isSubmitted && f['message'].invalid ? 'contact-message-error' : null"></textarea>
+            @if (isSubmitted && f['message'].invalid) { <p id="contact-message-error" class="field-error">Write at least 10 characters.</p> }
+          </div>
+          <div class="contact-actions">
+            <button type="submit" class="contact-submit"><img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /> Preview Message</button>
+            <button type="button" class="contact-reset" (click)="resetForm()">Clear form</button>
+          </div>
+        </form>
       </section>
 
-      <!-- 📍 LOCATION -->
-      <section class="bg-white p-8 rounded-3xl shadow-lg border-4 border-blue-300 flex-grow">
-
-        <h2 class="text-2xl font-bold text-blue-700 mb-4"><img src="assets/icons/location.svg" alt="" aria-hidden="true" class="app-icon" /> Location</h2>
-
-        <p class="text-gray-700 font-bold">Holy Angel University</p>
-        <p class="text-gray-600 mb-4 text-sm uppercase tracking-wide">
-          School of Computing
-        </p>
-
-        <!-- GOOGLE MAP -->
-        <div class="w-full h-48 rounded-2xl overflow-hidden border-2 border-blue-100 mb-4">
-          <iframe
-            [src]="mapUrl | safeUrl"
-            width="100%"
-            height="100%"
-            style="border:0;"
-            loading="lazy">
-          </iframe>
-        </div>
-
-        <!-- IMAGE -->
-        <div class="w-full h-48 rounded-2xl overflow-hidden border-2 border-blue-100">
-          <img [src]="locationImage"
-               alt="Location Image"
-               class="w-full h-full object-cover" />
-        </div>
-
-        <!-- CONTACT INFO -->
-        <div class="mt-6 space-y-3">
-
-          <div class="flex items-center gap-3 text-gray-700">
-            <span><img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /></span>
-            <span class="text-sm">support&#64;tubongpinoy.ph</span>
+      <aside class="contact-details" aria-label="About the team and location">
+        <section class="contact-card border-purple-300" aria-labelledby="developer-heading">
+          <h2 id="developer-heading" class="font-extrabold text-purple-700 mb-5">The Developer</h2>
+          <div class="developer-profile">
+            <div class="developer-avatar"><img src="assets/icons/developer.svg" alt="" aria-hidden="true" /></div>
+            <div><h3>Sir Humphrey Huey M. Huet</h3><p>6AWEB Project Lead &amp; Developer</p></div>
           </div>
-
-          <div class="flex items-center gap-3 text-gray-700">
-            <span><img src="assets/icons/calendar.svg" alt="" aria-hidden="true" class="app-icon" /></span>
-            <span class="text-sm">Project Submission: March 2026</span>
-          </div>
-
-        </div>
-
-      </section>
-
-    </section>
+        </section>
+        <section class="contact-card border-blue-300" aria-labelledby="location-heading">
+          <h2 id="location-heading" class="font-extrabold text-blue-700 mb-5"><img src="assets/icons/location.svg" alt="" aria-hidden="true" class="app-icon" /> Find Us</h2>
+          <h3 class="font-bold text-gray-800">Holy Angel University</h3>
+          <p class="text-gray-600 mb-5">School of Computing · Angeles City, Philippines</p>
+          <iframe [src]="mapUrl | safeUrl" title="Map showing Holy Angel University in Angeles City" width="100%" height="220" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <div class="contact-info"><img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /><span>support&#64;tubongpinoy.ph</span></div>
+        </section>
+      </aside>
+    </div>
   </div>
-
-  <!-- FOOTER -->
-  <footer class="mt-16 text-center text-gray-500 text-sm">
-    <p>© 2026 Tubong Pinoy Development Team</p>
-  </footer>
-
 </main>

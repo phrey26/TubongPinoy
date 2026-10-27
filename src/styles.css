@@ -1,6 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+@import './app/shared/styles/page-ui.css';
+@import './app/shared/styles/auth-ui.css';
 
 .return-to-games {
   display: flex;

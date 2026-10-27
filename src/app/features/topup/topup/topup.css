@@ -1,0 +1,25 @@
+:host { display: block; }
+.topup-back { display: inline-flex; align-items: center; gap: 8px; color: #7e22ce; font-size: 14px; font-weight: 700; margin-bottom: 24px; border-radius: 8px; }
+.topup-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 28px; }
+.topup-banner { display: block; width: 100%; aspect-ratio: 3 / 1; object-fit: cover; border: 4px solid #fdba74; border-radius: 24px; }
+.topup-notice { margin-top: 24px; align-items: center; }
+.topup-notice .app-icon { font-size: 28px; }
+.topup-notice h2 { font-size: 20px; margin-bottom: 4px; }
+.topup-section { margin-top: 36px; }
+.topup-packages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.topup-card { display: flex; flex-direction: column; padding: 24px; border-width: 4px; border-style: solid; border-radius: 24px; background: #fff; box-shadow: 0 4px 0 #ede9fe; }
+.topup-art { display: grid; place-items: center; height: 104px; border-radius: 16px; margin-bottom: 20px; }
+.topup-art img { width: 64px; height: 64px; }
+.topup-card h3 { font-size: 19px; font-weight: 800; color: #6b21a8; margin-bottom: 6px; }
+.topup-card > p { font-size: 14px; color: #64748b; }
+.topup-card strong { margin-top: 20px; color: #c2410c; font-size: 30px; font-weight: 900; }
+.topup-card strong span { font-size: 14px; font-weight: 600; }
+.topup-card .topup-price { margin: 4px 0 20px; color: #6b7280; }
+.topup-card button { margin-top: auto; padding: 12px; border: 3px solid #d8b4fe; border-radius: 14px; color: #6b21a8; background: #f3e8ff; font-weight: 800; }
+.topup-payment { margin-top: 36px; padding: 28px; border: 4px solid #fbcfe8; border-radius: 24px; background: #fff; }
+.payment-options { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 20px; }
+.payment-options button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; border: 2px solid #bfdbfe; border-radius: 12px; color: #1e3a8a; background: #eff6ff; font-weight: 700; }
+.payment-options span { font-size: 12px; font-weight: 500; }
+.topup-store { display: inline-block; color: #7e22ce; font-size: 14px; font-weight: 700; border-radius: 8px; }
+.topup-store:hover, .topup-back:hover { text-decoration: underline; }
+@media (max-width: 719px) { .topup-packages { grid-template-columns: 1fr; } .topup-payment { padding: 20px; } .topup-notice { align-items: flex-start; } }
