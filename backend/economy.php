@@ -52,14 +52,16 @@ function update_wallet(int $userId, array $body): array
             return $result;
         }
         $db->prepare('INSERT IGNORE INTO account_state (user_id) VALUES (?)')->execute([$userId]);
-        $query = $db->prepare('SELECT unlimited_until FROM account_state WHERE user_id = ? FOR UPDATE');
+        $query = $db->prepare('SELECT unlimited_until, permanent_juice FROM account_state WHERE user_id = ? FOR UPDATE');
         $query->execute([$userId]);
-        $unlimitedUntil = (int) $query->fetchColumn();
+        $entitlement = $query->fetch();
+        $unlimitedUntil = (int) $entitlement['unlimited_until'];
+        $permanentJuice = (bool) $entitlement['permanent_juice'];
         $tansans = (int) $user['tansans'];
         $juice = (int) $user['juice'];
         if ($action === 'consume_juice') {
             if (!in_array($item, ['tumbang_retry', 'jolens_round'], true)) throw new WalletFailure('Unknown game action.', 422);
-            if ($unlimitedUntil <= time()) {
+            if (!$permanentJuice && $unlimitedUntil <= time()) {
                 if ($juice < 20) throw new WalletFailure('You need 20 Juice to continue.');
                 $juice -= 20;
             }
@@ -68,7 +70,7 @@ function update_wallet(int $userId, array $body): array
             if (isset($energy[$item])) {
                 [$price, $refill] = $energy[$item];
                 if ($refill > 0 && $juice >= 100) throw new WalletFailure('Your Juice is already full.');
-                if ($item === 'energy_unli' && $unlimitedUntil > time()) throw new WalletFailure('Your unlimited Juice is already active.');
+                if ($item === 'energy_unli' && ($permanentJuice || $unlimitedUntil > time())) throw new WalletFailure('Your unlimited Juice is already active.');
                 if ($tansans < $price) throw new WalletFailure('Not enough Tansans.');
                 $tansans -= $price;
                 $juice = min(100, $juice + $refill);

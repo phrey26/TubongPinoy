@@ -88,7 +88,7 @@ function public_user(array $row): array
     $query->execute([$row['id']]);
     $row = $query->fetch();
     $db->prepare('INSERT IGNORE INTO account_state (user_id) VALUES (?)')->execute([$row['id']]);
-    $query = $db->prepare('SELECT unlimited_until, version FROM account_state WHERE user_id = ?');
+    $query = $db->prepare('SELECT unlimited_until, permanent_juice, version FROM account_state WHERE user_id = ?');
     $query->execute([$row['id']]);
     $state = $query->fetch();
     $query = $db->prepare('SELECT skin_id FROM user_skins WHERE user_id = ? ORDER BY skin_id');
@@ -97,6 +97,7 @@ function public_user(array $row): array
         'tansans' => (int) $row['tansans'], 'juice' => (int) $row['juice'],
         'ownedSkins' => $query->fetchAll(PDO::FETCH_COLUMN),
         'unlimitedJuiceUntil' => (int) $state['unlimited_until'] * 1000,
+        'permanentJuice' => (bool) $state['permanent_juice'],
         'walletVersion' => (int) $state['version']];
     if ($ownTransaction) $db->commit();
     return $result;

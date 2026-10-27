@@ -11,6 +11,7 @@ export interface AuthUser {
   juice: number;
   ownedSkins?: string[];
   unlimitedJuiceUntil?: number;
+  permanentJuice?: boolean;
   walletVersion?: number;
 }
 

@@ -97,7 +97,7 @@ try:
     token = result['csrfToken']
     check(cookie_value() != old_cookie, 'Signup rotates the session ID')
     check('password_hash' not in result['user'] and 'password' not in result['user'], 'API omits passwords and hashes')
-    check(result['user']['juice'] == 100 and result['user']['tansans'] == 1000, 'New accounts receive initial balances')
+    check(result['user']['juice'] == 100 and result['user']['tansans'] == 0, 'New accounts start with 0 Tansans and 100 Juice')
     inspect_database()
     check(True, 'Stored password is hashed and verifiable')
     check(request('session')[1]['user']['username'] == username, 'Session survives subsequent requests')

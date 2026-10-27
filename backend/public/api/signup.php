@@ -18,7 +18,7 @@ if (($body['terms'] ?? false) !== true) {
 }
 rate_limit('signup:' . ($_SERVER['REMOTE_ADDR'] ?? ''), 20);
 try {
-    $query = database()->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)');
+    $query = database()->prepare('INSERT INTO users (username, email, password_hash, tansans) VALUES (?, ?, ?, 0)');
     $query->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
 } catch (PDOException $error) {
     if (($error->errorInfo[1] ?? null) === 1062) {

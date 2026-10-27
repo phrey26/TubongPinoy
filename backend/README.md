@@ -65,7 +65,8 @@ account data. Angular guards control navigation, not database authorization.
 Accounts own their Tansans, Juice, purchased skins, and unlimited-Juice entitlement.
 They are returned by login/session/profile endpoints, cleared from frontend state
 on logout, and restored on a new login. Existing balances are preserved by setup.
-Each newly created account starts with 1,000 Tansans, 100 Juice, and no purchased skins.
+Each newly created account starts with 0 Tansans, 100 Juice, and no purchased skins.
+Setup updates the database default without changing existing account balances.
 
 `wallet.php` accepts `action`, `item`, and a UUID `requestId`. Supported actions:
 
@@ -93,6 +94,13 @@ Future skins can be added to the `skins` table (`id`, `name`, `type`, `price`,
 skin catalog uses placeholder artwork. Ownership is implemented; applying a skin
 to a game's visuals is a separate feature. Game scores/leaderboards, email
 verification, and password recovery are not implemented in this backend.
+
+For local debugging, `backend/bin/create-debug-account.php` reads a JSON object
+with `username` and `password` from standard input. It creates or resets that
+named account to 999,999 Tansans, 100 Juice, and `account_state.permanent_juice`.
+The password is hashed. This entitlement has no expiry and is never assignable
+through signup, top-ups or shop requests. Normal accounts default to no permanent
+entitlement. The CLI command is outside the public web directory.
 
 ## Verification
 

@@ -78,6 +78,11 @@ def fixture_database(mode, name):
         $db->prepare('UPDATE account_state a JOIN users u ON a.user_id = u.id SET a.unlimited_until = 1, a.version = a.version + 1 WHERE u.username = ?')->execute([$name]);
     } elseif ($argv[3] === 'concurrency') {
         $db->prepare('UPDATE users SET tansans = 200 WHERE username = ?')->execute([$name]);
+    } elseif ($argv[3] === 'fund') {
+        // Explicit test fixture; real accounts receive no signup credit.
+        $db->prepare('UPDATE users SET tansans = 1000 WHERE username = ?')->execute([$name]);
+    } elseif ($argv[3] === 'permanent') {
+        $db->prepare('UPDATE account_state a JOIN users u ON a.user_id = u.id SET a.permanent_juice = TRUE, a.unlimited_until = 0, a.version = a.version + 1 WHERE u.username = ?')->execute([$name]);
     }
     '''
     subprocess.run([PHP, '-r', code, str(ROOT), name, mode], check=True, capture_output=True)
@@ -87,8 +92,10 @@ try:
     a, b, guest = Client(), Client(), Client()
     check(guest.change('purchase', 'skin_1')[0] == 401, 'Guests cannot change balances or inventory')
     check(a.signup(names[0])[0] == 201 and b.signup(names[1])[0] == 201, 'Two independent accounts can be created')
-    check(a.user()['tansans'] == b.user()['tansans'] == 1000, 'Each account starts with its own balance')
+    check(a.user()['tansans'] == b.user()['tansans'] == 0, 'Each newly created account starts with 0 Tansans')
     check(a.user()['ownedSkins'] == b.user()['ownedSkins'] == [], 'New accounts own no purchased skins')
+    for name in names:
+        fixture_database('fund', name)
     check(a.request('catalog')[0] == 200, 'Catalog loads from the database')
     check(a.request('wallet', {'action': 'purchase', 'item': 'skin_1', 'requestId': str(uuid.uuid4())}, csrf=False)[0] == 403,
           'Balance changes require CSRF protection')
@@ -128,6 +135,12 @@ try:
         check(a.change('consume_juice', 'jolens_round')[1]['user']['juice'] == 80, 'Server expiry restores normal Juice costs')
     else:
         check(a.change('demo_topup', 'special')[0] == 403, 'Simulated credit is disabled unless explicitly enabled')
+    fixture_database('permanent', names[0])
+    before_juice = a.user()['juice']
+    result = a.change('consume_juice', 'tumbang_retry')[1]['user']
+    check(result['permanentJuice'] and result['juice'] == before_juice and result['unlimitedJuiceUntil'] == 0,
+          'Permanent unlimited Juice has no expiry and does not consume energy')
+    check(not b.user()['permanentJuice'], 'Permanent Juice is granted only to the designated account')
     saved_a = a.user()
     a.request('logout', {})
     check(a.login(names[1])[1]['user']['ownedSkins'] == [], 'Switching accounts does not inherit the previous inventory')

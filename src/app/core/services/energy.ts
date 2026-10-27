@@ -11,7 +11,9 @@ export class Energy {
     return this.account.changes$.pipe(map(user => user?.juice ?? 0), distinctUntilChanged());
   }
   getEnergyLevelValue(): number { return this.account.user()?.juice ?? 0; }
-  hasUnlimited(): boolean { return (this.account.user()?.unlimitedJuiceUntil ?? 0) > Date.now(); }
+  hasUnlimited(): boolean {
+    return this.account.user()?.permanentJuice === true || (this.account.user()?.unlimitedJuiceUntil ?? 0) > Date.now();
+  }
   consumeEnergy(reason: 'tumbang_retry' | 'jolens_round') {
     return this.injector.get(Wallet).change('consume_juice', reason);
   }

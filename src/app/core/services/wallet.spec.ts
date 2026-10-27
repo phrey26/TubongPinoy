@@ -85,5 +85,7 @@ describe('Per-account balances and inventory', () => {
     expect(energy.hasUnlimited()).toBe(true);
     state.set({ ...alice, unlimitedJuiceUntil: Date.now() - 1 });
     expect(energy.hasUnlimited()).toBe(false);
+    state.set({ ...alice, unlimitedJuiceUntil: 0, permanentJuice: true });
+    expect(energy.hasUnlimited()).toBe(true);
   });
 });

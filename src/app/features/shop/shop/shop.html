@@ -36,7 +36,9 @@
   @if (message()) {
     <p role="status" class="max-w-6xl mx-auto mb-6 rounded-xl bg-green-50 p-4 text-green-800">{{ message() }}</p>
   }
-  @if (unlimitedUntil > 0) {
+  @if (permanentJuice) {
+    <p class="max-w-6xl mx-auto mb-6 text-purple-700">Permanent unlimited Juice</p>
+  } @else if (unlimitedUntil > 0) {
     <p class="max-w-6xl mx-auto mb-6 text-purple-700">Unlimited Juice expiry: {{ unlimitedUntil | date:'medium' }}</p>
   }
   <!-- JUICE SECTION -->

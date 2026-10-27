@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL,
     email VARCHAR(254) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    tansans INT UNSIGNED NOT NULL DEFAULT 1000,
+    tansans INT UNSIGNED NOT NULL DEFAULT 0,
     juice TINYINT UNSIGNED NOT NULL DEFAULT 100,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
     UNIQUE KEY uq_users_email (email),
     CONSTRAINT chk_users_juice CHECK (juice <= 100)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Update the default on existing installations without changing saved balances.
+ALTER TABLE users ALTER COLUMN tansans SET DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS auth_rate_limits (
     bucket CHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
@@ -24,6 +27,7 @@ CREATE TABLE IF NOT EXISTS auth_rate_limits (
 CREATE TABLE IF NOT EXISTS account_state (
     user_id INT UNSIGNED PRIMARY KEY,
     unlimited_until BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    permanent_juice BOOLEAN NOT NULL DEFAULT FALSE,
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

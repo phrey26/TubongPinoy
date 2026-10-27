@@ -25,6 +25,7 @@ export class Shop implements OnInit {
   get userCoins(): number { return this.account.user()?.tansans ?? 0; }
   get userEnergy(): number { return this.account.user()?.juice ?? 0; }
   get unlimitedUntil(): number { return this.account.user()?.unlimitedJuiceUntil ?? 0; }
+  get permanentJuice(): boolean { return this.account.user()?.permanentJuice === true; }
 
   ngOnInit(): void {
     this.wallet.catalog().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
