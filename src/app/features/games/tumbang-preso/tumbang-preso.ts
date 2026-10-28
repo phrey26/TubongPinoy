@@ -1,9 +1,11 @@
+import { Game } from '../../../core/services/game';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Leaderboard } from '../../../shared/leaderboard/leaderboard';
 import { signal } from '@angular/core';
 import { finalize } from 'rxjs';
 import { authErrorMessage } from '../../../core/services/auth';
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy, inject } from '@angular/core';
+import { DestroyRef, inject, AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
@@ -25,6 +27,11 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('gamePanel') gamePanel!: ElementRef<HTMLDivElement>;
   @ViewChild('introDialog') introDialog!: ElementRef<HTMLDialogElement>;
   showIntroduction = true;
+  readonly tutorialLoading = signal(true);
+  private readonly gameService = inject(Game);
+  private readonly destroyRef = inject(DestroyRef);
+  private tutorialSeen = false;
+  private savingTutorial = false;
   hasStarted = false;
   isFullscreen = false;
   private animationFrameId = 0;
@@ -110,6 +117,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   showOutOfJuice = false;
 
   ngOnInit() {
+    this.loadTutorial();
     this.energySub = this.energyService.getEnergyLevel().subscribe(value => {
       this.energyLevel = value;
       // Spending the last Juice must not interrupt an attempt already purchased.
@@ -138,7 +146,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   obstacles: Obstacle[] = generateLevel(1).obstacles;
 
   ngAfterViewInit() {
-    this.introDialog.nativeElement.showModal?.();
+    if (!this.tutorialLoading() && this.showIntroduction) this.introDialog.nativeElement.showModal?.();
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
     this.ctx.imageSmoothingEnabled = false;
     this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -185,6 +193,24 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.hasStarted = true;
   }
 
+  private loadTutorial(): void {
+    this.gameService.tutorial('tumbang-preso').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: status => {
+        this.tutorialSeen = status.seen;
+        this.showIntroduction = !status.seen;
+        this.tutorialLoading.set(false);
+        if (!status.seen) this.introDialog?.nativeElement.showModal?.();
+        this.changeDetector.markForCheck();
+      },
+      error: () => {
+        // Keep the instructions available if preferences cannot be loaded.
+        this.tutorialLoading.set(false);
+        this.introDialog?.nativeElement.showModal?.();
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
   openTutorial(): void {
     if (this.showIntroduction) return;
     this.isDragging = false;
@@ -196,6 +222,15 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.isDragging = false;
     this.showIntroduction = false;
     this.introDialog.nativeElement.close?.();
+    if (!this.tutorialSeen && !this.savingTutorial && !this.tutorialLoading()) {
+      this.savingTutorial = true;
+      this.gameService.markTutorialSeen('tumbang-preso').pipe(
+        takeUntilDestroyed(this.destroyRef), finalize(() => this.savingTutorial = false),
+      ).subscribe({
+        next: () => { this.tutorialSeen = true; },
+        error: () => this.accountError.set('We could not remember that you saw this tutorial. It may appear again next visit.'),
+      });
+    }
   }
 
   @HostListener('mousemove', ['$event'])

@@ -29,6 +29,20 @@ describe('Game scores API', () => {
     request.flush({ game: 'jolens-blast', highScores: [], personalBest: 600 });
   });
 
+  it('reads the tutorial status for the selected game', () => {
+    service.tutorial('tumbang-preso').subscribe();
+    http.expectOne('/api/tutorial.php?game=tumbang-preso').flush({ game: 'tumbang-preso', seen: false });
+  });
+
+  it('marks a tutorial seen using a server session and CSRF token', () => {
+    service.markTutorialSeen('jolens-blast').subscribe();
+    http.expectOne('/api/session.php').flush({ user: { id: 1 }, csrfToken: 'token' });
+    const request = http.expectOne('/api/tutorial.php');
+    expect(request.request.headers.get('X-CSRF-Token')).toBe('token');
+    expect(request.request.body).toEqual({ game: 'jolens-blast' });
+    request.flush({ game: 'jolens-blast', seen: true });
+  });
+
   it('does not submit a guest score', () => {
     let status = 0;
     service.saveScore('tumbang-preso', 100).subscribe({ error: error => status = error.status });

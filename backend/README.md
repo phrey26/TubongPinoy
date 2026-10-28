@@ -152,3 +152,17 @@ on page load, score submission, or the Refresh scores button.
 Run `python3 backend/tests/scores_smoke.py` to verify authentication, validation,
 per-account/per-game isolation, persistence, and concurrent personal-best updates
 with temporary accounts that are cleaned up afterward.
+
+## Tutorial preferences
+
+Run `backend/bin/setup.php` to create `game_tutorials`. Each account stores a
+separate seen flag for `tumbang-preso` and `jolens-blast`, shared across browser
+sessions/devices. Existing accounts start unseen for both games.
+`GET /api/tutorial.php?game=tumbang-preso` returns `{ game, seen }`.
+`POST /api/tutorial.php` with `{ "game": "tumbang-preso" }` marks it seen and
+requires the authenticated session and CSRF token. Dismissing the instructions
+(including with Escape) records the preference; future visits skip the automatic
+popup. How to Play always remains available. If preferences cannot be read, the
+instructions remain available; a failed save is explained in the game's feedback.
+Run `python3 backend/tests/tutorial_smoke.py` to verify persistence, account/game
+isolation, validation, and CSRF protection using temporary accounts.

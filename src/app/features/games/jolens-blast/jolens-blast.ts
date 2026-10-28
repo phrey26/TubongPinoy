@@ -1,9 +1,11 @@
+import { Game } from '../../../core/services/game';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Leaderboard } from '../../../shared/leaderboard/leaderboard';
 import { signal } from '@angular/core';
 import { finalize } from 'rxjs';
 import { authErrorMessage } from '../../../core/services/auth';
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, ChangeDetectionStrategy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { DestroyRef, inject, OnInit, AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, ChangeDetectionStrategy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
@@ -31,7 +33,7 @@ interface Marble {
   templateUrl: './jolens-blast.html',
   styleUrl: './jolens-blast.css',
 })
-export class JolensBlast implements AfterViewInit, OnDestroy {
+export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('gameCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
@@ -51,7 +53,30 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   hasStarted = false;
   hasCompletedShot = false;
   showIntroduction = true;
+  readonly tutorialLoading = signal(true);
+  private readonly gameService = inject(Game);
+  private readonly destroyRef = inject(DestroyRef);
+  private tutorialSeen = false;
+  private savingTutorial = false;
   @ViewChild('introDialog') introDialog!: ElementRef<HTMLDialogElement>;
+
+  private loadTutorial(): void {
+    this.gameService.tutorial('jolens-blast').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: status => {
+        this.tutorialSeen = status.seen;
+        this.showIntroduction = !status.seen;
+        this.tutorialLoading.set(false);
+        if (!status.seen) this.introDialog?.nativeElement.showModal?.();
+        this.changeDetector.markForCheck();
+      },
+      error: () => {
+        // Keep the instructions available if preferences cannot be loaded.
+        this.tutorialLoading.set(false);
+        this.introDialog?.nativeElement.showModal?.();
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
 
   openTutorial(): void {
     if (this.showIntroduction) return;
@@ -64,6 +89,15 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
     this.isDragging = false;
     this.showIntroduction = false;
     this.introDialog.nativeElement.close?.();
+    if (!this.tutorialSeen && !this.savingTutorial && !this.tutorialLoading()) {
+      this.savingTutorial = true;
+      this.gameService.markTutorialSeen('jolens-blast').pipe(
+        takeUntilDestroyed(this.destroyRef), finalize(() => this.savingTutorial = false),
+      ).subscribe({
+        next: () => { this.tutorialSeen = true; },
+        error: () => this.accountError.set('We could not remember that you saw this tutorial. It may appear again next visit.'),
+      });
+    }
   }
 
   play(): void {
@@ -165,8 +199,18 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
 
   constructor(private energyService: Energy, private changeDetector: ChangeDetectorRef, private router: Router) {}
 
+  ngOnInit(): void {
+    this.loadTutorial();
+    this.energySub = this.energyService.getEnergyLevel().subscribe(level => {
+      this.energyLevel = level;
+      this.showCashOut = this.showBetSetup && (level < 20 && !this.energyService.hasUnlimited()) && !this.showGameOver;
+      if (level >= 20 || this.energyService.hasUnlimited()) this.showOutOfJuice = false;
+      this.changeDetector.markForCheck();
+    });
+  }
+
   ngAfterViewInit(): void {
-    this.introDialog.nativeElement.showModal?.();
+    if (!this.tutorialLoading() && this.showIntroduction) this.introDialog.nativeElement.showModal?.();
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
 
@@ -178,12 +222,6 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
       this.sprites.set(path, image);
     }
     this.spawnShooter();
-    this.energySub = this.energyService.getEnergyLevel().subscribe(level => {
-      this.energyLevel = level;
-      this.showCashOut = this.showBetSetup && (level < 20 && !this.energyService.hasUnlimited()) && !this.showGameOver;
-      if (level >= 20 || this.energyService.hasUnlimited()) this.showOutOfJuice = false;
-      this.changeDetector.markForCheck();
-    });
     this.gameLoop();
   }
 

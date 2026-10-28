@@ -1,5 +1,5 @@
 import { Game } from '../../../core/services/game';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { MemoryEnergy } from '../../../testing/energy-stub';
 import { Subject } from 'rxjs';
 import { vi, afterEach } from 'vitest';
@@ -28,7 +28,7 @@ describe('TumbangPreso', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 
     await TestBed.configureTestingModule({
-      providers: [{ provide: Game, useValue: { scores: () => of({ highScores: [], personalBest: 0 }), saveScore: () => of({ highScores: [], personalBest: 0 }) } }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
+      providers: [{ provide: Game, useValue: { tutorial: () => of({ seen: false }), markTutorialSeen: () => of({ seen: true }), scores: () => of({ highScores: [], personalBest: 0 }), saveScore: () => of({ highScores: [], personalBest: 0 }) } }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
       imports: [TumbangPreso],
     }).compileComponents();
 
@@ -38,6 +38,70 @@ describe('TumbangPreso', () => {
     component.closeTutorial();
     component.startGame();
     await fixture.whenStable();
+  });
+
+  it('skips automatic tutorials for a returning account but allows How to Play', async () => {
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    const service = TestBed.inject(Game);
+    vi.spyOn(service, 'tutorial').mockReturnValue(of({ game: 'tumbang-preso', seen: true }));
+    const save = vi.spyOn(service, 'markTutorialSeen');
+    const returning = TestBed.createComponent(TumbangPreso);
+    await returning.whenStable();
+    const player = returning.componentInstance;
+    expect(player.showIntroduction).toBe(false);
+    expect(player.tutorialLoading()).toBe(false);
+    player.openTutorial();
+    expect(player.showIntroduction).toBe(true);
+    player.closeTutorial();
+    expect(player.showIntroduction).toBe(false);
+    expect(save).not.toHaveBeenCalled();
+    returning.destroy();
+  });
+
+  it('waits for tutorial preferences and remembers a first dismissal for this game', async () => {
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    const pending = new Subject<{ game: 'tumbang-preso'; seen: boolean }>();
+    const service = TestBed.inject(Game);
+    vi.spyOn(service, 'tutorial').mockReturnValue(pending);
+    const save = vi.spyOn(service, 'markTutorialSeen');
+    const fresh = TestBed.createComponent(TumbangPreso);
+    await fresh.whenStable();
+    const player = fresh.componentInstance;
+    player.startGame();
+    expect(player.hasStarted).toBe(false);
+    expect(player.tutorialLoading()).toBe(true);
+    pending.next({ game: 'tumbang-preso', seen: false });
+    pending.complete();
+    expect(player.showIntroduction).toBe(true);
+    player.closeTutorial();
+    expect(save).toHaveBeenCalledWith('tumbang-preso');
+    player.openTutorial();
+    player.closeTutorial();
+    expect(save).toHaveBeenCalledTimes(1);
+    fresh.destroy();
+  });
+
+  it('keeps tutorials usable if preferences fail and retries a failed save on dismissal', async () => {
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    const service = TestBed.inject(Game);
+    vi.spyOn(service, 'tutorial').mockReturnValue(throwError(() => new Error('offline')));
+    const save = vi.spyOn(service, 'markTutorialSeen')
+      .mockReturnValueOnce(throwError(() => new Error('offline')));
+    const fresh = TestBed.createComponent(TumbangPreso);
+    await fresh.whenStable();
+    const player = fresh.componentInstance;
+    expect(player.showIntroduction).toBe(true);
+    expect(player.tutorialLoading()).toBe(false);
+    player.closeTutorial();
+    expect(player.showIntroduction).toBe(false);
+    expect(player.accountError()).toContain('may appear again');
+    player.openTutorial();
+    player.closeTutorial();
+    expect(save).toHaveBeenCalledTimes(2);
+    fresh.destroy();
   });
 
   it('should create', () => {
