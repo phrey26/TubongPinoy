@@ -42,6 +42,7 @@ function update_wallet(int $userId, array $body): array
         $query->execute([$userId]);
         $user = $query->fetch();
         if (!$user) throw new WalletFailure('Please log in again.', 401);
+        [$user, $entitlement] = recover_account_juice($db, $user);
         $query = $db->prepare('SELECT request_hash FROM wallet_operations WHERE user_id = ? AND request_id = ?');
         $query->execute([$userId, $requestId]);
         $previous = $query->fetchColumn();
@@ -51,10 +52,6 @@ function update_wallet(int $userId, array $body): array
             $db->commit();
             return $result;
         }
-        $db->prepare('INSERT IGNORE INTO account_state (user_id) VALUES (?)')->execute([$userId]);
-        $query = $db->prepare('SELECT unlimited_until, permanent_juice FROM account_state WHERE user_id = ? FOR UPDATE');
-        $query->execute([$userId]);
-        $entitlement = $query->fetch();
         $unlimitedUntil = (int) $entitlement['unlimited_until'];
         $permanentJuice = (bool) $entitlement['permanent_juice'];
         $tansans = (int) $user['tansans'];
@@ -97,7 +94,9 @@ function update_wallet(int $userId, array $body): array
             throw new WalletFailure('Unknown account action.', 422);
         }
         $db->prepare('UPDATE users SET tansans = ?, juice = ? WHERE id = ?')->execute([$tansans, $juice, $userId]);
-        $db->prepare('UPDATE account_state SET unlimited_until = ?, version = version + 1 WHERE user_id = ?')->execute([$unlimitedUntil, $userId]);
+        $refillAt = $juice >= 100 ? 0 : ((int) $entitlement['juice_refill_at'] ?: time());
+        $db->prepare('UPDATE account_state SET unlimited_until = ?, juice_refill_at = ?, version = version + 1 WHERE user_id = ?')
+            ->execute([$unlimitedUntil, $refillAt, $userId]);
         $db->prepare('INSERT INTO wallet_operations (user_id, request_id, request_hash, action, tansans_delta, juice_delta) VALUES (?, ?, ?, ?, ?, ?)')
             ->execute([$userId, $requestId, $requestHash, $action . ':' . $item, $tansans - (int) $user['tansans'], $juice - (int) $user['juice']]);
         $result = public_user([...$user, 'tansans' => $tansans, 'juice' => $juice]);

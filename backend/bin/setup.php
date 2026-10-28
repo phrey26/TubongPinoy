@@ -9,6 +9,11 @@ try {
     if (!(int) $column) {
         database()->exec('ALTER TABLE account_state ADD COLUMN permanent_juice BOOLEAN NOT NULL DEFAULT FALSE');
     }
+    $column = database()->query("SELECT COUNT(*) FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'account_state' AND COLUMN_NAME = 'juice_refill_at'")->fetchColumn();
+    if (!(int) $column) {
+        database()->exec('ALTER TABLE account_state ADD COLUMN juice_refill_at BIGINT UNSIGNED NOT NULL DEFAULT 0');
+    }
     echo "Database tables are ready. Existing accounts were preserved.\n";
 } catch (Throwable $error) {
     fwrite(STDERR, "Setup failed: " . $error->getMessage() . "\n");

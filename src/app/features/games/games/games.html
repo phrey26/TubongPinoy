@@ -4,6 +4,7 @@
       <span>The neighborhood playground</span>
       @if (account.user()) {
         <span class="ui-chip"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /> Your Juice: {{ unlimitedJuice ? 'Unlimited' : (energyLevel$ | async) + ' / 100' }}</span>
+        <app-juice-timer />
       } @else {
         <span class="ui-chip">Browse freely · Log in to play</span>
       }

@@ -1,3 +1,4 @@
+import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
 import { Confirmation } from '../../../core/services/confirmation';
 import { AccountState } from '../../../core/services/account-state';
 import { Game } from '../../../core/services/game';
@@ -31,7 +32,7 @@ interface Marble {
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-jolens-blast',
-  imports: [CommonModule, RouterModule, Leaderboard],
+  imports: [JuiceTimer, CommonModule, RouterModule, Leaderboard],
   templateUrl: './jolens-blast.html',
   styleUrl: './jolens-blast.css',
 })

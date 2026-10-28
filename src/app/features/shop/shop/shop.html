@@ -33,7 +33,7 @@
             } @else if (unlimitedActive) {
               Active until {{ unlimitedUntil | date:'shortTime' }} · {{ unlimitedUntil | date:'MMM d' }}
             } @else {
-              {{ userEnergy >= 100 ? 'Fully refreshed and ready to play' : 'Refill below to keep playing' }}
+              <app-juice-timer />
             }
           </span>
         </div>
@@ -52,7 +52,7 @@
       <div class="section-heading">
         <div>
           <h2 id="refills-heading">Juice Refills</h2>
-          <p>Choose a boost. Your Juice meter holds up to 100.</p>
+          <p>Juice refills for free: +1 every 2 minutes and 24 seconds, up to 100. Buy a boost to refill instantly.</p>
         </div>
         @if (unlimitedActive) { <span class="shop-badge shop-badge-green">Unlimited Juice active</span> }
       </div>

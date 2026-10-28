@@ -2,9 +2,41 @@
 
   <div class="ui-meta">
     <span>Larong Pinoy, saya ng lahat!</span>
-    <span class="ui-chip home-clock" aria-label="Local time">
-      <img src="assets/icons/clock.svg" alt="" aria-hidden="true" class="app-icon" />{{ currentTime$ | async | time }}
-    </span>
+    @if (account.user(); as user) {
+      <div #clockArea class="home-clock-group" (mouseenter)="openClockDetails()" (mouseleave)="onClockMouseLeave()">
+        <button #clockTrigger type="button" class="ui-button ui-button-soft home-clock"
+          [attr.aria-expanded]="clockDetailsOpen()" aria-controls="juice-clock-details"
+          [attr.aria-describedby]="clockDetailsOpen() ? 'juice-clock-details' : null"
+          (focus)="openClockDetails()" (blur)="closeClockDetails()" (click)="openClockDetails()">
+          <span class="sr-only">Local time:</span>
+          <img src="assets/icons/clock.svg" alt="" aria-hidden="true" class="app-icon" />{{ currentTime$ | async | time }}
+          <span class="sr-only">Show Juice refill details</span>
+        </button>
+        @if (clockDetailsOpen()) {
+          <div id="juice-clock-details" class="juice-clock-popover" role="tooltip">
+            <div class="juice-clock-card">
+              <strong class="juice-clock-heading"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" />Juice: {{ user.juice }} / 100</strong>
+              <app-juice-timer />
+              <div class="juice-clock-full">
+                <span>Fully refilled</span>
+                @if (recovery.fullRefillAt(); as fullAt) {
+                  <strong>{{ fullAt | date:'h:mm:ss a' }}</strong>
+                } @else if (user.juice >= 100) {
+                  <strong>Already full</strong>
+                } @else {
+                  <span>Waiting for refill details…</span>
+                }
+              </div>
+              <p>+1 Juice every 2 minutes and 24 seconds.</p>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <span class="ui-chip home-clock" aria-label="Local time">
+        <img src="assets/icons/clock.svg" alt="" aria-hidden="true" class="app-icon" />{{ currentTime$ | async | time }}
+      </span>
+    }
   </div>
 
   <!-- HERO SECTION -->

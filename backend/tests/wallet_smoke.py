@@ -66,6 +66,11 @@ def check(condition, description):
     print('PASS:', description, flush=True)
 
 
+def same_account(left, right):
+    # Server time changes on each response; balances and saved account state should not.
+    return {key: value for key, value in left.items() if key != 'serverTime'} == {key: value for key, value in right.items() if key != 'serverTime'}
+
+
 def fixture_database(mode, name):
     code = r'''
     require $argv[1] . '/database.php';
@@ -146,9 +151,9 @@ try:
     check(a.login(names[1])[1]['user']['ownedSkins'] == [], 'Switching accounts does not inherit the previous inventory')
     a.request('logout', {})
     restored = a.login(names[0])[1]['user']
-    check(restored == saved_a, 'Balances and skins survive logout and a fresh login')
+    check(same_account(restored, saved_a), 'Balances and skins survive logout and a fresh login')
     fresh = Client()
-    check(fresh.login(names[0])[1]['user'] == saved_a, 'A separate browser session sees the same saved account')
+    check(same_account(fresh.login(names[0])[1]['user'], saved_a), 'A separate browser session sees the same saved account')
     fixture_database('concurrency', names[1])
     b2 = Client()
     assert b2.login(names[1])[0] == 200
@@ -159,7 +164,7 @@ try:
     final_b = b.user()
     check(sorted(outcomes) == [200, 409] and final_b['tansans'] in [0, 50] and len(final_b['ownedSkins']) == 1,
           'Concurrent purchases from separate sessions cannot overspend the account')
-    check(a.user() == saved_a, 'Concurrent changes to account B leave account A unchanged')
+    check(same_account(a.user(), saved_a), 'Concurrent changes to account B leave account A unchanged')
     print(f'{passed} wallet checks passed.', flush=True)
 finally:
     for name in names:

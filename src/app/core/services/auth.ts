@@ -13,6 +13,8 @@ export interface AuthUser {
   unlimitedJuiceUntil?: number;
   permanentJuice?: boolean;
   walletVersion?: number;
+  nextJuiceAt?: number;
+  serverTime?: number;
 }
 
 export interface AuthSession {

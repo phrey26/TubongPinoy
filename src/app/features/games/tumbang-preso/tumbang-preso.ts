@@ -1,3 +1,4 @@
+import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
 import { Confirmation } from '../../../core/services/confirmation';
 import { AccountState } from '../../../core/services/account-state';
 import { Game } from '../../../core/services/game';
@@ -19,7 +20,7 @@ import { launchShot, Obstacle, stepShot } from './shot-physics';
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-tumbang-preso',
-  imports: [CommonModule, RouterModule, Leaderboard],
+  imports: [JuiceTimer, CommonModule, RouterModule, Leaderboard],
   templateUrl: './tumbang-preso.html',
   styleUrl: './tumbang-preso.css',
 })

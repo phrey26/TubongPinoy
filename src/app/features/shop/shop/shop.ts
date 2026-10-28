@@ -1,3 +1,4 @@
+import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
 import { CommonModule } from '@angular/common';
 import { Component, ChangeDetectionStrategy, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -20,7 +21,7 @@ interface Refill {
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-shop',
-  imports: [CommonModule, RouterModule],
+  imports: [JuiceTimer, CommonModule, RouterModule],
   templateUrl: './shop.html',
   styleUrl: './shop.css',
 })

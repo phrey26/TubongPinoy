@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/juice.php';
 
 ini_set('display_errors', '0');
 header('Content-Type: application/json; charset=utf-8');
@@ -86,11 +87,7 @@ function public_user(array $row): array
     if ($ownTransaction) $db->beginTransaction();
     $query = $db->prepare('SELECT id, username, email, tansans, juice FROM users WHERE id = ? FOR UPDATE');
     $query->execute([$row['id']]);
-    $row = $query->fetch();
-    $db->prepare('INSERT IGNORE INTO account_state (user_id) VALUES (?)')->execute([$row['id']]);
-    $query = $db->prepare('SELECT unlimited_until, permanent_juice, version FROM account_state WHERE user_id = ?');
-    $query->execute([$row['id']]);
-    $state = $query->fetch();
+    [$row, $state] = recover_account_juice($db, $query->fetch());
     $query = $db->prepare('SELECT skin_id FROM user_skins WHERE user_id = ? ORDER BY skin_id');
     $query->execute([$row['id']]);
     $result = ['id' => (int) $row['id'], 'username' => $row['username'], 'email' => $row['email'],
@@ -98,7 +95,9 @@ function public_user(array $row): array
         'ownedSkins' => $query->fetchAll(PDO::FETCH_COLUMN),
         'unlimitedJuiceUntil' => (int) $state['unlimited_until'] * 1000,
         'permanentJuice' => (bool) $state['permanent_juice'],
-        'walletVersion' => (int) $state['version']];
+        'walletVersion' => (int) $state['version'],
+        'nextJuiceAt' => $row['juice'] < 100 ? ((int) $state['juice_refill_at'] + JUICE_REFILL_SECONDS) * 1000 : 0,
+        'serverTime' => time() * 1000];
     if ($ownTransaction) $db->commit();
     return $result;
 }

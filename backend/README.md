@@ -166,3 +166,28 @@ popup. How to Play always remains available. If preferences cannot be read, the
 instructions remain available; a failed save is explained in the game's feedback.
 Run `python3 backend/tests/tutorial_smoke.py` to verify persistence, account/game
 isolation, validation, and CSRF protection using temporary accounts.
+
+## Free Juice recovery
+
+Juice regenerates by **1 point every 144 seconds (2 minutes 24 seconds)**, capped at
+100. Recovery works while logged out or offline and never costs Tansans. A meter
+starting at zero takes four hours to refill completely. Time at full is not banked.
+Spending from full starts a fresh interval; further spending and partial shop
+refills preserve the remaining interval. Reaching full clears it. Unlimited passes
+keep preventing game costs while the underlying meter can still recover normally.
+
+Run `backend/bin/setup.php` after updating to add `account_state.juice_refill_at`.
+Existing partial meters begin their first interval when next loaded; no historical
+credits are inferred. The server applies elapsed intervals under the account row
+lock when reading account data or changing the wallet, so no cron job is needed.
+Recovery increments `walletVersion`; stale responses cannot undo recovered Juice.
+Account payloads include `nextJuiceAt` (Unix milliseconds, zero when full) and
+`serverTime` for a device-clock-independent countdown. The client refreshes `/api/me.php`
+when an interval expires, displays only server-confirmed Juice, and retries failed
+refreshes without granting credit locally. The homepage, lobby, shop, and both games
+show the same refill status.
+
+Verification: `php backend/tests/juice_test.php` checks exact calculation boundaries;
+`python3 backend/tests/juice_smoke.py` checks persistence, spending/refill interaction,
+account isolation, and concurrent recovery with temporary accounts. Only those
+fixture accounts are altered and removed by the smoke test.

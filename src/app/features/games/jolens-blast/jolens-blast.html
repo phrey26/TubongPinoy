@@ -33,6 +33,7 @@
           <div class="game-values">
             <span class="font-bold text-blue-700"><img src="assets/icons/score.svg" alt="" aria-hidden="true" class="app-icon" /> Final score: {{ showGameOver ? currentScore : 'At session end' }}</span>
             <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ unlimitedJuice ? 'Unlimited' : energyLevel + ' / 100' }}</span>
+            <app-juice-timer />
             <span class="font-bold text-gray-800"><img src="assets/icons/marble.svg" alt="" aria-hidden="true" class="app-icon" /> Your marbles: {{ marbleInventory }}</span>
           </div>
           <div class="game-tools">
@@ -139,7 +140,7 @@
           <div *ngIf="showOutOfJuice" class="absolute inset-0 bg-purple-900/70 backdrop-blur-sm flex items-center justify-center z-40">
             <div class="bg-white p-8 rounded-3xl border-4 border-red-400 shadow-2xl text-center max-w-sm">
               <h2 class="text-3xl font-black text-red-600 mb-4">Out of Juice! <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /></h2>
-              <p class="text-gray-700 mb-6 font-medium">You need 20 juice to place a new bet. Shots within a paid round are free.</p>
+              <p class="text-gray-700 mb-6 font-medium">You need 20 Juice for a new round. Juice refills for free over time; shots within a paid round are free.</p>
               <div class="flex flex-col gap-3">
                 <button (click)="goToShop()" class="ui-button ui-button-red px-10 py-3">
                   Buy More Juice

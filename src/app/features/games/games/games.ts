@@ -1,3 +1,4 @@
+import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
 import { AccountState } from '../../../core/services/account-state';
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -8,7 +9,7 @@ import { RouterModule } from '@angular/router';
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-games',
-  imports: [CommonModule, RouterModule],
+  imports: [JuiceTimer, CommonModule, RouterModule],
   templateUrl: './games.html',
   styleUrl: './games.css',
 })
