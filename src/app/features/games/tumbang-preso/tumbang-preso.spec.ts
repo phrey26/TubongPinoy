@@ -1,3 +1,5 @@
+import { Confirmation } from '../../../core/services/confirmation';
+import { AccountState } from '../../../core/services/account-state';
 import { Game } from '../../../core/services/game';
 import { of, throwError } from 'rxjs';
 import { MemoryEnergy } from '../../../testing/energy-stub';
@@ -102,6 +104,23 @@ describe('TumbangPreso', () => {
     player.closeTutorial();
     expect(save).toHaveBeenCalledTimes(2);
     fresh.destroy();
+  });
+
+  it('confirms leaving an active game and retains progress when cancelled', () => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', email: 'p@example.com', tansans: 0, juice: 100 });
+    const confirmation = TestBed.inject(Confirmation);
+    component.currentScore = 200;
+    let leave: boolean | undefined;
+    const answer = component.confirmLeave();
+    expect(typeof answer).not.toBe('boolean');
+    if (typeof answer !== 'boolean') answer.subscribe(value => leave = value);
+    expect(confirmation.active()?.confirmLabel).toBe('Leave game');
+    confirmation.respond(false);
+    expect(leave).toBe(false);
+    expect(component.currentScore).toBe(200);
+    const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
+    component.onBeforeUnload(event);
+    expect(event.defaultPrevented).toBe(true);
   });
 
   it('should create', () => {

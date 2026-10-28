@@ -1,7 +1,8 @@
 import { Component, ChangeDetectionStrategy, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { EMPTY, finalize, switchMap } from 'rxjs';
 import { Auth, authErrorMessage } from '../../core/services/auth';
+import { Confirmation } from '../../core/services/confirmation';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -13,6 +14,7 @@ import { Auth, authErrorMessage } from '../../core/services/auth';
 export class Header implements OnInit {
   readonly auth = inject(Auth);
   private readonly router = inject(Router);
+  private readonly confirmation = inject(Confirmation);
   readonly loggingOut = signal(false);
   readonly logoutError = signal('');
   readonly menuOpen = signal(false);
@@ -31,7 +33,14 @@ export class Header implements OnInit {
     if (this.loggingOut()) return;
     this.loggingOut.set(true);
     this.logoutError.set('');
-    this.auth.logout().pipe(finalize(() => this.loggingOut.set(false))).subscribe({
+    this.confirmation.ask({
+      title: 'Are you sure you want to log out?',
+      message: 'You will need to log in again to play. Any active game will end.',
+      confirmLabel: 'Log out', cancelLabel: 'Stay logged in',
+    }).pipe(
+      switchMap(confirmed => confirmed ? this.auth.logout() : EMPTY),
+      finalize(() => this.loggingOut.set(false)),
+    ).subscribe({
       next: () => void this.router.navigateByUrl('/games'),
       error: (error: unknown) => this.logoutError.set(authErrorMessage(error)),
     });

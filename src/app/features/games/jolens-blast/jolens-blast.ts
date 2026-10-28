@@ -1,3 +1,5 @@
+import { Confirmation } from '../../../core/services/confirmation';
+import { AccountState } from '../../../core/services/account-state';
 import { Game } from '../../../core/services/game';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Leaderboard } from '../../../shared/leaderboard/leaderboard';
@@ -55,6 +57,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   showIntroduction = true;
   readonly tutorialLoading = signal(true);
   private readonly gameService = inject(Game);
+  private readonly confirmation = inject(Confirmation);
+  private readonly account = inject(AccountState);
   private readonly destroyRef = inject(DestroyRef);
   private tutorialSeen = false;
   private savingTutorial = false;
@@ -225,6 +229,22 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.gameLoop();
   }
 
+  get hasGameToLeave(): boolean { return !!this.account.user() && this.hasStarted && !this.showGameOver; }
+
+  confirmLeave() {
+    if (!this.hasGameToLeave) return true;
+    return this.confirmation.ask({
+      title: 'Are you sure you want to leave?',
+      message: this.savingJuice() ? 'A Juice purchase is still processing and may still be charged if you leave.' : 'Your marbles and unfinished session will be discarded. Choose End Session first if you want to save your final score.',
+      confirmLabel: 'Leave game', cancelLabel: 'Keep playing',
+    });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.hasGameToLeave) { event.preventDefault(); event.returnValue = ''; }
+  }
+
   ngOnDestroy(): void {
     cancelAnimationFrame(this.animationFrameId);
     this.effects.clear();
@@ -301,6 +321,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onMouseDown(event: MouseEvent) {
+    if (this.confirmation.active()) return;
     if (
       this.showIntroduction ||
       !this.hasStarted ||
@@ -348,6 +369,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onMouseUp() {
+    if (this.confirmation.active()) { this.isDragging = false; return; }
     if (!this.isDragging) return;
     this.isDragging = false;
 
@@ -389,6 +411,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   updatePhysics() {
+    if (this.confirmation.active()) return;
     if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) return;
     if (!this.shotInProgress && !this.currentShooter.isMoving &&
         !this.marblesOnBoard.some(marble => marble.isMoving)) return;
@@ -555,6 +578,19 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   get canEndSession(): boolean {
     return !this.savingJuice() && this.hasStarted && !this.showIntroduction && !this.showGameOver && !this.shotInProgress && !this.isDragging;
+  }
+
+  requestEndSession(): void {
+    if (!this.canEndSession) return;
+    this.confirmation.ask({
+      title: 'Are you sure you want to end this session?',
+      message: this.hasCompletedShot
+        ? `Finish with ${this.marbleInventory} marbles for ${this.marbleInventory * 50} points? Your collection will reset for a new game.`
+        : 'You have not completed a shot, so this session will earn 0 points.',
+      confirmLabel: 'End session', cancelLabel: 'Keep playing',
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(confirmed => {
+      if (confirmed) this.endSession();
+    });
   }
 
   endSession(): void {

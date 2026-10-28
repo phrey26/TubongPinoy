@@ -1,6 +1,8 @@
+import { Confirmation } from '../../core/services/confirmation';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { Header } from './header';
@@ -20,6 +22,24 @@ describe('Header', () => {
     fixture.detectChanges();
     TestBed.inject(HttpTestingController).expectOne('/api/session.php').flush({ user: null, csrfToken: 'test' });
     await fixture.whenStable();
+  });
+
+  it('keeps the session when logout is cancelled and sends logout only after confirmation', () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const confirmation = TestBed.inject(Confirmation);
+    const http = TestBed.inject(HttpTestingController);
+    component.logout();
+    http.expectNone('/api/session.php');
+    confirmation.respond(false);
+    expect(component.loggingOut()).toBe(false);
+    http.expectNone('/api/logout.php');
+    component.logout();
+    confirmation.respond(true);
+    http.expectOne('/api/session.php').flush({ user: { id: 1 }, csrfToken: 'token' });
+    http.expectOne('/api/logout.php').flush({ message: 'Logged out.' });
+    expect(component.loggingOut()).toBe(false);
+    expect(navigate).toHaveBeenCalledWith('/games');
+    http.verify();
   });
 
   it('should create', () => {

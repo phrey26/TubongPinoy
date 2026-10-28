@@ -2,10 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, ChangeDetectionStrategy, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
-import { finalize, interval } from 'rxjs';
+import { EMPTY, finalize, interval, switchMap } from 'rxjs';
 import { AccountState } from '../../../core/services/account-state';
 import { authErrorMessage } from '../../../core/services/auth';
 import { Skin, Wallet } from '../../../core/services/wallet';
+import { Confirmation } from '../../../core/services/confirmation';
 
 interface Refill {
   id: string;
@@ -27,6 +28,7 @@ export class Shop implements OnInit {
   private readonly wallet = inject(Wallet);
   private readonly account = inject(AccountState);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmation = inject(Confirmation);
   readonly cosmeticSkins = signal<Skin[]>([]);
   readonly pending = signal(false);
   readonly pendingItem = signal<string | null>(null);
@@ -91,11 +93,22 @@ export class Shop implements OnInit {
 
   private purchase(id: string): void {
     if (this.pending()) return;
+    const item = this.refills.find(refill => refill.id === id) ?? this.cosmeticSkins().find(skin => skin.id === id);
+    if (!item || this.userCoins < item.price) return;
+    const accountId = this.account.user()?.id;
     this.pending.set(true);
-    this.pendingItem.set(id);
     this.message.set('');
     this.errorMessage.set('');
-    this.wallet.change('purchase', id).pipe(
+    this.confirmation.ask({
+      title: 'Are you sure you want to buy this?',
+      message: `Buy ${item.name} for ${item.price.toLocaleString()} Tansans? This amount will be deducted from your balance.`,
+      confirmLabel: 'Buy item', cancelLabel: 'Keep browsing',
+    }).pipe(
+      switchMap(confirmed => {
+        if (!confirmed || this.account.user()?.id !== accountId) return EMPTY;
+        this.pendingItem.set(id);
+        return this.wallet.change('purchase', id);
+      }),
       takeUntilDestroyed(this.destroyRef), finalize(() => { this.pending.set(false); this.pendingItem.set(null); }),
     ).subscribe({
       next: result => {

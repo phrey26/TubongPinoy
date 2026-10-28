@@ -1,3 +1,5 @@
+import { Confirmation } from '../../../core/services/confirmation';
+import { AccountState } from '../../../core/services/account-state';
 import { Game } from '../../../core/services/game';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Leaderboard } from '../../../shared/leaderboard/leaderboard';
@@ -6,7 +8,7 @@ import { finalize } from 'rxjs';
 import { authErrorMessage } from '../../../core/services/auth';
 import { CommonModule } from '@angular/common';
 import { DestroyRef, inject, AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
 import { ImpactEffects } from './impact-effects';
@@ -29,6 +31,9 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   showIntroduction = true;
   readonly tutorialLoading = signal(true);
   private readonly gameService = inject(Game);
+  private readonly confirmation = inject(Confirmation);
+  private readonly account = inject(AccountState);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private tutorialSeen = false;
   private savingTutorial = false;
@@ -92,6 +97,22 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.isDragging = false;
       this.changeDetector.markForCheck();
     }
+  }
+
+  get hasGameToLeave(): boolean { return !!this.account.user() && this.hasStarted; }
+
+  confirmLeave() {
+    if (!this.hasGameToLeave) return true;
+    return this.confirmation.ask({
+      title: 'Are you sure you want to leave?',
+      message: this.savingJuice() ? 'A Juice purchase is still processing and may still be charged if you leave.' : 'Your current level and attempt will reset. Saved high scores stay on your account.',
+      confirmLabel: 'Leave game', cancelLabel: 'Keep playing',
+    });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.hasGameToLeave) { event.preventDefault(); event.returnValue = ''; }
   }
 
   ngOnDestroy(): void {
@@ -169,6 +190,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
+    if (this.confirmation.active()) return;
     if (
       this.showIntroduction ||
       !this.hasStarted ||
@@ -253,6 +275,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   @HostListener('mouseup')
   onMouseUp() {
+    if (this.confirmation.active()) { this.isDragging = false; return; }
     if (!this.isDragging) return;
     this.isDragging = false;
     this.velocity.x = (this.dragStart.x - this.dragCurrent.x) * 0.22;
@@ -351,14 +374,13 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   goToShop() {
-    this.showOutOfJuice = false;
-    window.location.href = '/shop';
+    void this.router.navigate(['/shop']);
   }
 
   private render(timestamp = performance.now()) {
     const seconds = this.lastFrameTime === null ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
     this.lastFrameTime = timestamp;
-    if (this.isLaunched && !this.showIntroduction) this.updatePhysics();
+    if (this.isLaunched && !this.showIntroduction && !this.confirmation.active()) this.updatePhysics();
     for (const popup of this.bankPopups) popup.age += seconds;
     this.bankPopups = this.bankPopups.filter(popup => popup.age < 0.6);
     this.impacts.update(seconds);

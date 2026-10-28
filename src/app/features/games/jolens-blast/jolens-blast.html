@@ -41,7 +41,7 @@
             [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
             <img src="assets/icons/fullscreen.svg" alt="" aria-hidden="true" class="app-icon" />{{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
           </button>
-          <button type="button" (click)="endSession()" [disabled]="!canEndSession"
+          <button type="button" (click)="requestEndSession()" [disabled]="!canEndSession"
             class="px-3 py-2 border-2 border-blue-400 rounded-xl text-blue-800 font-bold disabled:opacity-40">End Session</button>
           </div>
           @if (accountError()) {
@@ -103,7 +103,7 @@
                 <button (click)="chooseNextBet()" class="px-10 py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a] active:translate-y-1 transition font-bold text-gray-950">
                   Place Another Bet
                 </button>
-                <button (click)="endSession()" class="text-sm font-bold text-blue-700 hover:text-blue-900">
+                <button (click)="requestEndSession()" class="text-sm font-bold text-blue-700 hover:text-blue-900">
                   End Session &amp; Score
                 </button>
               </div>
@@ -131,7 +131,7 @@
               <h2 class="text-2xl font-black text-blue-700 mb-3">Collect Your Points</h2>
               <p class="text-gray-700">Not enough Juice for another round? Finish this session and turn your collection into points first.</p>
               <p class="my-4 font-black text-purple-700">{{ hasCompletedShot ? marbleInventory + ' marbles × 50 = ' + (marbleInventory * 50) + ' points' : 'Complete a shot before earning points. This session is worth 0 points.' }}</p>
-              <button type="button" (click)="endSession()" class="jolens-action w-full" [disabled]="!canEndSession">{{ hasCompletedShot ? 'Convert Marbles & End Session' : 'End Session (0 points)' }}</button>
+              <button type="button" (click)="requestEndSession()" class="jolens-action w-full" [disabled]="!canEndSession">{{ hasCompletedShot ? 'Convert Marbles & End Session' : 'End Session (0 points)' }}</button>
             </div>
           </div>
 

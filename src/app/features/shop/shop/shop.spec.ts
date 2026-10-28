@@ -1,3 +1,4 @@
+import { Confirmation } from '../../../core/services/confirmation';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
@@ -19,7 +20,7 @@ describe('Shop', () => {
     fixture = TestBed.createComponent(Shop);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    TestBed.inject(HttpTestingController).expectOne('/api/catalog.php').flush({ skins: [], demoTopupsEnabled: true });
+    TestBed.inject(HttpTestingController).expectOne('/api/catalog.php').flush({ skins: [{ id: 'skin_1', name: 'Dragon Armor', type: 'Legendary Skin', price: 300, imageUrl: 'assets/icons/customization.svg' }], demoTopupsEnabled: true });
     await fixture.whenStable();
   });
 
@@ -37,6 +38,9 @@ describe('Shop', () => {
     state.set(user);
     component.buyCosmetic('skin_1');
     component.buyCosmetic('skin_1');
+    expect(TestBed.inject(Confirmation).active()?.message).toContain('300 Tansans');
+    http.expectNone('/api/session.php');
+    TestBed.inject(Confirmation).respond(true);
     http.expectOne('/api/session.php').flush({ user, csrfToken: 'token' });
     const request = http.expectOne('/api/wallet.php');
     expect(component.owns('skin_1')).toBe(false);
@@ -45,6 +49,17 @@ describe('Shop', () => {
     expect(component.owns('skin_1')).toBe(true);
     component.buyCosmetic('skin_1');
     http.expectNone('/api/session.php');
+  });
+
+  it('cancels a purchase without making requests or spending Tansans', () => {
+    const state = TestBed.inject(AccountState);
+    state.set({ id: 1, username: 'A', email: 'a@example.com', tansans: 700, juice: 80 });
+    component.buyCosmetic('skin_1');
+    TestBed.inject(Confirmation).respond(false);
+    expect(component.pending()).toBe(false);
+    expect(component.userCoins).toBe(700);
+    TestBed.inject(HttpTestingController).expectNone('/api/session.php');
+    TestBed.inject(HttpTestingController).expectNone('/api/wallet.php');
   });
 
   it('replaces the displayed inventory when another account signs in', () => {

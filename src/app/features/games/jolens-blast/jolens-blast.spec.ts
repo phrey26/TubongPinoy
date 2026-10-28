@@ -1,3 +1,5 @@
+import { Confirmation } from '../../../core/services/confirmation';
+import { AccountState } from '../../../core/services/account-state';
 import { Game } from '../../../core/services/game';
 import { of, throwError } from 'rxjs';
 import { MemoryEnergy } from '../../../testing/energy-stub';
@@ -186,6 +188,41 @@ describe('JolensBlast', () => {
     player.closeTutorial();
     expect(save).toHaveBeenCalledTimes(2);
     fresh.destroy();
+  });
+
+  it('confirms leaving an active game and retains progress when cancelled', () => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', email: 'p@example.com', tansans: 0, juice: 100 });
+    const confirmation = TestBed.inject(Confirmation);
+    component.currentScore = 200;
+    let leave: boolean | undefined;
+    const answer = component.confirmLeave();
+    expect(typeof answer).not.toBe('boolean');
+    if (typeof answer !== 'boolean') answer.subscribe(value => leave = value);
+    expect(confirmation.active()?.confirmLabel).toBe('Leave game');
+    confirmation.respond(false);
+    expect(leave).toBe(false);
+    expect(component.currentScore).toBe(200);
+    const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
+    component.onBeforeUnload(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('ends a session only after confirmation and freezes physics while asking', () => {
+    const confirmation = TestBed.inject(Confirmation);
+    component.hasCompletedShot = true;
+    component.marbleInventory = 12;
+    component.requestEndSession();
+    expect(component.showGameOver).toBe(false);
+    const frames = component['shotFrames'];
+    component.updatePhysics();
+    expect(component['shotFrames']).toBe(frames);
+    confirmation.respond(false);
+    expect(component.marbleInventory).toBe(12);
+    expect(component.showGameOver).toBe(false);
+    component.requestEndSession();
+    confirmation.respond(true);
+    expect(component.showGameOver).toBe(true);
+    expect(component.currentScore).toBe(600);
   });
 
   it('should create', () => {

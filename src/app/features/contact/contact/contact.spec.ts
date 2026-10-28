@@ -1,3 +1,4 @@
+import { Confirmation } from '../../../core/services/confirmation';
 import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
@@ -34,6 +35,10 @@ describe('Contact', () => {
     expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain('no message has been sent');
     expect(component.contactForm.value.message).toBe('I have an idea for a new game.');
     component.resetForm();
+    TestBed.inject(Confirmation).respond(false);
+    expect(component.contactForm.value.message).toBe('I have an idea for a new game.');
+    component.resetForm();
+    TestBed.inject(Confirmation).respond(true);
     expect(component.feedback()).toBe('');
     expect(component.contactForm.value.subject).toBe('Game Feedback');
   });
