@@ -1,3 +1,5 @@
+import { Game } from '../../../core/services/game';
+import { of } from 'rxjs';
 import { MemoryEnergy } from '../../../testing/energy-stub';
 import { Subject } from 'rxjs';
 import { vi, afterEach } from 'vitest';
@@ -26,7 +28,7 @@ describe('TumbangPreso', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 
     await TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
+      providers: [{ provide: Game, useValue: { scores: () => of({ highScores: [], personalBest: 0 }), saveScore: () => of({ highScores: [], personalBest: 0 }) } }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
       imports: [TumbangPreso],
     }).compileComponents();
 
@@ -191,6 +193,9 @@ describe('TumbangPreso', () => {
 
     expect(component.showNiceShot).toBe(true);
     expect(component.currentScore).toBe(100);
+    const save = vi.spyOn(TestBed.inject(Game), 'saveScore');
+    fixture.detectChanges();
+    expect(save).toHaveBeenCalledWith('tumbang-preso', 100);
     expect(component.showTryAgain).toBe(false);
   });
 

@@ -1,3 +1,4 @@
+import { Leaderboard } from '../../../shared/leaderboard/leaderboard';
 import { signal } from '@angular/core';
 import { finalize } from 'rxjs';
 import { authErrorMessage } from '../../../core/services/auth';
@@ -26,7 +27,7 @@ interface Marble {
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-jolens-blast',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, Leaderboard],
   templateUrl: './jolens-blast.html',
   styleUrl: './jolens-blast.css',
 })
@@ -133,14 +134,6 @@ export class JolensBlast implements AfterViewInit, OnDestroy {
   showGameOver = false;
   showOutOfJuice = false;
   showCashOut = false;
-
-  // Leaderboard
-  highScores = [
-    { username: 'JuanDelaCruz', points: 4500 },
-    { username: 'MariaClara', points: 3200 },
-    { username: 'JoseRizal', points: 2800 },
-    { username: 'Luzviminda', points: 2100 }
-  ];
 
   // Game Data
   private colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];

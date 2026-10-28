@@ -1,6 +1,34 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { switchMap, throwError, timeout } from 'rxjs';
+import { Auth } from './auth';
+
+export type GameId = 'tumbang-preso' | 'jolens-blast';
+export interface GameScores {
+  game: GameId;
+  highScores: { userId: number; username: string; points: number }[];
+  personalBest: number;
+}
 
 @Injectable({
   providedIn: 'root',
 })
-export class Game {}
+export class Game {
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(Auth);
+
+  scores(game: GameId) {
+    return this.http.get<GameScores>('/api/scores.php', { params: { game } }).pipe(timeout(8000));
+  }
+
+  saveScore(game: GameId, points: number) {
+    return this.auth.loadSession().pipe(
+      switchMap(session => session.user
+        ? this.http.post<GameScores>('/api/scores.php', { game, points }, {
+          headers: { 'X-CSRF-Token': session.csrfToken },
+        })
+        : throwError(() => new HttpErrorResponse({ status: 401 }))),
+      timeout(8000),
+    );
+  }
+}

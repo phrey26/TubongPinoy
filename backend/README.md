@@ -92,8 +92,8 @@ skin, with a unique composite key to prevent double purchases.
 Future skins can be added to the `skins` table (`id`, `name`, `type`, `price`,
 `image_url`, `active`); the shop reads that catalog automatically. The current
 skin catalog uses placeholder artwork. Ownership is implemented; applying a skin
-to a game's visuals is a separate feature. Game scores/leaderboards, email
-verification, and password recovery are not implemented in this backend.
+to a game's visuals is a separate feature. Game high scores are documented below. Email verification and password recovery
+are not implemented in this backend.
 
 For local debugging, `backend/bin/create-debug-account.php` reads a JSON object
 with `username` and `password` from standard input. It creates or resets that
@@ -129,3 +129,26 @@ in the production build. Do not use the MAMP development account for deployment.
 References: [Angular development proxy](https://angular.dev/tools/cli/serve#proxying-to-a-backend-server),
 [PHP password hashing](https://www.php.net/manual/en/function.password-hash.php),
 [PHP session cookie options](https://www.php.net/manual/en/function.session-set-cookie-params.php).
+
+## Game high scores
+
+Run `backend/bin/setup.php` after updating to create `game_high_scores` while
+preserving existing accounts. Each `(user_id, game)` has one personal best.
+`GET /api/scores.php?game=tumbang-preso` (or `jolens-blast`) returns that game's
+top 10 accounts and the signed-in user's `personalBest`. Ties use account ID
+ascending for stable ordering. Accounts without a positive score do not appear.
+`POST /api/scores.php` accepts JSON `{ "game": "tumbang-preso", "points": 100 }`
+and requires a session and CSRF token. The server derives identity from the session
+and atomically retains the greater score, including concurrent submissions.
+Tumbang Preso saves cumulative points after each hit. Jolens Blast saves its final
+score at session end. These scores do not grant Tansans or change the wallet.
+
+Scores are reported by browser gameplay and validated for game, integer range,
+and scoring increments. This does not verify physics or prevent a modified client
+from submitting fabricated scores; competitive anti-cheat would require server
+verification of game runs. Live rankings here mean saved database scores, refreshed
+on page load, score submission, or the Refresh scores button.
+
+Run `python3 backend/tests/scores_smoke.py` to verify authentication, validation,
+per-account/per-game isolation, persistence, and concurrent personal-best updates
+with temporary accounts that are cleaned up afterward.

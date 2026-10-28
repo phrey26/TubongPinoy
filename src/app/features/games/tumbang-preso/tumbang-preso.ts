@@ -1,3 +1,4 @@
+import { Leaderboard } from '../../../shared/leaderboard/leaderboard';
 import { signal } from '@angular/core';
 import { finalize } from 'rxjs';
 import { authErrorMessage } from '../../../core/services/auth';
@@ -11,15 +12,10 @@ import { drawPixelText } from './pixel-text';
 import { generateLevel } from './level-generation';
 import { launchShot, Obstacle, stepShot } from './shot-physics';
 
-interface HighScore {
-  username: string;
-  points: number;
-}
-
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-tumbang-preso',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, Leaderboard],
   templateUrl: './tumbang-preso.html',
   styleUrl: './tumbang-preso.css',
 })
@@ -112,12 +108,6 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   showTryAgain = false;
   showNiceShot = false;
   showOutOfJuice = false;
-
-  highScores: HighScore[] = [
-    { username: 'JuanDelaCruz', points: 1500 },
-    { username: 'SlipperMaster', points: 1200 },
-    { username: 'Pambato01', points: 900 }
-  ];
 
   ngOnInit() {
     this.energySub = this.energyService.getEnergyLevel().subscribe(value => {

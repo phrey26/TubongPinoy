@@ -1,3 +1,5 @@
+import { Game } from '../../../core/services/game';
+import { of } from 'rxjs';
 import { MemoryEnergy } from '../../../testing/energy-stub';
 import { Subject } from 'rxjs';
 import { vi, afterEach } from 'vitest';
@@ -26,7 +28,7 @@ describe('JolensBlast', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 
     await TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
+      providers: [{ provide: Game, useValue: { scores: () => of({ highScores: [], personalBest: 0 }), saveScore: () => of({ highScores: [], personalBest: 0 }) } }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
       imports: [JolensBlast],
     }).compileComponents();
 
@@ -104,6 +106,22 @@ describe('JolensBlast', () => {
     expect(component.hasCompletedShot).toBe(false);
     component.endSession();
     expect(component.currentScore).toBe(0);
+  });
+
+  it('saves the final score to the Jolens leaderboard only when the session ends', () => {
+    const save = vi.spyOn(TestBed.inject(Game), 'saveScore');
+    fixture.detectChanges();
+    expect(save).not.toHaveBeenCalled();
+    component.hasCompletedShot = true;
+    component.marbleInventory = 12;
+    component.endSession();
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    expect(save).toHaveBeenCalledWith('jolens-blast', 600);
+    component.endSession();
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    expect(save).toHaveBeenCalledTimes(1);
   });
 
   it('should create', () => {

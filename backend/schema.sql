@@ -24,6 +24,15 @@ CREATE TABLE IF NOT EXISTS auth_rate_limits (
     INDEX idx_rate_limit_expiry (expires_at)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS game_high_scores (
+    user_id INT UNSIGNED NOT NULL,
+    game VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    points INT UNSIGNED NOT NULL,
+    PRIMARY KEY (user_id, game),
+    INDEX idx_game_ranking (game, points, user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS account_state (
     user_id INT UNSIGNED PRIMARY KEY,
     unlimited_until BIGINT UNSIGNED NOT NULL DEFAULT 0,
