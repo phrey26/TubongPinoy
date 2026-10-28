@@ -1,3 +1,4 @@
+import { AccountState } from '../../core/services/account-state';
 import { Confirmation } from '../../core/services/confirmation';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -40,6 +41,71 @@ describe('Header', () => {
     expect(component.loggingOut()).toBe(false);
     expect(navigate).toHaveBeenCalledWith('/games');
     http.verify();
+  });
+
+  function signIn(): HTMLButtonElement {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Juan', email: 'juan@example.com', tansans: 0, juice: 100 });
+    fixture.detectChanges();
+    return fixture.nativeElement.querySelector('.account-trigger');
+  }
+
+  it('opens account options with placeholders and keeps logout inside the miniwindow', () => {
+    const trigger = signIn();
+    expect(fixture.nativeElement.querySelector('.account-popover')).toBeNull();
+    expect(trigger.textContent).toContain('Juan');
+    expect(trigger.textContent).not.toContain('Logout');
+    trigger.click();
+    fixture.detectChanges();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    const options = [...fixture.nativeElement.querySelectorAll('.account-option')] as HTMLButtonElement[];
+    expect(options).toHaveLength(4);
+    expect(options[0].textContent).toContain('Edit profile');
+    expect(options[1].textContent).toContain('Inventory');
+    expect(options[2].textContent).toContain('Settings');
+    expect(options.slice(0, 3).every(option => option.disabled && option.textContent?.includes('Coming soon'))).toBe(true);
+    expect(options[3].disabled).toBe(false);
+    options[3].click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.account-popover')).toBeNull();
+    expect(TestBed.inject(Confirmation).active()?.confirmLabel).toBe('Log out');
+    TestBed.inject(Confirmation).respond(false);
+    expect(component.auth.user()?.username).toBe('Juan');
+  });
+
+  it('dismisses the miniwindow on Escape, outside click, or moving focus out', () => {
+    const trigger = signIn();
+    const focus = vi.spyOn(trigger, 'focus');
+    trigger.click();
+    fixture.detectChanges();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(component.accountMenuOpen()).toBe(false);
+    expect(focus).toHaveBeenCalled();
+    trigger.click();
+    fixture.detectChanges();
+    document.body.click();
+    expect(component.accountMenuOpen()).toBe(false);
+    trigger.click();
+    fixture.detectChanges();
+    document.body.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    expect(component.accountMenuOpen()).toBe(false);
+  });
+
+  it('opens only one header panel at a time and clears account options on sign-out', () => {
+    const trigger = signIn();
+    component.toggleMenu();
+    trigger.click();
+    fixture.detectChanges();
+    expect(component.menuOpen()).toBe(false);
+    expect(component.accountMenuOpen()).toBe(true);
+    component.toggleMenu();
+    expect(component.menuOpen()).toBe(true);
+    expect(component.accountMenuOpen()).toBe(false);
+    trigger.click();
+    fixture.detectChanges();
+    TestBed.inject(AccountState).set(null);
+    fixture.detectChanges();
+    expect(component.accountMenuOpen()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.account-trigger')).toBeNull();
   });
 
   it('should create', () => {

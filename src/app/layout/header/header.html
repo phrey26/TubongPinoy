@@ -22,10 +22,33 @@
       </a>
     </nav>
 
-    <div class="header-account">
+    <div #accountArea class="header-account">
       @if (auth.user(); as user) {
-        <span class="header-username" [title]="user.username"><img src="assets/icons/account.svg" alt="" aria-hidden="true" /> {{ user.username }}</span>
-        <button type="button" class="ui-button ui-button-indigo account-button" (click)="logout()" [disabled]="loggingOut()">{{ loggingOut() ? 'Logging out…' : 'Logout' }}</button>
+        <button #accountTrigger type="button" class="ui-button ui-button-indigo account-button account-trigger"
+          [attr.aria-label]="user.username + ', account options'" [attr.aria-expanded]="accountMenuOpen()"
+          aria-controls="account-options" [disabled]="loggingOut()" (click)="toggleAccountMenu()">
+          <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="account-avatar" />
+          <span class="header-username" [title]="user.username">{{ loggingOut() ? 'Logging out…' : user.username }}</span>
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" class="account-chevron" [class.is-open]="accountMenuOpen()"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </button>
+        @if (accountMenuOpen()) {
+          <section id="account-options" class="account-popover" aria-label="Account options">
+            <div class="account-popover-heading"><span>Your account</span><strong>{{ user.username }}</strong></div>
+            <ul class="account-options">
+              @for (option of accountOptions; track option.id) {
+                <li>
+                  <button type="button" class="ui-button account-option" [class.ui-button-soft]="!option.available"
+                    [class.ui-button-pink]="option.id === 'logout'" [disabled]="!option.available || loggingOut()"
+                    (click)="selectAccountOption(option.id)">
+                    <img [src]="option.icon" alt="" aria-hidden="true" />
+                    <span>{{ option.label }}</span>
+                    @if (!option.available) { <span class="account-soon">Coming soon</span> }
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
       } @else {
         <a routerLink="/login" routerLinkActive="account-active" class="ui-button ui-button-indigo account-button" (click)="closeMenu()">Login</a>
         <a routerLink="/signup" routerLinkActive="account-active" class="ui-button ui-button-teal account-button signup-button" (click)="closeMenu()">Signup</a>
