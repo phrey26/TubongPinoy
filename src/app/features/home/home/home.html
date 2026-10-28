@@ -29,17 +29,13 @@
     <div class="flex justify-center gap-4 flex-wrap">
 
       <button routerLink="/games"
-        class="px-6 py-3 bg-yellow-400 border-4 border-yellow-600 rounded-2xl
-        shadow-[0_5px_0_#92400e] hover:-translate-y-1 hover:shadow-[0_7px_0_#92400e]
-        active:translate-y-1 active:shadow-[0_3px_0_#92400e] transition font-bold">
+        class="ui-button px-6 py-3">
         <img src="assets/icons/games.svg" alt="" aria-hidden="true" class="inline-block w-7 h-7 mr-2 align-middle" />Explore Games
       </button>
 
       @if (!account.user()) {
       <button routerLink="/signup"
-        class="px-6 py-3 bg-green-400 border-4 border-green-600 rounded-2xl
-        shadow-[0_5px_0_#14532d] hover:-translate-y-1 hover:shadow-[0_7px_0_#14532d]
-        active:translate-y-1 active:shadow-[0_3px_0_#14532d] transition font-bold">
+        class="ui-button ui-button-green px-6 py-3">
         <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="inline-block w-7 h-7 mr-2 align-middle" /> Create Account
       </button>
       }
@@ -163,9 +159,7 @@
     </p>
 
     <button [routerLink]="account.user() ? '/games' : '/signup'"
-      class="px-8 py-4 bg-pink-400 border-4 border-pink-600 rounded-2xl
-      shadow-[0_6px_0_#831843] hover:-translate-y-1 hover:shadow-[0_8px_0_#831843]
-      active:translate-y-1 active:shadow-[0_3px_0_#831843] transition font-bold text-lg">
+      class="ui-button ui-button-pink px-8 py-4 text-lg">
       {{ account.user() ? 'Choose a Game' : 'Join Now' }}
     </button>
 

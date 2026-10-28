@@ -13,7 +13,7 @@
         <dialog #introDialog class="intro-dialog" aria-labelledby="jolens-intro-title" aria-describedby="jolens-intro-description"
           (cancel)="$event.preventDefault(); closeTutorial()">
           <div class="flex items-center justify-end gap-3 mb-2">
-            <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus class="jolens-action tutorial-close">×</button>
+            <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus class="ui-button ui-button-soft ui-button-icon jolens-action tutorial-close">×</button>
           </div>
           <img src="assets/thumbnails/jolens_blast_thumbnail.png" alt="Colorful marbles being knocked out of a circle"
             width="1280" height="720" class="w-full rounded-2xl mb-4" />
@@ -26,7 +26,7 @@
             <li><strong>Choose when to finish.</strong> Clear the circle to place another stake, or end your session between shots. Each marble you own at session end is worth 50 points.</li>
           </ol>
           <p class="mt-4 font-semibold text-blue-700">Each confirmed round costs 20 Juice. Shots within that round are free, even at zero Juice. Opening Play or adjusting your stake costs nothing.</p>
-          <button type="button" (click)="closeTutorial()" class="jolens-action mt-5 w-full">Got it, back to the game</button>
+          <button type="button" (click)="closeTutorial()" class="ui-button ui-button-blue jolens-action mt-5 w-full">Got it, back to the game</button>
         </dialog>
 
         <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-6 py-2 bg-blue-50 rounded-2xl border-2 border-blue-200">
@@ -36,13 +36,13 @@
             <span class="font-bold text-gray-800"><img src="assets/icons/marble.svg" alt="" aria-hidden="true" class="app-icon" /> Your marbles: {{ marbleInventory }}</span>
           </div>
           <div class="game-tools">
-          <button type="button" class="fullscreen-button" [disabled]="tutorialLoading()" (click)="openTutorial()">How to Play</button>
-          <button type="button" class="fullscreen-button" (click)="toggleFullscreen()"
+          <button type="button" class="ui-button ui-button-blue fullscreen-button" [disabled]="tutorialLoading()" (click)="openTutorial()">How to Play</button>
+          <button type="button" class="ui-button ui-button-blue fullscreen-button" (click)="toggleFullscreen()"
             [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
             <img src="assets/icons/fullscreen.svg" alt="" aria-hidden="true" class="app-icon" />{{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
           </button>
           <button type="button" (click)="requestEndSession()" [disabled]="!canEndSession"
-            class="px-3 py-2 border-2 border-blue-400 rounded-xl text-blue-800 font-bold disabled:opacity-40">End Session</button>
+            class="ui-button ui-button-blue px-3 py-2">End Session</button>
           </div>
           @if (accountError()) {
             <p role="alert" class="game-account-error w-full text-sm text-red-700">{{ accountError() }}</p>
@@ -66,7 +66,7 @@
             <div class="bg-white p-6 rounded-3xl border-4 border-blue-400 text-center">
               <h2 class="text-2xl font-black text-blue-700 mb-3">Ready to enter the circle?</h2>
               <p class="text-gray-700">Choose your stake after pressing Play.</p>
-              <button type="button" [disabled]="tutorialLoading()" (click)="play()" class="jolens-action mt-4 w-full">
+              <button type="button" [disabled]="tutorialLoading()" (click)="play()" class="ui-button ui-button-blue jolens-action mt-4 w-full">
                 <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> {{ tutorialLoading() ? 'Loading…' : 'Play' }}
               </button>
             </div>
@@ -78,18 +78,18 @@
               <p class="text-gray-700 mt-3">Your collection: <strong>{{ marbleInventory }} marbles</strong></p>
               <div class="bet-selector" role="group" aria-label="Marble stake">
                 <button type="button" (click)="changeBet(-1)" [disabled]="selectedBet <= 1"
-                  aria-label="Decrease bet" class="jolens-action bet-arrow">‹</button>
+                  aria-label="Decrease bet" class="ui-button ui-button-blue jolens-action bet-arrow">‹</button>
                 <div aria-live="polite" aria-atomic="true" class="bet-value">
                   <img src="assets/icons/marble.svg" alt="" aria-hidden="true" width="64" height="64" class="mx-auto" />
                   <strong>{{ selectedBet }}</strong><span>marbles</span>
                 </div>
                 <button type="button" (click)="changeBet(1)" [disabled]="selectedBet >= maxBet"
-                  aria-label="Increase bet" class="jolens-action bet-arrow">›</button>
+                  aria-label="Increase bet" class="ui-button ui-button-blue jolens-action bet-arrow">›</button>
               </div>
               <p class="text-gray-700">{{ selectedBet * 2 }} targets in the circle.<br />{{ marbleInventory - selectedBet }} marbles stay with you.</p>
               <p class="text-sm text-gray-600">Stake 1–5 and keep at least one shooter.</p>
               <button type="button" (click)="startRound()" [disabled]="savingJuice() || selectedBet < 1 || selectedBet > maxBet"
-                class="jolens-action mt-4 w-full">Confirm Bet &amp; Play</button>
+                class="ui-button ui-button-blue jolens-action mt-4 w-full">Confirm Bet &amp; Play</button>
               <p class="mt-3 text-sm font-semibold text-pink-700">20 <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> per round · Shots are free</p>
             </div>
           </div>
@@ -100,10 +100,10 @@
               <h2 class="text-4xl font-black text-blue-600 mb-2">Board Cleared!</h2>
               <p class="text-gray-600 mb-6 font-medium">You knocked every marble out!</p>
               <div class="flex flex-col gap-3">
-                <button (click)="chooseNextBet()" class="px-10 py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a] active:translate-y-1 transition font-bold text-gray-950">
+                <button (click)="chooseNextBet()" class="ui-button ui-button-blue px-10 py-3">
                   Place Another Bet
                 </button>
-                <button (click)="requestEndSession()" class="text-sm font-bold text-blue-700 hover:text-blue-900">
+                <button (click)="requestEndSession()" class="ui-button ui-button-blue text-sm">
                   End Session &amp; Score
                 </button>
               </div>
@@ -116,10 +116,10 @@
               <h2 class="text-3xl font-black text-purple-700 mb-2">Session Complete!</h2>
               <p class="text-gray-600 mb-6 font-medium">{{ hasCompletedShot ? marbleInventory + ' marbles × 50 = ' + currentScore + ' points.' : 'No shots completed. No points awarded.' }}</p>
               <div class="flex flex-col gap-3">
-                <button (click)="tryAgain()" class="px-10 py-3 bg-blue-400 border-4 border-blue-600 rounded-2xl shadow-[0_5px_0_#1e3a8a] hover:-translate-y-1 hover:shadow-[0_7px_0_#1e3a8a] active:translate-y-1 transition font-bold text-gray-950">
+                <button (click)="tryAgain()" class="ui-button ui-button-blue px-10 py-3">
                   New Game
                 </button>
-                <button routerLink="/games" class="text-xs font-bold text-gray-400 hover:text-pink-500">
+                <button routerLink="/games" class="ui-button ui-button-soft text-xs">
                   Back to Games
                 </button>
               </div>
@@ -131,7 +131,7 @@
               <h2 class="text-2xl font-black text-blue-700 mb-3">Collect Your Points</h2>
               <p class="text-gray-700">Not enough Juice for another round? Finish this session and turn your collection into points first.</p>
               <p class="my-4 font-black text-purple-700">{{ hasCompletedShot ? marbleInventory + ' marbles × 50 = ' + (marbleInventory * 50) + ' points' : 'Complete a shot before earning points. This session is worth 0 points.' }}</p>
-              <button type="button" (click)="requestEndSession()" class="jolens-action w-full" [disabled]="!canEndSession">{{ hasCompletedShot ? 'Convert Marbles & End Session' : 'End Session (0 points)' }}</button>
+              <button type="button" (click)="requestEndSession()" class="ui-button ui-button-blue jolens-action w-full" [disabled]="!canEndSession">{{ hasCompletedShot ? 'Convert Marbles & End Session' : 'End Session (0 points)' }}</button>
             </div>
           </div>
 
@@ -141,10 +141,10 @@
               <h2 class="text-3xl font-black text-red-600 mb-4">Out of Juice! <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /></h2>
               <p class="text-gray-700 mb-6 font-medium">You need 20 juice to place a new bet. Shots within a paid round are free.</p>
               <div class="flex flex-col gap-3">
-                <button (click)="goToShop()" class="px-10 py-3 bg-red-400 border-4 border-red-600 rounded-2xl shadow-[0_5px_0_#7f1d1d] hover:-translate-y-1 hover:shadow-[0_7px_0_#7f1d1d] active:translate-y-1 transition font-bold text-gray-950">
+                <button (click)="goToShop()" class="ui-button ui-button-red px-10 py-3">
                   Buy More Juice
                 </button>
-                <button routerLink="/games" class="px-10 py-3 border-2 border-purple-400 rounded-2xl text-purple-700 font-bold hover:bg-purple-50 transition">
+                <button routerLink="/games" class="ui-button px-10 py-3">
                   Back to Main Menu
                 </button>
               </div>
@@ -158,7 +158,7 @@
 
     <aside class="game-sidebar flex flex-col gap-6">
       <app-leaderboard game="jolens-blast" [score]="showGameOver ? currentScore : 0" />
-      <button routerLink="/games" class="return-to-games">
+      <button routerLink="/games" class="ui-button return-to-games">
         <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m10 5-7 7 7 7M3 12h18" /></svg>
         Back to Games
       </button>

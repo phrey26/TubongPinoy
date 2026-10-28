@@ -7,9 +7,8 @@
 .lobby-card h2 { margin: 14px 0 10px; }
 .lobby-card-body > p { color: #4b5563; }
 .lobby-cost { display: flex; align-items: center; gap: 6px; margin: 20px 0 16px; font-size: 13px; }
-.lobby-card .lobby-play { margin-top: auto; }
+.lobby-card .lobby-play { min-height: 48px; width: 100%; padding: 12px 18px; }
 .lobby-play { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; width: 100%; padding: 12px 18px; border-width: 3px; border-style: solid; border-radius: 14px; box-shadow: 0 4px 0 #581c8733; font-weight: 800; white-space: nowrap; transition: transform 150ms; }
-.lobby-play:hover { transform: translateY(-2px); }
 .lobby-store { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px; margin-top: 40px; border-width: 4px; border-style: solid; border-radius: 24px; }
 .lobby-store .lobby-play { width: auto; flex: none; }
 @media (max-width: 719px) { .lobby-grid { grid-template-columns: 1fr; } .lobby-store { align-items: stretch; flex-direction: column; padding: 20px; } }

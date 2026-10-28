@@ -53,24 +53,7 @@
   font-size: clamp(0.7rem, 1.8vh, 0.875rem);
 }
 
-.fullscreen-button {
-  padding: 6px 12px;
-  border: 2px solid #2563eb;
-  border-radius: 10px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.fullscreen-button:hover {
-  background: #dbeafe;
-}
-
-.fullscreen-button:focus-visible {
-  outline: 3px solid #1d4ed8;
-  outline-offset: 2px;
-}
+.fullscreen-button { padding: 6px 12px; }
 
 .game-panel:fullscreen,
 .game-panel.is-fullscreen {
@@ -227,41 +210,19 @@
 .intro-steps { list-style: decimal; padding-left: 24px; color: #374151; }
 .intro-steps li + li { margin-top: 12px; }
 .intro-steps strong { color: #1d4ed8; }
-.jolens-action {
-  padding: 10px 16px;
-  border: 3px solid #2563eb;
-  border-radius: 14px;
-  background: #bfdbfe;
-  color: #1e3a8a;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #1e3a8a;
-  transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
-}
-.jolens-action:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
-@media (hover: hover) {
-  .jolens-action:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 6px 0 #1e3a8a; filter: brightness(1.08); }
-}
-.jolens-action:not(:disabled):active { transform: translateY(3px); box-shadow: 0 1px 0 #1e3a8a; }
-.jolens-action:focus-visible { outline: 3px solid #7e22ce; outline-offset: 4px; }
 .tutorial-close { font-size: 24px; line-height: 1; }
 .bet-selector { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 20px 0; }
 .bet-value { display: grid; gap: 4px; color: #1d4ed8; }
 .bet-value strong { font-size: 32px; line-height: 1; }
 .bet-value span { font-size: 14px; }
 .game-board .bet-arrow { font-size: 32px; padding: 4px 14px; }
-@media (prefers-reduced-motion: reduce) {
-  .jolens-action { transition: none; }
-  .jolens-action:not(:disabled):hover, .jolens-action:not(:disabled):active { transform: none; }
-}
-
 /* Page controls stay separate from the unchanged canvas and game artwork. */
 .game-heading p { line-height: 1.5; }
 .game-stats { padding: 8px; gap: 8px 12px; }
 .game-values { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
 .game-values > span { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
 .game-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.game-tools button { min-height: 40px; font-size: 12px; }
+.game-tools button { min-height: 44px; font-size: 12px; }
 .game-account-error { padding: 8px 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; line-height: 1.5; }
 .game-sidebar .leaderboard-note { color: #6b7280; font-size: 12px; line-height: 1.5; margin: -4px 0 16px; }
 .game-sidebar .flex.justify-between { gap: 12px; }

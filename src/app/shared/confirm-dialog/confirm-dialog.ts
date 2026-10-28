@@ -10,8 +10,8 @@ import { Confirmation } from '../../core/services/confirmation';
         <h2 id="confirmation-title">{{ request.title }}</h2>
         <p id="confirmation-message">{{ request.message }}</p>
         <div class="actions">
-          <button type="button" autofocus (click)="confirmation.respond(false)">{{ request.cancelLabel || 'Cancel' }}</button>
-          <button type="button" class="confirm" (click)="confirmation.respond(true)">{{ request.confirmLabel }}</button>
+          <button type="button" autofocus (click)="confirmation.respond(false)" class="ui-button ui-button-soft">{{ request.cancelLabel || 'Cancel' }}</button>
+          <button type="button" class="ui-button ui-button-pink confirm" (click)="confirmation.respond(true)">{{ request.confirmLabel }}</button>
         </div>
       }
     </dialog>
@@ -21,11 +21,7 @@ import { Confirmation } from '../../core/services/confirmation';
     dialog::backdrop { background: #2e1065b3; backdrop-filter: blur(3px); }
     h2 { color: #6b21a8; font-size: 24px; font-weight: 800; line-height: 1.3; }
     p { margin-top: 12px; line-height: 1.65; }
-    .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-    button { min-height: 44px; padding: 10px 16px; border: 2px solid #c084fc; border-radius: 12px; color: #581c87; font-weight: 800; cursor: pointer; }
-    button:hover { background: #faf5ff; }
-    .confirm { background: #e9d5ff; border-color: #7e22ce; }
-    .confirm:hover { background: #d8b4fe; }
+    .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-bottom: 4px; }
   `,
 })
 export class ConfirmDialog {

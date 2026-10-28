@@ -42,7 +42,7 @@
             <input id="signup-password" autocomplete="new-password" maxlength="72" formControlName="password" [type]="showPassword ? 'text' : 'password'" placeholder="••••••••"
               [class.border-red-400]="f.password.invalid && f.password.touched" [attr.aria-invalid]="!!(f.password.invalid && f.password.touched)" [attr.aria-describedby]="f.password.invalid && f.password.touched ? 'signup-password-error' : null"
               class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
-            <button type="button" (click)="togglePassword()" class="password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
+            <button type="button" (click)="togglePassword()" class="ui-button ui-button-soft ui-button-icon password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-lg">
               <img [src]="showPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
@@ -55,7 +55,7 @@
             <input id="signup-confirm" autocomplete="new-password" formControlName="confirmPassword" [type]="showConfirmPassword ? 'text' : 'password'" placeholder="••••••••"
               [class.border-red-400]="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" [attr.aria-invalid]="!!(signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched)" [attr.aria-describedby]="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched ? 'signup-confirmPassword-error' : null"
               class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
-            <button type="button" (click)="toggleConfirmPassword()" class="password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-lg opacity-60 hover:opacity-100">
+            <button type="button" (click)="toggleConfirmPassword()" class="ui-button ui-button-soft ui-button-icon password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-lg">
               <img [src]="showConfirmPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showConfirmPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
@@ -69,10 +69,7 @@
       </div>
 
       <button type="submit" [disabled]="signupForm.invalid || isSubmitting()"
-        class="w-full py-4 bg-pink-400 border-4 border-pink-600 rounded-2xl
-        shadow-[0_6px_0_#831843] hover:-translate-y-1 hover:shadow-[0_8px_0_#831843]
-        active:translate-y-1 active:shadow-[0_2px_0_#831843] transition-all font-bold text-base text-purple-950 tracking-wide
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none">
+        class="ui-button ui-button-pink w-full py-4 text-base tracking-wide">
         <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="app-icon" /> {{ isSubmitting() ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT' }}
       </button>
 

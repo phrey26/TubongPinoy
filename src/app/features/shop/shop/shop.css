@@ -26,7 +26,7 @@
 .shop-feedback-error { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
 .shop-feedback > img { width: 22px; height: 22px; flex-shrink: 0; }
 .shop-feedback p { flex: 1; }
-.shop-feedback button { padding: 0 6px; font-size: 24px; cursor: pointer; }
+.shop-feedback button { flex-shrink: 0; font-size: 24px; }
 .shop-section { margin-top: 40px; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 .section-heading h2 { margin-bottom: 4px; color: #581c87; font-size: 24px; font-weight: 800; }
@@ -47,11 +47,8 @@
 .product-price { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; font-size: 18px; font-weight: 800; color: #854d0e; }
 .product-price img { width: 24px; height: 24px; }
 .product-price span { font-size: 12px; font-weight: 600; color: #64748b; }
-.shop-button { width: 100%; min-height: 44px; padding: 10px 12px; border: 2px solid #7e22ce; border-radius: 12px; background: #e9d5ff; box-shadow: 0 3px 0 #7e22ce; color: #581c87; font-size: 14px; font-weight: 800; line-height: 1.4; cursor: pointer; transition: background 150ms, transform 150ms; }
-.shop-button:not(:disabled):hover { background: #d8b4fe; transform: translateY(-1px); }
-.shop-button:not(:disabled):active { transform: translateY(2px); box-shadow: none; }
-.shop-button:disabled { border-color: #e2e8f0; background: #f1f5f9; color: #64748b; box-shadow: none; cursor: not-allowed; }
-.shop-button.shop-button-owned { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+.shop-button { width: 100%; font-size: 14px; }
+.shop-button.shop-button-owned { --button-edge: #86efac; --button-bg: #f0fdf4; --button-text: #166534; }
 .product-owned { border-color: #bbf7d0; }
 .owned-badge { position: absolute; top: 8px; right: 8px; }
 .shop-empty { padding: 32px; border: 2px dashed #e9d5ff; border-radius: 20px; text-align: center; background: #ffffffa6; color: #64748b; }
@@ -66,4 +63,3 @@ a:focus-visible, button:focus-visible { outline: 3px solid #9333ea; outline-offs
   .shop-heading-icon { width: 56px; height: 56px; }
 }
 @media (max-width: 419px) { .shop-page { padding: 24px 16px 48px; } .skin-grid { grid-template-columns: 1fr; } .wallet-item { padding: 20px; } }
-@media (prefers-reduced-motion: reduce) { .shop-button { transition: none; } .shop-button:not(:disabled):hover, .shop-button:not(:disabled):active { transform: none; } }

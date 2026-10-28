@@ -5,19 +5,19 @@
     </a>
 
     <nav id="primary-navigation" class="primary-nav" [class.is-open]="menuOpen()" aria-label="Main navigation">
-      <a routerLink="/" routerLinkActive="nav-active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" class="nav-link nav-home" (click)="closeMenu()">
+      <a routerLink="/" routerLinkActive="nav-active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" class="ui-button ui-button-gold nav-link nav-home" (click)="closeMenu()">
         <img src="assets/icons/home.svg" alt="" aria-hidden="true" /> Home
       </a>
-      <a routerLink="/games" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="nav-link nav-games" (click)="closeMenu()">
+      <a routerLink="/games" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="ui-button ui-button-orange nav-link nav-games" (click)="closeMenu()">
         <img src="assets/icons/games.svg" alt="" aria-hidden="true" /> Games
       </a>
-      <a routerLink="/shop" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="nav-link nav-shop" (click)="closeMenu()">
+      <a routerLink="/shop" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="ui-button ui-button-green nav-link nav-shop" (click)="closeMenu()">
         <img src="assets/icons/shop.svg" alt="" aria-hidden="true" /> Shop
       </a>
-      <a routerLink="/topup" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="nav-link nav-topup" (click)="closeMenu()">
+      <a routerLink="/topup" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="ui-button ui-button-blue nav-link nav-topup" (click)="closeMenu()">
         <img src="assets/icons/wallet.svg" alt="" aria-hidden="true" /> Top Up <span class="nav-soon">Soon</span>
       </a>
-      <a routerLink="/contact" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="nav-link nav-contact" (click)="closeMenu()">
+      <a routerLink="/contact" routerLinkActive="nav-active" ariaCurrentWhenActive="page" class="ui-button ui-button-pink nav-link nav-contact" (click)="closeMenu()">
         <img src="assets/icons/mail.svg" alt="" aria-hidden="true" /> Contact
       </a>
     </nav>
@@ -25,13 +25,13 @@
     <div class="header-account">
       @if (auth.user(); as user) {
         <span class="header-username" [title]="user.username"><img src="assets/icons/account.svg" alt="" aria-hidden="true" /> {{ user.username }}</span>
-        <button type="button" class="account-button" (click)="logout()" [disabled]="loggingOut()">{{ loggingOut() ? 'Logging out…' : 'Logout' }}</button>
+        <button type="button" class="ui-button ui-button-indigo account-button" (click)="logout()" [disabled]="loggingOut()">{{ loggingOut() ? 'Logging out…' : 'Logout' }}</button>
       } @else {
-        <a routerLink="/login" routerLinkActive="account-active" class="account-button" (click)="closeMenu()">Login</a>
-        <a routerLink="/signup" routerLinkActive="account-active" class="account-button signup-button" (click)="closeMenu()">Signup</a>
+        <a routerLink="/login" routerLinkActive="account-active" class="ui-button ui-button-indigo account-button" (click)="closeMenu()">Login</a>
+        <a routerLink="/signup" routerLinkActive="account-active" class="ui-button ui-button-teal account-button signup-button" (click)="closeMenu()">Signup</a>
       }
     </div>
-    <button type="button" class="menu-button" [attr.aria-expanded]="menuOpen()" aria-controls="primary-navigation" (click)="toggleMenu()">
+    <button type="button" class="ui-button ui-button-indigo menu-button" [attr.aria-expanded]="menuOpen()" aria-controls="primary-navigation" (click)="toggleMenu()">
       <span aria-hidden="true">☰</span> {{ menuOpen() ? 'Close' : 'Menu' }}
     </button>
   </div>

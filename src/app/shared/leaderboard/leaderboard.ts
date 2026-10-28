@@ -24,7 +24,7 @@ import { Game, GameId, GameScores } from '../../core/services/game';
           </li>
         }
       </ol>
-      <button type="button" class="mt-3 min-h-11 px-3 border-2 border-purple-300 rounded-xl font-bold text-purple-700"
+      <button type="button" class="ui-button mt-3 min-h-11 px-3"
         [disabled]="loading()" (click)="refresh()">{{ failedScore ? 'Retry saving score' : 'Refresh scores' }}</button>
     </section>
   `,

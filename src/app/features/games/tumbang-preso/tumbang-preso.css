@@ -28,49 +28,6 @@
 .intro-steps li + li { margin-top: 12px; }
 .intro-steps strong { color: #7e22ce; }
 
-.game-action,
-.fullscreen-button {
-  --button-shadow: #14532d;
-  cursor: pointer;
-  box-shadow: 0 4px 0 var(--button-shadow);
-  transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
-}
-
-.game-action-purple,
-.fullscreen-button {
-  --button-shadow: #581c87;
-}
-
-@media (hover: hover) {
-  .game-action:hover,
-  .fullscreen-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 var(--button-shadow);
-    filter: brightness(1.08);
-  }
-}
-
-.game-action:active,
-.fullscreen-button:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 var(--button-shadow);
-  filter: brightness(0.95);
-}
-
-.game-action:focus-visible {
-  outline: 3px solid #7e22ce;
-  outline-offset: 4px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .game-action,
-  .fullscreen-button { transition: none; }
-  .game-action:hover,
-  .game-action:active,
-  .fullscreen-button:hover,
-  .fullscreen-button:active { transform: none; }
-}
-
 .game-page {
   /* The shared header spacer and footer each occupy 4rem. */
   height: calc(100dvh - var(--site-header-height) - var(--site-footer-height));
@@ -122,24 +79,7 @@
   font-size: clamp(0.7rem, 1.8vh, 0.875rem);
 }
 
-.fullscreen-button {
-  padding: 6px 12px;
-  border: 2px solid #9333ea;
-  border-radius: 10px;
-  background: #f3e8ff;
-  color: #7e22ce;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.fullscreen-button:hover {
-  background: #e9d5ff;
-}
-
-.fullscreen-button:focus-visible {
-  outline: 3px solid #7e22ce;
-  outline-offset: 2px;
-}
+.fullscreen-button { padding: 6px 12px; }
 
 .game-panel:fullscreen,
 .game-panel.is-fullscreen {
@@ -282,7 +222,7 @@
 .game-values { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
 .game-values > span { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
 .game-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.game-tools button { min-height: 40px; font-size: 12px; }
+.game-tools button { min-height: 44px; font-size: 12px; }
 .game-account-error { padding: 8px 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; line-height: 1.5; }
 .game-sidebar .leaderboard-note { color: #6b7280; font-size: 12px; line-height: 1.5; margin: -4px 0 16px; }
 .game-sidebar .flex.justify-between { gap: 12px; }

@@ -5,6 +5,6 @@
 .footer-brand img { flex: none; }
 .footer-inner p { font-size: 12px; text-align: center; }
 .footer-socials { display: flex; flex-wrap: wrap; justify-content: flex-end; justify-self: end; gap: 8px; }
-.footer-socials button { display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 10px; border: 2px solid #6366f1; border-radius: 12px; background: #e0e7ff; color: #3730a3; font-size: 12px; font-weight: 700; cursor: not-allowed; }
+.footer-socials button { gap: 6px; padding: 6px 10px; font-size: 12px; }
 .footer-socials span { font-size: 10px; font-weight: 500; }
 @media (max-width: 979px) { .footer-inner { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; padding: 16px; text-align: center; } .footer-inner p { order: 3; width: 100%; } .footer-socials { justify-content: center; } }

@@ -33,8 +33,8 @@
             @if (isSubmitted && f['message'].invalid) { <p id="contact-message-error" class="field-error">Write at least 10 characters.</p> }
           </div>
           <div class="contact-actions">
-            <button type="submit" class="contact-submit"><img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /> Preview Message</button>
-            <button type="button" class="contact-reset" (click)="resetForm()">Clear form</button>
+            <button type="submit" class="ui-button ui-button-teal contact-submit"><img src="assets/icons/mail.svg" alt="" aria-hidden="true" class="app-icon" /> Preview Message</button>
+            <button type="button" class="ui-button ui-button-soft contact-reset" (click)="resetForm()">Clear form</button>
           </div>
         </form>
       </section>

@@ -44,7 +44,7 @@
       <div class="shop-feedback" [class.shop-feedback-error]="errorMessage()" [attr.role]="errorMessage() ? 'alert' : 'status'">
         <img [src]="errorMessage() ? 'assets/icons/warning.svg' : 'assets/icons/check.svg'" alt="" aria-hidden="true" />
         <p>{{ errorMessage() || message() }}</p>
-        <button type="button" aria-label="Dismiss message" (click)="dismissMessage()">×</button>
+        <button type="button" aria-label="Dismiss message" (click)="dismissMessage()" class="ui-button ui-button-soft ui-button-icon">×</button>
       </div>
     }
 
@@ -68,7 +68,7 @@
             <p class="product-description">{{ item.description }}</p>
             <div class="product-footer">
               <p class="product-price"><img src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ item.price | number }} <span>Tansans</span></p>
-              <button type="button" class="shop-button" [disabled]="refillUnavailable(item)" (click)="buyItem(item.id)"
+              <button type="button" class="ui-button shop-button" [disabled]="refillUnavailable(item)" (click)="buyItem(item.id)"
                 [attr.aria-label]="item.name + ': ' + refillButtonLabel(item)">
                 {{ refillButtonLabel(item) }}
               </button>
@@ -92,7 +92,7 @@
       } @else if (catalogError()) {
         <div class="shop-empty" role="alert">
           <p>We couldn’t load the collection. Please try again.</p>
-          <button type="button" class="shop-button" (click)="loadCatalog()">Try again</button>
+          <button type="button" class="ui-button shop-button" (click)="loadCatalog()">Try again</button>
         </div>
       } @else if (cosmeticSkins().length === 0) {
         <div class="shop-empty">New skins are on their way. Check back soon!</div>
@@ -108,7 +108,7 @@
               <h3>{{ skin.name }}</h3>
               <div class="product-footer">
                 <p class="product-price"><img src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ skin.price | number }} <span>Tansans</span></p>
-                <button type="button" class="shop-button" [class.shop-button-owned]="owns(skin.id)"
+                <button type="button" class="ui-button shop-button" [class.shop-button-owned]="owns(skin.id)"
                   [disabled]="pending() || owns(skin.id) || userCoins < skin.price" (click)="buyCosmetic(skin.id)"
                   [attr.aria-label]="skin.name + ': ' + skinButtonLabel(skin)">
                   {{ skinButtonLabel(skin) }}

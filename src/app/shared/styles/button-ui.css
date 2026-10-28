@@ -1,0 +1,64 @@
+/* Shared raised controls, matching the playground's colorful cards and borders. */
+.ui-button {
+  --button-bg: #e9d5ff;
+  --button-hover: #d8b4fe;
+  --button-edge: #9333ea;
+  --button-shadow: #6b21a8;
+  --button-text: #581c87;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 3px solid var(--button-edge);
+  border-radius: 14px;
+  background: var(--button-bg);
+  color: var(--button-text);
+  box-shadow: 0 4px 0 var(--button-shadow);
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transform: translateY(0);
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ui-button-blue { --button-bg: #bfdbfe; --button-hover: #93c5fd; --button-edge: #2563eb; --button-shadow: #1e3a8a; --button-text: #1e3a8a; }
+.ui-button-green { --button-bg: #4ade80; --button-hover: #86efac; --button-edge: #16a34a; --button-shadow: #14532d; --button-text: #052e16; }
+.ui-button-pink { --button-bg: #f9a8d4; --button-hover: #f472b6; --button-edge: #db2777; --button-shadow: #831843; --button-text: #500724; }
+.ui-button-teal { --button-bg: #5eead4; --button-hover: #2dd4bf; --button-edge: #0f766e; --button-shadow: #134e4a; --button-text: #134e4a; }
+.ui-button-gold { --button-bg: #facc15; --button-hover: #fde047; --button-edge: #ca8a04; --button-shadow: #854d0e; --button-text: #422006; }
+.ui-button-orange { --button-bg: #fb923c; --button-hover: #fdba74; --button-edge: #ea580c; --button-shadow: #9a3412; --button-text: #431407; }
+.ui-button-red { --button-bg: #fca5a5; --button-hover: #f87171; --button-edge: #dc2626; --button-shadow: #7f1d1d; --button-text: #450a0a; }
+.ui-button-indigo { --button-bg: #e0e7ff; --button-hover: #c7d2fe; --button-edge: #4f46e5; --button-shadow: #3730a3; --button-text: #312e81; }
+.ui-button-soft { --button-bg: #faf5ff; --button-hover: #f3e8ff; --button-edge: #c084fc; --button-shadow: #9333ea; --button-text: #6b21a8; }
+.ui-button-icon { width: 44px; min-width: 44px; padding: 6px; border-width: 2px; border-radius: 12px; }
+@media (hover: hover) {
+  .ui-button:not(:disabled):hover {
+    background: var(--button-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--button-shadow);
+  }
+}
+.ui-button:not(:disabled):active {
+  background: var(--button-hover);
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--button-shadow);
+}
+.ui-button:focus-visible { outline: 3px solid #7e22ce; outline-offset: 4px; }
+.ui-button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+  filter: saturate(.5);
+  transform: none;
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-button { transition: none; }
+  .ui-button:not(:disabled):hover, .ui-button:not(:disabled):active {
+    transform: none;
+    box-shadow: 0 4px 0 var(--button-shadow);
+  }
+}
