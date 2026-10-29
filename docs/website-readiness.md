@@ -1,6 +1,6 @@
 # Website readiness
 
-Updated October 29, 2026. These changes target the current local Angular/PHP app.
+Updated October 30, 2026. These changes target the current local Angular/PHP app.
 They do not deploy the project or make the existing build ready to upload to itch.io.
 
 ## Requested checklist
@@ -67,14 +67,15 @@ descriptions; it is not resolved by alt text or an automated accessibility scan.
 ## Verification
 
 - `npm test -- --watch=false` — Angular component, service, routing and physics tests.
-- `npm run build` — optimized bundle and size budgets. Three existing component CSS
-  warnings remain for Shop and the two games; the initial bundle is below 500 kB.
+- `npm run build` — optimized bundle and size budgets. All component styles are
+  below the unchanged 4 kB warning budget; the initial bundle is below 500 kB.
 - Existing backend smoke suites are described in `backend/README.md` and use
   temporary accounts with cleanup.
 
 Image optimization uses derived WebP assets while retaining original artwork. The
 eleven optimized files total about 1.81 MB, compared with 20.70 MB of originals.
-The initial production JS/CSS bundle was reduced from about 570.59 kB to 391.95 kB.
+The initial production JS/CSS bundle was reduced from about 570.59 kB to 392.41 kB
+(about 104 kB estimated transfer).
 
 Verified locally on October 29, 2026:
 
@@ -94,3 +95,25 @@ Verified locally on October 29, 2026:
 - All 47 literal asset references found in the production bundles resolve to
   packaged files. All 11 derived WebP images are present. Packaged assets total
   about 2.32 MiB.
+
+October 30 follow-up:
+
+- Removed unused and overridden game styles, consolidated Shop styles, and reused
+  existing layout utilities. Removed obsolete game column-span utilities so the
+  board and leaderboard retain their intended desktop layout.
+- The home About image now loads eagerly because it can be the largest visible
+  image on the initial screen. The lower call-to-action image remains lazy loaded.
+- Corrected the footer brand link's accessible name to include its visible
+  “HH productions” label, addressing the voice-control label mismatch.
+- Production build passes without warnings; existing size budgets were not raised.
+- All 213 Angular tests pass across 38 files.
+- Twelve Chrome page/state/viewport checks (Home, Shop, and both game tutorial and
+  board states at 390 px and 1440 px) pass the axe WCAG A/AA rules checked. No
+  horizontal overflow, missing alt attributes, broken images, or JavaScript
+  exceptions were found. Account/API responses were mocked for these visual
+  checks; this follow-up did not repeat the live backend form audit above.
+
+Still deferred: production URL-dependent SEO files, final policy contact/retention
+details, and deployment integration with a separately hosted account backend.
+Analytics stays disabled. Keyboard-only canvas gameplay remains a documented
+accessibility limitation, outside the completed basic page-accessibility checks.

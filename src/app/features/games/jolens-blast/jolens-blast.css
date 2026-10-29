@@ -23,6 +23,7 @@
 
 .game-heading p {
   font-size: clamp(0.75rem, 1.8vh, 1rem);
+  line-height: 1.5;
 }
 
 .game-layout {
@@ -35,7 +36,6 @@
 .play-section {
   min-width: 0;
   min-height: 0;
-  grid-column: auto;
 }
 
 .game-panel {
@@ -49,7 +49,8 @@
 
 .game-stats {
   margin-bottom: 8px;
-  padding: 4px 8px;
+  padding: 8px;
+  gap: 8px 12px;
   font-size: clamp(0.7rem, 1.8vh, 0.875rem);
 }
 
@@ -116,11 +117,7 @@
   flex: none;
 }
 
-.game-board canvas {
-  image-rendering: pixelated;
-}
-
-.game-board img {
+.game-board canvas, .game-board img {
   image-rendering: pixelated;
 }
 
@@ -128,15 +125,6 @@
   min-height: 0;
   overflow-y: auto;
   gap: 12px;
-}
-
-.game-sidebar > div {
-  padding: 16px;
-}
-
-.game-sidebar h2 {
-  font-size: 1.25rem;
-  margin-bottom: 12px;
 }
 
 .game-board > div {
@@ -171,6 +159,7 @@
 }
 
 .game-board button {
+  min-height: 44px;
   padding: 8px 12px;
   font-size: clamp(0.75rem, 4cqw, 1rem);
 }
@@ -178,7 +167,8 @@
 @media (max-width: 799px) {
   .game-page {
     height: auto;
-    padding: 12px;
+    min-height: 0;
+    padding: 20px 16px 32px;
     grid-template-rows: auto auto;
   }
 
@@ -192,7 +182,10 @@
 
   .game-sidebar {
     overflow: visible;
+    margin-top: 8px;
   }
+  .game-heading p { font-size: 13px; }
+  .game-tools { width: 100%; }
 }
 
 .intro-dialog {
@@ -200,7 +193,7 @@
   width: min(540px, calc(100vw - 24px));
   max-height: calc(100dvh - 24px);
   overflow-y: auto;
-  padding: 24px;
+  padding: clamp(16px, 4vw, 24px);
   border: 4px solid #60a5fa;
   border-radius: 24px;
   background: white;
@@ -217,19 +210,9 @@
 .bet-value span { font-size: 14px; }
 .game-board .bet-arrow { font-size: 32px; padding: 4px 14px; }
 /* Page controls stay separate from the unchanged canvas and game artwork. */
-.game-heading p { line-height: 1.5; }
-.game-stats { padding: 8px; gap: 8px 12px; }
 .game-values { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
 .game-values > span { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
 .game-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.game-tools button { min-height: 44px; font-size: 12px; }
+.game-tools button { font-size: 12px; }
 .game-account-error { padding: 8px 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; line-height: 1.5; }
-.game-sidebar .leaderboard-note { color: #6b7280; font-size: 12px; line-height: 1.5; margin: -4px 0 16px; }
-.game-sidebar .flex.justify-between { gap: 12px; }
-.game-sidebar .flex.justify-between > span:first-child { min-width: 0; overflow-wrap: anywhere; }
-.game-sidebar .flex.justify-between > span:last-child { flex: none; }
-.game-board button { min-height: 44px; }
-.intro-dialog { padding: clamp(16px, 4vw, 24px); }
 .intro-dialog p, .intro-steps { font-size: 14px; line-height: 1.65; }
-.intro-dialog button[aria-label="Close tutorial"] { min-width: 44px; min-height: 44px; }
-@media (max-width: 799px) { .game-page { min-height: 0; padding: 20px 16px 32px; } .game-heading p { font-size: 13px; } .game-tools { width: 100%; } .game-sidebar { margin-top: 8px; } }
