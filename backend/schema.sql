@@ -35,6 +35,13 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Incrementing this version revokes older login sessions after credential changes.
+CREATE TABLE IF NOT EXISTS account_security (
+    user_id INT UNSIGNED PRIMARY KEY,
+    version BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS game_high_scores (
     user_id INT UNSIGNED NOT NULL,
     game VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,

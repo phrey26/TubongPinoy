@@ -1,12 +1,13 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
+import { EMPTY, finalize, switchMap } from 'rxjs';
 import { AccountState } from '../../../core/services/account-state';
 import { User } from '../../../core/services/user';
 import { authErrorMessage } from '../../../core/services/auth';
 import { Collectible, DEFAULT_GAME_SKINS, GameSkin, gameSkinUrl } from '../../../core/services/customization';
 import { GameId } from '../../../core/services/game';
+import { Confirmation } from '../../../core/services/confirmation';
 
 @Component({
   selector: 'app-inventory', imports: [RouterLink],
@@ -15,6 +16,7 @@ import { GameId } from '../../../core/services/game';
 export class Inventory {
   readonly account = inject(AccountState);
   private readonly service = inject(User);
+  private readonly confirmation = inject(Confirmation);
   private readonly destroyRef = inject(DestroyRef);
   readonly game = signal<GameId>('tumbang-preso');
   readonly items = signal<GameSkin[]>([]);
@@ -60,7 +62,13 @@ export class Inventory {
     this.pending.set(item.id);
     this.error.set('');
     this.message.set('');
-    this.service.equip(item.game, item.id).pipe(
+    this.confirmation.ask({
+      title: 'Are you sure you want to change skins?',
+      message: `Equip ${item.name} for ${item.game === 'tumbang-preso' ? 'Tumbang Preso' : 'Jolens Blast'}? This starter skin is free to use.`,
+      confirmLabel: 'Equip skin', cancelLabel: 'Keep current skin',
+    }).pipe(
+      switchMap(confirmed => confirmed && this.account.user()?.id === id
+        ? this.service.equip(item.game, item.id) : EMPTY),
       takeUntilDestroyed(this.destroyRef), finalize(() => this.pending.set(null)),
     ).subscribe({
       next: result => {
@@ -68,5 +76,18 @@ export class Inventory {
       },
       error: error => { if (this.account.user()?.id === id) this.error.set(authErrorMessage(error)); },
     });
+  }
+
+  confirmLeave() {
+    return !this.pending() || this.confirmation.ask({
+      title: 'Are you sure you want to leave?',
+      message: 'Your skin change is still saving and may complete after you leave.',
+      confirmLabel: 'Leave page', cancelLabel: 'Stay here',
+    });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.pending()) { event.preventDefault(); event.returnValue = ''; }
   }
 }

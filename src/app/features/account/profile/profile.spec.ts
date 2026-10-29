@@ -30,6 +30,8 @@ describe('Edit profile', () => {
     expect(service.saveProfile).not.toHaveBeenCalled();
     service.saveProfile.mockReturnValue(of({ user: { ...player, displayName: 'Maria José', avatarId: 'maya' } }));
     component.save();
+    expect(service.saveProfile).not.toHaveBeenCalled();
+    TestBed.inject(Confirmation).respond(true);
     expect(service.saveProfile).toHaveBeenCalledWith('Maria José', 'maya');
     expect(component.hasChanges).toBe(false);
     expect(component.message()).toContain('Profile saved');
@@ -49,6 +51,7 @@ describe('Edit profile', () => {
     service.saveProfile.mockReturnValue(pending);
     component.form.controls.displayName.setValue('New Name');
     component.save(); component.save();
+    TestBed.inject(Confirmation).respond(true);
     expect(service.saveProfile).toHaveBeenCalledTimes(1);
     expect(component.pending()).toBe(true);
     pending.error(new Error('offline'));
@@ -56,6 +59,8 @@ describe('Edit profile', () => {
     expect(component.hasChanges).toBe(true);
     expect(component.error()).toContain('could not reach');
     component.discard();
+    expect(component.hasChanges).toBe(true);
+    TestBed.inject(Confirmation).respond(true);
     expect(component.hasChanges).toBe(false);
     expect(component.form.controls.displayName.value).toBe('Juan Plays');
   });
@@ -70,5 +75,15 @@ describe('Edit profile', () => {
     TestBed.inject(Confirmation).respond(false);
     expect(leave).toBe(false);
     expect(component.form.controls.displayName.value).toBe('New Name');
+  });
+
+  it('keeps the draft and sends no save when confirmation is cancelled', () => {
+    const { component, service } = setup();
+    component.form.controls.displayName.setValue('New Name');
+    component.save();
+    TestBed.inject(Confirmation).respond(false);
+    expect(service.saveProfile).not.toHaveBeenCalled();
+    expect(component.hasChanges).toBe(true);
+    expect(component.pending()).toBe(false);
   });
 });

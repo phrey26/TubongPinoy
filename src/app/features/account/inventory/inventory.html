@@ -9,6 +9,7 @@
     <nav class="account-tabs" aria-label="Account pages">
       <a routerLink="/account/profile" class="ui-button ui-button-soft">Edit profile</a>
       <a routerLink="/account/inventory" class="ui-button" aria-current="page">Inventory</a>
+      <a routerLink="/account/settings" class="ui-button ui-button-soft">Settings</a>
     </nav>
     <div class="account-tabs" role="group" aria-label="Choose a game">
       <button type="button" class="ui-button ui-button-gold" [attr.aria-pressed]="game() === 'tumbang-preso'" (click)="selectGame('tumbang-preso')">Tumbang Preso</button>

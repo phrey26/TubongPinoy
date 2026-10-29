@@ -16,8 +16,8 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
    /Applications/MAMP/bin/php/php8.3.30/bin/php backend/bin/setup.php
    ```
 
-   This creates missing tables without dropping existing accounts. If you already
-   created the users table from our earlier SQL, only the rate-limit table is new.
+   This creates missing tables without dropping existing accounts, including
+   profile preferences and account session versions used by Settings.
 4. Link **only `backend/public`** to MAMP's document root:
 
    ```sh
@@ -42,6 +42,7 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
 | GET | `/api/me.php` | Authenticated profile; returns 401 to guests |
 | GET | `/api/catalog.php` | Available skins and whether simulated top-ups are enabled |
 | POST | `/api/wallet.php` | Authenticated Juice consumption, shop purchases, or demo top-ups |
+| POST | `/api/settings.php` | Change username, email, or password after verifying the current password |
 
 POST requests require JSON and the `X-CSRF-Token` from the session endpoint.
 Signup accepts `username`, `email`, `password`, and `terms: true`.
@@ -224,3 +225,36 @@ selected sprite for the next visit; gameplay physics and scores are unchanged.
 Run `python3 backend/tests/profile_smoke.py` to check validation, CSRF, account
 isolation, persistence, concurrent updates, asset availability and leaderboard
 identity. It creates and removes only its uniquely named fixture accounts.
+
+## Account settings and confirmations
+
+Run `backend/bin/setup.php` to add `account_security` before serving this version.
+The protected `/account/settings` page changes username, email and password in
+separate forms. Each save and skin equip uses the shared “Are you sure?” dialog.
+Profile and Settings drafts also require confirmation before discarding or
+leaving; closing/reloading the browser uses its native unsaved-change prompt.
+
+`POST /api/settings.php` requires a session, CSRF token, `currentPassword`, and:
+
+- `action: "username"` with `username` (3–50 ASCII letters, digits or underscores).
+- `action: "email"` with `email` (a valid address, normalized to lowercase).
+- `action: "password"` with matching `newPassword` and `confirmPassword`
+  (8–72 UTF-8 bytes, no null characters, consistent with signup).
+
+The current password is verified for every change. Duplicate usernames/emails
+return 409; incorrect current passwords return 422 without signing the user out.
+There is a per-account limit of 15 attempts per 15 minutes. Account IDs come from
+the session. Profile display names, equipped skins, purchases and balances stay
+intact when sign-in details change. Email changes take effect immediately; this
+does not add email verification or password recovery.
+
+Successful changes rotate the current session ID and CSRF token, preserve the
+original expiry/Remember Me choice, and increment an account security version.
+Other sessions become invalid at their next authenticated request. Existing
+sessions without a version use zero until the first credential change. Login
+and credential changes share the account row lock to prevent concurrent login
+from accepting an obsolete password with a new session version.
+
+Run `python3 backend/tests/settings_smoke.py` to verify validation, uniqueness,
+current-password checks, rotation, session invalidation, persistence and
+concurrent credential updates. Only its temporary fixture accounts are removed.

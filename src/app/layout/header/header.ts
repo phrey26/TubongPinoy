@@ -28,7 +28,7 @@ export class Header implements OnInit {
   readonly accountOptions = [
     { id: 'edit-profile', label: 'Edit profile', icon: 'assets/icons/account.svg', available: true },
     { id: 'inventory', label: 'Inventory', icon: 'assets/icons/package.svg', available: true },
-    { id: 'settings', label: 'Settings', icon: 'assets/icons/settings.svg', available: false },
+    { id: 'settings', label: 'Settings', icon: 'assets/icons/settings.svg', available: true },
     { id: 'logout', label: 'Logout', icon: 'assets/icons/logout.svg', available: true },
   ];
 
@@ -68,9 +68,9 @@ export class Header implements OnInit {
 
   selectAccountOption(id: string): void {
     if (id === 'logout') this.logout();
-    if (id === 'edit-profile' || id === 'inventory') {
+    if (id === 'edit-profile' || id === 'inventory' || id === 'settings') {
       this.closeMenu();
-      void this.router.navigateByUrl(id === 'edit-profile' ? '/account/profile' : '/account/inventory');
+      void this.router.navigateByUrl('/account/' + (id === 'edit-profile' ? 'profile' : id));
     }
   }
 

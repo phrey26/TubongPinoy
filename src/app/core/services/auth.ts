@@ -87,5 +87,5 @@ export function authErrorMessage(error: unknown): string {
 
 export function safeReturnUrl(value: string | null): string {
   return value && !/[\\\u0000-\u001f]/.test(value) &&
-    /^\/(?:games(?:\/[a-z0-9-]+)*|shop|topup|account\/(?:profile|inventory))(?:[?#].*)?$/.test(value) ? value : '/games';
+    /^\/(?:games(?:\/[a-z0-9-]+)*|shop|topup|account\/(?:profile|inventory|settings))(?:[?#].*)?$/.test(value) ? value : '/games';
 }

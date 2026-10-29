@@ -107,10 +107,12 @@ function public_user(array $row): array
 function current_user(): ?array
 {
     if (!isset($_SESSION['user_id'])) return null;
-    $query = database()->prepare('SELECT id, username, email, tansans, juice FROM users WHERE id = ?');
+    $query = database()->prepare('SELECT u.id, u.username, u.email, u.tansans, u.juice,
+        COALESCE(s.version, 0) AS auth_version FROM users u
+        LEFT JOIN account_security s ON s.user_id = u.id WHERE u.id = ?');
     $query->execute([$_SESSION['user_id']]);
     $row = $query->fetch();
-    if (!$row) {
+    if (!$row || (int) $row['auth_version'] !== (int) ($_SESSION['auth_version'] ?? 0)) {
         unset($_SESSION['user_id']);
         return null;
     }
@@ -125,9 +127,25 @@ function require_user(): array
 
 function establish_session(int $userId, bool $remember = false): void
 {
+    $query = database()->prepare('SELECT version FROM account_security WHERE user_id = ?');
+    $query->execute([$userId]);
     session_regenerate_id(true);
     $_SESSION = ['user_id' => $userId, 'csrf' => bin2hex(random_bytes(32)),
+        'auth_version' => (int) $query->fetchColumn(), 'remember' => $remember,
         'expires_at' => time() + ($remember ? 30 * 86400 : 8 * 3600)];
+    $cookie = session_get_cookie_params();
+    unset($cookie['lifetime']);
+    setcookie(session_name(), session_id(), $cookie + ['expires' => $remember ? $_SESSION['expires_at'] : 0]);
+}
+
+function rotate_account_session(int $version): void
+{
+    // Keep the original expiry and Remember Me choice, including pre-update sessions.
+    $remember = $_SESSION['remember'] ?? (($_SESSION['expires_at'] ?? 0) > time() + 8 * 3600);
+    session_regenerate_id(true);
+    $_SESSION['auth_version'] = $version;
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+    $_SESSION['remember'] = $remember;
     $cookie = session_get_cookie_params();
     unset($cookie['lifetime']);
     setcookie(session_name(), session_id(), $cookie + ['expires' => $remember ? $_SESSION['expires_at'] : 0]);

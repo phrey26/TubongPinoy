@@ -7,6 +7,11 @@ import { Auth, AuthUser } from './auth';
 import { GameId } from './game';
 import { Collectible, GameSkin } from './customization';
 
+export type SettingsChange =
+  | { action: 'username'; username: string; currentPassword: string }
+  | { action: 'email'; email: string; currentPassword: string }
+  | { action: 'password'; newPassword: string; confirmPassword: string; currentPassword: string };
+
 @Injectable({
   providedIn: 'root',
 })
@@ -32,7 +37,9 @@ export class User {
 
   equip(game: GameId, skinId: string) { return this.save('inventory', { game, skinId }); }
 
-  private save(endpoint: 'profile' | 'inventory', body: object) {
+  saveSettings(change: SettingsChange) { return this.save('settings', change); }
+
+  private save(endpoint: 'profile' | 'inventory' | 'settings', body: object) {
     return defer(() => {
       const id = this.account.user()?.id;
       return this.auth.loadSession().pipe(

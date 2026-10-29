@@ -37,7 +37,7 @@ describe('Account access routes', () => {
     http.expectNone('/api/session.php');
   });
 
-  it.each(['/games/tumbang-preso', '/games/jolens-blast', '/shop', '/topup', '/account/profile', '/account/inventory'])(
+  it.each(['/games/tumbang-preso', '/games/jolens-blast', '/shop', '/topup', '/account/profile', '/account/inventory', '/account/settings'])(
     'redirects guests from %s and remembers the destination', async path => {
       const navigation = harness.navigateByUrl(path);
       // Router navigation reaches the asynchronous guard on the next task.

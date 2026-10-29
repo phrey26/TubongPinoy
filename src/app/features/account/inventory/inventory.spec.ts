@@ -7,6 +7,7 @@ import { User } from '../../../core/services/user';
 import { AccountState } from '../../../core/services/account-state';
 import { AuthUser } from '../../../core/services/auth';
 import { GameSkin } from '../../../core/services/customization';
+import { Confirmation } from '../../../core/services/confirmation';
 
 describe('Inventory', () => {
   const player: AuthUser = { id: 1, username: 'Juan', email: 'j@example.com', tansans: 0, juice: 100,
@@ -43,6 +44,8 @@ describe('Inventory', () => {
     const pending = new Subject<{ user: AuthUser }>();
     service.equip.mockReturnValue(pending);
     component.equip(items[1]); component.equip(items[1]);
+    expect(service.equip).not.toHaveBeenCalled();
+    TestBed.inject(Confirmation).respond(true);
     expect(service.equip).toHaveBeenCalledTimes(1);
     expect(service.equip).toHaveBeenCalledWith('tumbang-preso', 'slipper_blue');
     expect(component.equippedId()).toBe('slipper_pink');
@@ -61,8 +64,18 @@ describe('Inventory', () => {
     expect(component.loadError()).toBe('');
     service.equip.mockReturnValue(throwError(() => new Error('offline')));
     component.equip(items[1]);
+    TestBed.inject(Confirmation).respond(true);
     expect(component.equippedId()).toBe('slipper_pink');
     expect(component.error()).toContain('could not reach');
+    expect(component.pending()).toBeNull();
+  });
+
+  it('keeps the current skin when confirmation is cancelled', () => {
+    const { component, service } = setup();
+    component.equip(items[1]);
+    TestBed.inject(Confirmation).respond(false);
+    expect(service.equip).not.toHaveBeenCalled();
+    expect(component.equippedId()).toBe('slipper_pink');
     expect(component.pending()).toBeNull();
   });
 });

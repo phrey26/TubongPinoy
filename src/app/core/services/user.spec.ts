@@ -20,6 +20,28 @@ describe('Account customization API', () => {
   });
   afterEach(() => http.verify());
 
+  it('posts settings with CSRF and accepts the updated sign-in details', () => {
+    const change = { action: 'username' as const, username: 'AliceNew', currentPassword: 'current-password' };
+    service.saveSettings(change).subscribe();
+    http.expectOne('/api/session.php').flush({ user: alice, csrfToken: 'token' });
+    const request = http.expectOne('/api/settings.php');
+    expect(request.request.headers.get('X-CSRF-Token')).toBe('token');
+    expect(request.request.body).toEqual(change);
+    request.flush({ user: { ...alice, username: 'AliceNew', walletVersion: 2 }, csrfToken: 'rotated' });
+    expect(state.user()?.username).toBe('AliceNew');
+    expect(state.user()).not.toHaveProperty('currentPassword');
+  });
+
+  it('keeps the session after an incorrect confirmation password', () => {
+    let status = 0;
+    service.saveSettings({ action: 'email', email: 'new@example.com', currentPassword: 'wrong' })
+      .subscribe({ error: error => status = error.status });
+    http.expectOne('/api/session.php').flush({ user: alice, csrfToken: 'token' });
+    http.expectOne('/api/settings.php').flush({ message: 'Your current password is incorrect.' }, { status: 422, statusText: 'Invalid' });
+    expect(status).toBe(422);
+    expect(state.user()).toEqual(alice);
+  });
+
   it('saves only profile choices with CSRF and accepts the confirmed account snapshot', () => {
     service.saveProfile('Alice Plays', 'lila').subscribe();
     http.expectOne('/api/session.php').flush({ user: alice, csrfToken: 'token' });

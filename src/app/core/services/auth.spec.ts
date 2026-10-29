@@ -65,7 +65,7 @@ describe('Auth', () => {
     'rejects unsafe or looping return URLs: %s', value => expect(safeReturnUrl(value)).toBe('/games'),
   );
 
-  it.each(['/shop', '/topup', '/games/tumbang-preso', '/games/jolens-blast?round=2', '/account/profile', '/account/inventory']) (
+  it.each(['/shop', '/topup', '/games/tumbang-preso', '/games/jolens-blast?round=2', '/account/profile', '/account/inventory', '/account/settings']) (
     'preserves local destinations: %s', value => expect(safeReturnUrl(value)).toBe(value),
   );
 });

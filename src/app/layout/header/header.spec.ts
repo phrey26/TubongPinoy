@@ -49,7 +49,7 @@ describe('Header', () => {
     return fixture.nativeElement.querySelector('.account-trigger');
   }
 
-  it('opens profile and inventory options, keeps settings disabled, and confirms logout', () => {
+  it('opens all account options and confirms logout', () => {
     const trigger = signIn();
     expect(fixture.nativeElement.querySelector('.account-popover')).toBeNull();
     expect(trigger.textContent).toContain('Juan');
@@ -64,7 +64,7 @@ describe('Header', () => {
     expect(options[2].textContent).toContain('Settings');
     expect(options[0].disabled).toBe(false);
     expect(options[1].disabled).toBe(false);
-    expect(options[2].disabled && options[2].textContent?.includes('Coming soon')).toBe(true);
+    expect(options[2].disabled).toBe(false);
     expect(options[3].disabled).toBe(false);
     options[3].click();
     fixture.detectChanges();
@@ -125,6 +125,8 @@ describe('Header', () => {
     expect(navigate).toHaveBeenLastCalledWith('/account/profile');
     component.selectAccountOption('inventory');
     expect(navigate).toHaveBeenLastCalledWith('/account/inventory');
+    component.selectAccountOption('settings');
+    expect(navigate).toHaveBeenLastCalledWith('/account/settings');
   });
 
   it('opens navigation and closes it with Escape or after choosing a destination', () => {

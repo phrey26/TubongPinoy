@@ -2,7 +2,7 @@ import { Component, DestroyRef, HostListener, effect, inject, signal } from '@an
 import { FormControl, FormGroup, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
+import { EMPTY, finalize, switchMap } from 'rxjs';
 import { AccountState } from '../../../core/services/account-state';
 import { User } from '../../../core/services/user';
 import { authErrorMessage } from '../../../core/services/auth';
@@ -57,10 +57,17 @@ export class Profile {
   }
 
   discard(): void {
-    if (this.pending()) return;
-    this.form.reset(this.saved);
-    this.error.set('');
-    this.message.set('');
+    if (this.pending() || !this.hasChanges) return;
+    this.confirmation.ask({
+      title: 'Are you sure you want to discard these changes?',
+      message: 'Your name and icon will return to your saved profile.',
+      confirmLabel: 'Discard changes', cancelLabel: 'Keep editing',
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(confirmed => {
+      if (!confirmed) return;
+      this.form.reset(this.saved);
+      this.error.set('');
+      this.message.set('');
+    });
   }
 
   save(): void {
@@ -71,7 +78,13 @@ export class Profile {
     this.pending.set(true);
     this.message.set('');
     this.error.set('');
-    this.service.saveProfile(value.displayName.trim(), value.avatarId).pipe(
+    this.confirmation.ask({
+      title: 'Are you sure you want to save your profile?',
+      message: `Use “${value.displayName.trim()}” and your selected icon in your profile and leaderboards?`,
+      confirmLabel: 'Save profile', cancelLabel: 'Keep editing',
+    }).pipe(
+      switchMap(confirmed => confirmed && this.account.user()?.id === id
+        ? this.service.saveProfile(value.displayName.trim(), value.avatarId) : EMPTY),
       takeUntilDestroyed(this.destroyRef), finalize(() => this.pending.set(false)),
     ).subscribe({
       next: result => {
@@ -86,7 +99,7 @@ export class Profile {
 
   confirmLeave() {
     return !this.hasChanges || this.confirmation.ask({
-      title: 'Leave profile editing?',
+      title: 'Are you sure you want to leave?',
       message: this.pending() ? 'Your profile is still saving. The change may complete after you leave.'
         : 'Your unsaved name and icon changes will be discarded.',
       confirmLabel: 'Leave page', cancelLabel: 'Keep editing',
