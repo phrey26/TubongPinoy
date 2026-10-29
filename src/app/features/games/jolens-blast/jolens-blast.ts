@@ -17,6 +17,7 @@ import { scatterMarbles } from './marble-placement';
 import { JOLENS_ASSETS, JOLENS_ASSET_PATHS } from './jolens-assets';
 import { MarbleEffects } from './marble-effects';
 import { drawPixelText } from '../../../shared/canvas/pixel-text';
+import { gameSkinUrl } from '../../../core/services/customization';
 
 interface Marble {
   sprite?: string;
@@ -314,7 +315,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       y: this.shooterHome.y,
       radius: this.marbleRadius,
       color: '#f8fafc',
-      sprite: JOLENS_ASSETS.shooters[0].path,
+      sprite: gameSkinUrl('jolens-blast', this.account.user()?.equippedSkins?.['jolens-blast']),
       dx: 0,
       dy: 0,
       isMoving: false

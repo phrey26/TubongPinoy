@@ -25,15 +25,15 @@
     <div #accountArea class="header-account">
       @if (auth.user(); as user) {
         <button #accountTrigger type="button" class="ui-button ui-button-indigo account-button account-trigger"
-          [attr.aria-label]="user.username + ', account options'" [attr.aria-expanded]="accountMenuOpen()"
+          [attr.aria-label]="(user.displayName || user.username) + ', account options'" [attr.aria-expanded]="accountMenuOpen()"
           aria-controls="account-options" [disabled]="loggingOut()" (click)="toggleAccountMenu()">
-          <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="account-avatar" />
-          <span class="header-username" [title]="user.username">{{ loggingOut() ? 'Logging out…' : user.username }}</span>
+          <img [src]="avatarUrl(user.avatarId)" alt="" aria-hidden="true" class="account-avatar" />
+          <span class="header-username" [title]="user.displayName || user.username">{{ loggingOut() ? 'Logging out…' : (user.displayName || user.username) }}</span>
           <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" class="account-chevron" [class.is-open]="accountMenuOpen()"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
         @if (accountMenuOpen()) {
           <section id="account-options" class="account-popover" aria-label="Account options">
-            <div class="account-popover-heading"><span>Your account</span><strong>{{ user.username }}</strong></div>
+            <div class="account-popover-heading"><span>Your account · {{ '@' + user.username }}</span><strong>{{ user.displayName || user.username }}</strong></div>
             <ul class="account-options">
               @for (option of accountOptions; track option.id) {
                 <li>

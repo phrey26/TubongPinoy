@@ -24,6 +24,17 @@ CREATE TABLE IF NOT EXISTS auth_rate_limits (
     INDEX idx_rate_limit_expiry (expires_at)
 ) ENGINE=InnoDB;
 
+-- Preferences are separate from login credentials. Existing accounts use defaults
+-- until their first profile edit or skin selection.
+CREATE TABLE IF NOT EXISTS user_profiles (
+    user_id INT UNSIGNED PRIMARY KEY,
+    display_name VARCHAR(50) NOT NULL,
+    avatar_id VARCHAR(20) NOT NULL DEFAULT 'sunny',
+    tumbang_skin VARCHAR(50) NOT NULL DEFAULT 'slipper_pink',
+    jolens_skin VARCHAR(50) NOT NULL DEFAULT 'shooter_chrome',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS game_high_scores (
     user_id INT UNSIGNED NOT NULL,
     game VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,

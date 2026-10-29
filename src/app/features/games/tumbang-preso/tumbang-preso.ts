@@ -16,6 +16,7 @@ import { ImpactEffects } from './impact-effects';
 import { drawPixelText } from './pixel-text';
 import { generateLevel } from './level-generation';
 import { launchShot, Obstacle, stepShot } from './shot-physics';
+import { gameSkinUrl, SLIPPER_COLORS } from '../../../core/services/customization';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -51,6 +52,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private readonly obstacleFlashes = new Map<Obstacle, number>();
   private bankPopups: { x: number; y: number; age: number }[] = [];
   private readonly sprites = new Map<string, HTMLImageElement>();
+  private slipperSprite = gameSkinUrl('tumbang-preso');
   private readonly stoneAssets = [
     'assets/tumbang-preso-assets/stones/stone_flat_brown.png',
     'assets/tumbang-preso-assets/stones/stone_mossy.png',
@@ -168,6 +170,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   obstacles: Obstacle[] = generateLevel(1).obstacles;
 
   ngAfterViewInit() {
+    this.slipperSprite = gameSkinUrl('tumbang-preso', this.account.user()?.equippedSkins?.['tumbang-preso']);
     if (!this.tutorialLoading() && this.showIntroduction) this.introDialog.nativeElement.showModal?.();
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
     this.ctx.imageSmoothingEnabled = false;
@@ -176,7 +179,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       'assets/tumbang-preso-assets/background/street_bg_clean.png',
       'assets/tumbang-preso-assets/can/can_standing.png',
       'assets/tumbang-preso-assets/can/can_fallen.png',
-      'assets/tumbang-preso-assets/slippers/slipper_pink.png',
+      ...SLIPPER_COLORS.map(color => gameSkinUrl('tumbang-preso', `slipper_${color}`)),
       'assets/tumbang-preso-assets/ui/aim_arrow.png',
       'assets/tumbang-preso-assets/ui/aim_dot.png',
       'assets/tumbang-preso-assets/effects/impact-sheet.png',
@@ -359,6 +362,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   resetSlipper() {
+    this.slipperSprite = gameSkinUrl('tumbang-preso', this.account.user()?.equippedSkins?.['tumbang-preso']);
     this.isLaunched = false;
     this.showTryAgain = false;
     this.showNiceShot = false;
@@ -414,7 +418,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.ctx.save();
     this.ctx.translate(this.slipperPos.x, this.slipperPos.y);
     this.ctx.rotate(this.slipperAngle);
-    if (!this.drawSprite('assets/tumbang-preso-assets/slippers/slipper_pink.png',
+    if (!this.drawSprite(this.slipperSprite,
       -this.SLIPPER_HALF_WIDTH, -this.SLIPPER_HALF_HEIGHT,
       this.SLIPPER_HALF_WIDTH * 2, this.SLIPPER_HALF_HEIGHT * 2)) {
       this.ctx.fillStyle = '#ec4899';

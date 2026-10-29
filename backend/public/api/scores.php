@@ -25,8 +25,10 @@ if ($method === 'POST') {
         ON DUPLICATE KEY UPDATE points = GREATEST(points, VALUES(points))');
     $query->execute([$user['id'], $game, $points]);
 }
-$query = $db->prepare('SELECT s.user_id AS userId, u.username, s.points
+$query = $db->prepare('SELECT s.user_id AS userId, u.username,
+    COALESCE(p.display_name, u.username) AS displayName, COALESCE(p.avatar_id, \'sunny\') AS avatarId, s.points
     FROM game_high_scores s JOIN users u ON u.id = s.user_id
+    LEFT JOIN user_profiles p ON p.user_id = u.id
     WHERE s.game = ? ORDER BY s.points DESC, s.user_id ASC LIMIT 10');
 $query->execute([$game]);
 $scores = $query->fetchAll();

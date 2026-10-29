@@ -1,0 +1,57 @@
+<main class="ui-page account-page">
+  <div class="ui-container">
+    <a routerLink="/games" class="account-back">← Back to Games</a>
+    <header class="account-heading">
+      <span class="eyebrow">A LITTLE STYLE FOR EVERY SHOT</span>
+      <h1>Your inventory</h1>
+      <p>Pick your lucky slipper or your favorite jolens. Make the playground yours.</p>
+    </header>
+    <nav class="account-tabs" aria-label="Account pages">
+      <a routerLink="/account/profile" class="ui-button ui-button-soft">Edit profile</a>
+      <a routerLink="/account/inventory" class="ui-button" aria-current="page">Inventory</a>
+    </nav>
+    <div class="account-tabs" role="group" aria-label="Choose a game">
+      <button type="button" class="ui-button ui-button-gold" [attr.aria-pressed]="game() === 'tumbang-preso'" (click)="selectGame('tumbang-preso')">Tumbang Preso</button>
+      <button type="button" class="ui-button ui-button-blue" [attr.aria-pressed]="game() === 'jolens-blast'" (click)="selectGame('jolens-blast')">Jolens Blast</button>
+    </div>
+
+    @if (loading()) {
+      <p role="status" class="account-card">Opening your collection…</p>
+    } @else if (loadError()) {
+      <div class="account-card"><p role="alert" class="feedback">{{ loadError() }}</p><button type="button" class="ui-button" (click)="load()">Try again</button></div>
+    } @else {
+      <section class="account-card equipped-banner" aria-label="Equipped skin">
+        <div class="equipped-art"><img [src]="gameSkinUrl(game(), equippedId())" [alt]="equipped()?.name || 'Default skin'" width="64" height="80" /></div>
+        <div><span class="eyebrow">CURRENTLY EQUIPPED</span><h2>{{ equipped()?.name || 'Default skin' }}</h2><p class="muted">Saved to your account. Ready whenever you play.</p></div>
+        <a [routerLink]="'/games/' + game()" class="ui-button ui-button-green" [attr.aria-disabled]="pending() ? 'true' : null" (click)="pending() ? $event.preventDefault() : null">Play game →</a>
+      </section>
+      @if (error()) { <p role="alert" class="ui-feedback ui-feedback-error feedback">{{ error() }}</p> }
+      @if (message()) { <p role="status" class="ui-feedback ui-feedback-success feedback">{{ message() }}</p> }
+      <div class="collection-heading"><h2>Starter skins</h2><span class="starter-badge">All yours · Free to switch</span></div>
+      <div class="skin-grid" [attr.aria-busy]="!!pending()">
+        @for (item of visibleItems(); track item.id) {
+          <article class="account-card skin-card" [class.is-equipped]="equippedId() === item.id">
+            <div class="skin-art" [class.marble-art]="game() === 'jolens-blast'"><img [src]="gameSkinUrl(item.game, item.id)" [alt]="item.name" width="64" height="80" /></div>
+            <h3>{{ item.name }}</h3>
+            <p class="muted">{{ game() === 'tumbang-preso' ? 'Tumbang Preso' : 'Jolens Blast' }}</p>
+            <button type="button" class="ui-button" [class.ui-button-green]="equippedId() === item.id" [disabled]="!!pending() || equippedId() === item.id"
+              (click)="equip(item)" [attr.aria-label]="item.name + ': ' + (equippedId() === item.id ? 'Equipped' : 'Use this skin')">
+              {{ pending() === item.id ? 'Equipping…' : equippedId() === item.id ? '✓ Equipped' : 'Use this skin' }}
+            </button>
+          </article>
+        }
+      </div>
+      @if (collectibles().length) {
+        <section class="collectibles" aria-label="Purchased collectibles">
+          <div class="collection-heading"><h2>Collected from the store</h2></div>
+          <p class="muted">These collectible items are saved to your account. They do not have a playable skin yet.</p>
+          <div class="collectible-list">
+            @for (item of collectibles(); track item.id) {
+              <div class="account-card collectible"><img [src]="item.imageUrl" alt="" width="40" height="40" /><strong>{{ item.name }}</strong><span class="starter-badge">Owned</span></div>
+            }
+          </div>
+        </section>
+      }
+    }
+  </div>
+</main>

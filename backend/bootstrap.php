@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/juice.php';
+require_once __DIR__ . '/customization.php';
 
 ini_set('display_errors', '0');
 header('Content-Type: application/json; charset=utf-8');
@@ -97,7 +98,8 @@ function public_user(array $row): array
         'permanentJuice' => (bool) $state['permanent_juice'],
         'walletVersion' => (int) $state['version'],
         'nextJuiceAt' => $row['juice'] < 100 ? ((int) $state['juice_refill_at'] + JUICE_REFILL_SECONDS) * 1000 : 0,
-        'serverTime' => time() * 1000];
+        'serverTime' => time() * 1000,
+        ...account_profile($db, (int) $row['id'], $row['username'])];
     if ($ownTransaction) $db->commit();
     return $result;
 }

@@ -4,6 +4,7 @@ import { NavigationStart, Router, RouterModule } from '@angular/router';
 import { EMPTY, filter, finalize, switchMap } from 'rxjs';
 import { Auth, authErrorMessage } from '../../core/services/auth';
 import { Confirmation } from '../../core/services/confirmation';
+import { avatarUrl } from '../../core/services/customization';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -14,6 +15,7 @@ import { Confirmation } from '../../core/services/confirmation';
 })
 export class Header implements OnInit {
   readonly auth = inject(Auth);
+  readonly avatarUrl = avatarUrl;
   private readonly router = inject(Router);
   private readonly confirmation = inject(Confirmation);
   private readonly destroyRef = inject(DestroyRef);
@@ -24,9 +26,8 @@ export class Header implements OnInit {
   readonly menuOpen = signal(false);
   readonly accountMenuOpen = signal(false);
   readonly accountOptions = [
-    { id: 'edit-profile', label: 'Edit profile', icon: 'assets/icons/account.svg', available: false },
-    // Future home for equippable skins and effects purchased with Tansans.
-    { id: 'inventory', label: 'Inventory', icon: 'assets/icons/package.svg', available: false },
+    { id: 'edit-profile', label: 'Edit profile', icon: 'assets/icons/account.svg', available: true },
+    { id: 'inventory', label: 'Inventory', icon: 'assets/icons/package.svg', available: true },
     { id: 'settings', label: 'Settings', icon: 'assets/icons/settings.svg', available: false },
     { id: 'logout', label: 'Logout', icon: 'assets/icons/logout.svg', available: true },
   ];
@@ -67,6 +68,10 @@ export class Header implements OnInit {
 
   selectAccountOption(id: string): void {
     if (id === 'logout') this.logout();
+    if (id === 'edit-profile' || id === 'inventory') {
+      this.closeMenu();
+      void this.router.navigateByUrl(id === 'edit-profile' ? '/account/profile' : '/account/inventory');
+    }
   }
 
   ngOnInit(): void {

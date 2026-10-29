@@ -91,8 +91,9 @@ skin, with a unique composite key to prevent double purchases.
 
 Future skins can be added to the `skins` table (`id`, `name`, `type`, `price`,
 `image_url`, `active`); the shop reads that catalog automatically. The current
-skin catalog uses placeholder artwork. Ownership is implemented; applying a skin
-to a game's visuals is a separate feature. Game high scores are documented below. Email verification and password recovery
+skin catalog uses placeholder artwork. Ownership is implemented; those store collectibles
+do not have playable artwork yet. Free starter game skins can be equipped from Inventory.
+Game high scores are documented below. Email verification and password recovery
 are not implemented in this backend.
 
 For local debugging, `backend/bin/create-debug-account.php` reads a JSON object
@@ -191,3 +192,35 @@ Verification: `php backend/tests/juice_test.php` checks exact calculation bounda
 `python3 backend/tests/juice_smoke.py` checks persistence, spending/refill interaction,
 account isolation, and concurrent recovery with temporary accounts. Only those
 fixture accounts are altered and removed by the smoke test.
+
+## Profiles and game inventory
+
+Run `backend/bin/setup.php` to add `user_profiles` before serving this version.
+Existing accounts and purchases are preserved. Accounts without a preference row
+use their username as the display name, the Sunny avatar, a pink slipper and a
+chrome shooter. New profile and inventory pages are protected at
+`/account/profile` and `/account/inventory` and open from the header's account menu.
+
+`POST /api/profile.php` accepts `{ "displayName": "Juan Plays", "avatarId": "miko" }`.
+Display names allow 2–30 Unicode characters (letters, numbers, spaces and basic
+punctuation), are not unique, and do not change login usernames or email addresses.
+The four allowed icons are `sunny`, `lila`, `miko`, and `maya`. User-provided image
+URLs/uploads are not accepted. Leaderboards expose `displayName` and `avatarId`
+alongside the existing username and score fields.
+
+`GET /api/inventory.php` returns `items`, owned store `collectibles`, and the current
+`user`. Starter equipment is free for every account: six slipper colors and three
+Jolens shooter styles. `POST /api/inventory.php` accepts
+`{ "game": "tumbang-preso", "skinId": "slipper_blue" }` or a valid Jolens selection.
+It rejects unknown and cross-game selections. Both POST endpoints require the
+session and CSRF token. All identity comes from the session, and changes serialize
+under the same account row lock as wallet updates. They increment `walletVersion`
+so delayed snapshots cannot revert preferences. Neither action charges the wallet.
+
+The returned account includes `displayName`, `avatarId`, and `equippedSkins` keyed
+by game ID. Choices survive sign-out and work across devices. Each game loads its
+selected sprite for the next visit; gameplay physics and scores are unchanged.
+
+Run `python3 backend/tests/profile_smoke.py` to check validation, CSRF, account
+isolation, persistence, concurrent updates, asset availability and leaderboard
+identity. It creates and removes only its uniquely named fixture accounts.

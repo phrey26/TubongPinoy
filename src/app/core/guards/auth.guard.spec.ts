@@ -12,7 +12,7 @@ class Page {}
 // Exercise the real route tree and guards without starting canvas render loops.
 function testRoutes(source: Routes): Routes {
   return source.map(route => ({ ...route,
-    ...(route.component ? { component: Page } : {}),
+    ...(route.component || route.loadComponent ? { component: Page, loadComponent: undefined } : {}),
     ...(route.children ? { children: testRoutes(route.children) } : {}),
   }));
 }
@@ -37,7 +37,7 @@ describe('Account access routes', () => {
     http.expectNone('/api/session.php');
   });
 
-  it.each(['/games/tumbang-preso', '/games/jolens-blast', '/shop', '/topup'])(
+  it.each(['/games/tumbang-preso', '/games/jolens-blast', '/shop', '/topup', '/account/profile', '/account/inventory'])(
     'redirects guests from %s and remembers the destination', async path => {
       const navigation = harness.navigateByUrl(path);
       // Router navigation reaches the asynchronous guard on the next task.

@@ -231,6 +231,17 @@ describe('JolensBlast', () => {
     expect(window.requestAnimationFrame).toHaveBeenCalled();
   });
 
+  it('uses the saved shooter style and restores the default for another account', () => {
+    const state = TestBed.inject(AccountState);
+    state.set({ id: 1, username: 'Juan', email: 'j@example.com', tansans: 0, juice: 100,
+      equippedSkins: { 'jolens-blast': 'shooter_gold' } });
+    component.spawnShooter();
+    expect(component['currentShooter'].sprite).toBe('assets/jolens-blast-assets/shooters/shooter_gold.png');
+    state.set({ id: 2, username: 'Maria', email: 'm@example.com', tansans: 0, juice: 100 });
+    component.spawnShooter();
+    expect(component['currentShooter'].sprite).toBe('assets/jolens-blast-assets/shooters/shooter_chrome.png');
+  });
+
   it('does not stake marbles or start a round while the Juice payment is pending or fails', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;

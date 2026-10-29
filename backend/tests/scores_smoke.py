@@ -84,7 +84,7 @@ try:
     rows = a.scores('tumbang-preso')[1]['highScores']
     check(len(rows) <= 10 and rows == sorted(rows, key=lambda row: (-row['points'], row['userId'])),
           'The leaderboard is capped at 10 and uses stable descending score order')
-    check(all(set(row) == {'userId', 'username', 'points'} for row in rows),
+    check(all(set(row) == {'userId', 'username', 'displayName', 'avatarId', 'points'} for row in rows),
           'Ranking entries expose no email or password information')
     a.request('logout.php', {})
     a.request('session.php')

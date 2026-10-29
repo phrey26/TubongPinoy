@@ -1,0 +1,60 @@
+<main class="ui-page account-page">
+  <div class="ui-container">
+    <a routerLink="/games" class="account-back">← Back to Games</a>
+    <header class="account-heading">
+      <span class="eyebrow">YOUR CORNER OF THE PLAYGROUND</span>
+      <h1>Edit profile</h1>
+      <p>A familiar face. A name that's yours.</p>
+    </header>
+    <nav class="account-tabs" aria-label="Account pages">
+      <a routerLink="/account/profile" class="ui-button" aria-current="page">Edit profile</a>
+      <a routerLink="/account/inventory" class="ui-button ui-button-soft">Inventory</a>
+    </nav>
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="profile-layout">
+      <aside class="account-card profile-preview" aria-label="Profile preview">
+        <span class="eyebrow">LOOKING GOOD!</span>
+        <img [src]="avatarUrl(form.controls.avatarId.value)" alt="Your selected cartoon profile icon" class="profile-portrait" width="176" height="176" />
+        <h2>{{ form.controls.displayName.value.trim() || account.user()?.username }}</h2>
+        <p class="handle">{{ '@' + (account.user()?.username || '') }}</p>
+        <span class="starter-badge">Your playground profile</span>
+        <p class="muted">Your icon and display name appear in the account menu and game leaderboards.</p>
+      </aside>
+
+      <section class="account-card">
+        @if (error()) { <p role="alert" class="ui-feedback ui-feedback-error feedback">{{ error() }}</p> }
+        @if (message()) { <p role="status" class="ui-feedback ui-feedback-success feedback">{{ message() }}</p> }
+        <fieldset [disabled]="pending()">
+          <legend>Choose your player icon</legend>
+          <p class="muted">Meet the neighborhood crew. Pick your favorite.</p>
+          <div class="avatar-grid">
+            @for (avatar of avatars; track avatar.id) {
+              <label class="avatar-option">
+                <input type="radio" formControlName="avatarId" [value]="avatar.id" [attr.aria-label]="avatar.name + ': ' + avatar.description" />
+                <span class="avatar-tile">
+                  <img [src]="avatarUrl(avatar.id)" alt="" width="96" height="96" />
+                  <strong>{{ avatar.name }}</strong>
+                  <span class="avatar-check" aria-hidden="true">{{ form.controls.avatarId.value === avatar.id ? '✓' : '' }}</span>
+                </span>
+              </label>
+            }
+          </div>
+          <label for="display-name" class="field-label">Display name</label>
+          <input id="display-name" type="text" formControlName="displayName" autocomplete="nickname"
+            class="name-input" aria-describedby="display-name-help display-name-error"
+            [attr.aria-invalid]="form.controls.displayName.touched && form.controls.displayName.invalid" />
+          <p id="display-name-help" class="muted field-help">2–30 characters. Your login username stays {{ account.user()?.username }}.</p>
+          <p id="display-name-error" class="field-error">
+            @if (form.controls.displayName.touched && form.controls.displayName.invalid) {
+              Use 2–30 characters: letters, numbers, spaces, periods, apostrophes, underscores or hyphens.
+            }
+          </p>
+        </fieldset>
+        <div class="account-actions">
+          <button type="submit" class="ui-button ui-button-green" [disabled]="pending() || !hasChanges || form.invalid">{{ pending() ? 'Saving…' : 'Save profile' }}</button>
+          <button type="button" class="ui-button ui-button-soft" (click)="discard()" [disabled]="pending() || !hasChanges">Discard changes</button>
+        </div>
+      </section>
+    </form>
+  </div>
+</main>

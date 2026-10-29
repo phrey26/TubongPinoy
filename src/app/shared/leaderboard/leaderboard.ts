@@ -3,6 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, Subject, catchError, concatMap, finalize, tap } from 'rxjs';
 import { Game, GameId, GameScores } from '../../core/services/game';
+import { avatarUrl } from '../../core/services/customization';
 
 @Component({
   selector: 'app-leaderboard',
@@ -19,7 +20,10 @@ import { Game, GameId, GameScores } from '../../core/services/game';
       <ol class="space-y-3">
         @for (score of highScores(); track score.userId; let i = $index) {
           <li class="flex justify-between gap-3 p-3 rounded-xl bg-purple-50 border-2 border-purple-100">
-            <span class="font-bold break-all">{{ i + 1 }}. {{ score.username }}</span>
+            <span class="flex items-center gap-2 min-w-0 font-bold break-words">
+              <img [src]="avatarUrl(score.avatarId)" alt="" width="32" height="32" class="rounded-full shrink-0" />
+              <span>{{ i + 1 }}. {{ score.displayName || score.username }}</span>
+            </span>
             <span class="font-black text-purple-700 shrink-0">{{ score.points | number }}</span>
           </li>
         }
@@ -30,6 +34,7 @@ import { Game, GameId, GameScores } from '../../core/services/game';
   `,
 })
 export class Leaderboard implements OnInit, OnChanges {
+  readonly avatarUrl = avatarUrl;
   @Input({ required: true }) game!: GameId;
   @Input() score = 0;
   private readonly service = inject(Game);

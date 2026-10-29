@@ -49,7 +49,7 @@ describe('Header', () => {
     return fixture.nativeElement.querySelector('.account-trigger');
   }
 
-  it('opens account options with placeholders and keeps logout inside the miniwindow', () => {
+  it('opens profile and inventory options, keeps settings disabled, and confirms logout', () => {
     const trigger = signIn();
     expect(fixture.nativeElement.querySelector('.account-popover')).toBeNull();
     expect(trigger.textContent).toContain('Juan');
@@ -62,7 +62,9 @@ describe('Header', () => {
     expect(options[0].textContent).toContain('Edit profile');
     expect(options[1].textContent).toContain('Inventory');
     expect(options[2].textContent).toContain('Settings');
-    expect(options.slice(0, 3).every(option => option.disabled && option.textContent?.includes('Coming soon'))).toBe(true);
+    expect(options[0].disabled).toBe(false);
+    expect(options[1].disabled).toBe(false);
+    expect(options[2].disabled && options[2].textContent?.includes('Coming soon')).toBe(true);
     expect(options[3].disabled).toBe(false);
     options[3].click();
     fixture.detectChanges();
@@ -110,6 +112,19 @@ describe('Header', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('shows the saved identity and opens the requested account page', () => {
+    signIn();
+    TestBed.inject(AccountState).set({ ...component.auth.user()!, displayName: 'Juan Plays', avatarId: 'miko' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.header-username').textContent).toContain('Juan Plays');
+    expect(fixture.nativeElement.querySelector('.account-avatar').getAttribute('src')).toBe('assets/avatars/miko.png');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    component.selectAccountOption('edit-profile');
+    expect(navigate).toHaveBeenLastCalledWith('/account/profile');
+    component.selectAccountOption('inventory');
+    expect(navigate).toHaveBeenLastCalledWith('/account/inventory');
   });
 
   it('opens navigation and closes it with Escape or after choosing a destination', () => {

@@ -29,6 +29,11 @@ export const routes: Routes = [
   { path: 'shop', component: Shop, canActivate: [authGuard] },
   { path: 'topup', component: Topup, canActivate: [authGuard] },
 
+  { path: 'account/profile', canActivate: [authGuard], canDeactivate: [leaveGuard],
+    loadComponent: () => import('./features/account/profile/profile').then(module => module.Profile) },
+  { path: 'account/inventory', canActivate: [authGuard],
+    loadComponent: () => import('./features/account/inventory/inventory').then(module => module.Inventory) },
+
   { path: 'contact', component: Contact, canDeactivate: [leaveGuard] },
 
   { path: '**', redirectTo: '' }

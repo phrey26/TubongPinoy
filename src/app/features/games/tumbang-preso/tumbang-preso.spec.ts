@@ -129,6 +129,20 @@ describe('TumbangPreso', () => {
     expect(window.requestAnimationFrame).toHaveBeenCalled();
   });
 
+  it('draws the saved slipper color and restores the default for another account', () => {
+    const state = TestBed.inject(AccountState);
+    state.set({ id: 1, username: 'Juan', email: 'j@example.com', tansans: 0, juice: 100,
+      equippedSkins: { 'tumbang-preso': 'slipper_blue' } });
+    component.resetSlipper();
+    const draw = vi.spyOn(component as any, 'drawSprite').mockReturnValue(true);
+    component['drawSlipper']();
+    expect(draw).toHaveBeenCalledWith('assets/tumbang-preso-assets/slippers/slipper_blue.png', -12, -21, 24, 42);
+    state.set({ id: 2, username: 'Maria', email: 'm@example.com', tansans: 0, juice: 100 });
+    component.resetSlipper();
+    component['drawSlipper']();
+    expect(draw).toHaveBeenLastCalledWith('assets/tumbang-preso-assets/slippers/slipper_pink.png', -12, -21, 24, 42);
+  });
+
   it('waits for a confirmed Juice deduction before granting a retry', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;

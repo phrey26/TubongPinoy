@@ -7,7 +7,7 @@ export type GameId = 'tumbang-preso' | 'jolens-blast';
 export interface TutorialStatus { game: GameId; seen: boolean; }
 export interface GameScores {
   game: GameId;
-  highScores: { userId: number; username: string; points: number }[];
+  highScores: { userId: number; username: string; displayName?: string; avatarId?: string; points: number }[];
   personalBest: number;
 }
 
