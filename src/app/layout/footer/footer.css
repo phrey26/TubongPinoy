@@ -4,7 +4,6 @@
 .footer-brand { display: inline-flex; align-items: center; justify-self: start; gap: 8px; font-size: 13px; font-weight: 800; border-radius: 8px; }
 .footer-brand img { flex: none; }
 .footer-inner p { font-size: 12px; text-align: center; }
-.footer-socials { display: flex; flex-wrap: wrap; justify-content: flex-end; justify-self: end; gap: 8px; }
-.footer-socials button { gap: 6px; padding: 6px 10px; font-size: 12px; }
-.footer-socials span { font-size: 10px; font-weight: 500; }
-@media (max-width: 979px) { .footer-inner { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; padding: 16px; text-align: center; } .footer-inner p { order: 3; width: 100%; } .footer-socials { justify-content: center; } }
+.footer-links { display: flex; flex-wrap: wrap; justify-content: flex-end; justify-self: end; gap: 4px; }
+.footer-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 979px) { .footer-inner { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; padding: 16px; text-align: center; } .footer-inner p { order: 3; width: 100%; } .footer-links { justify-content: center; } }

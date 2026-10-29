@@ -42,8 +42,8 @@ export class Home {
   );
 
   //images
-  heroImage = 'assets/images/tubong-pinoy-hero-branded.png';
-  aboutImage = 'assets/images/about-image-bw.png';
+  heroImage = 'assets/images/tubong-pinoy-hero-branded.webp';
+  aboutImage = 'assets/images/about-image-bw.webp';
 
 
 }

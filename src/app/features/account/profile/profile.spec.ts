@@ -26,7 +26,7 @@ describe('Edit profile', () => {
     avatar.click();
     component.form.controls.displayName.setValue('Maria José');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.profile-portrait').getAttribute('src')).toBe('assets/avatars/maya.png');
+    expect(fixture.nativeElement.querySelector('.profile-portrait').getAttribute('src')).toBe('assets/avatars/maya.webp');
     expect(service.saveProfile).not.toHaveBeenCalled();
     service.saveProfile.mockReturnValue(of({ user: { ...player, displayName: 'Maria José', avatarId: 'maya' } }));
     component.save();

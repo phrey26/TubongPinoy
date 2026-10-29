@@ -16,6 +16,7 @@
 .developer-profile h3 { color: #581c87; font-weight: 800; line-height: 1.4; }
 .developer-profile p { color: #6b7280; font-size: 13px; margin-top: 4px; }
 .contact-card iframe { display: block; border: 2px solid #dbeafe; border-radius: 16px; background: #eff6ff; }
+.map-placeholder { display: grid; gap: 16px; padding: 20px; border: 2px solid #dbeafe; border-radius: 16px; background: #eff6ff; font-size: 14px; }
 .contact-info { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 20px; font-size: 14px; color: #4b5563; overflow-wrap: anywhere; }
 @media (max-width: 799px) { .contact-grid { grid-template-columns: 1fr; } }
 @media (max-width: 419px) { .contact-card { padding: 20px; } .developer-profile { align-items: flex-start; } .developer-avatar { width: 48px; height: 48px; border-radius: 14px; } .developer-avatar img { width: 32px; height: 32px; } }

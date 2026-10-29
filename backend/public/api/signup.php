@@ -14,7 +14,7 @@ if (strlen($password) < 8 || strlen($password) > 72 || str_contains($password, "
     respond(['message' => 'Use a password between 8 and 72 bytes long.'], 422);
 }
 if (($body['terms'] ?? false) !== true) {
-    respond(['message' => 'Please agree to the community guidelines.'], 422);
+    respond(['message' => 'Please agree to the Terms of Use and acknowledge the Privacy Policy.'], 422);
 }
 rate_limit('signup:' . ($_SERVER['REMOTE_ADDR'] ?? ''), 20);
 try {

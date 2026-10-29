@@ -16,7 +16,7 @@
             <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus
               class="ui-button ui-button-soft ui-button-icon game-action game-action-purple text-2xl">×</button>
           </div>
-          <img src="assets/thumbnails/tumbang_preso_thumbnail.png" alt="A slipper knocking down a tin can"
+          <img src="assets/thumbnails/tumbang_preso_thumbnail.webp" alt="A slipper knocking down a tin can"
             width="1280" height="720" class="w-full rounded-2xl mb-4" />
           <h2 id="intro-title" class="text-2xl font-black text-purple-700 mb-2">Welcome to Tumbang Preso!</h2>
           <p id="intro-description" class="text-gray-700 mb-4">A slipper, a tin can, and a little diskarte—clever thinking. Bring the Filipino street-game spirit to this aiming challenge!</p>
@@ -36,7 +36,7 @@
         <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-3 py-2 bg-purple-50 rounded-2xl border-2 border-purple-200">
           <div class="game-values">
             <span class="font-bold text-purple-700"><img src="assets/icons/score.svg" alt="" aria-hidden="true" class="app-icon" /> Score: {{ currentScore }}</span>
-            <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ unlimitedJuice ? 'Unlimited' : energyLevel + ' / 100' }}</span>
+            <span class="font-bold text-pink-700"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ unlimitedJuice ? 'Unlimited' : energyLevel + ' / 100' }}</span>
             <app-juice-timer />
             <span class="font-bold text-purple-700">Level {{ currentLevel }}</span>
           </div>
@@ -53,10 +53,10 @@
         </div>
 
         <div class="board-space">
-        <img class="board-backdrop" src="assets/tumbang-preso-assets/background/neighborhood-play-v2.png"
+        <img class="board-backdrop" src="assets/tumbang-preso-assets/background/neighborhood-play-v2.webp"
           alt="" aria-hidden="true" />
         <div class="game-board w-full aspect-[9/16] bg-green-50 rounded-2xl border-4 border-dashed border-green-200 relative overflow-hidden">
-          <canvas #gameCanvas width="450" height="800" class="block w-full h-full cursor-crosshair"></canvas>
+          <canvas #gameCanvas width="450" height="800" role="img" aria-label="Tumbang Preso board: use a mouse to pull the slipper back and release toward the can. Keyboard gameplay is not available." class="block w-full h-full cursor-crosshair">Tumbang Preso requires a browser with canvas support and a mouse or similar pointing device.</canvas>
 
           <div *ngIf="!hasStarted" class="absolute inset-0 bg-purple-950/60 backdrop-blur-sm flex items-center justify-center z-30">
             <div class="bg-white p-6 rounded-3xl border-4 border-purple-300 text-center shadow-xl">

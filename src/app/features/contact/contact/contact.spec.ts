@@ -23,6 +23,26 @@ describe('Contact', () => {
     expect(component).toBeTruthy();
   });
 
+  it('does not embed Google until requested and removes the embed when hidden', () => {
+    expect(fixture.nativeElement.querySelector('iframe')).toBeNull();
+    const load = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(button => button.textContent?.includes('Load Google Map'))!;
+    load.click(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('iframe')?.getAttribute('src')).toContain('https://www.google.com/maps');
+    const hide = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(button => button.textContent?.includes('Hide map'))!;
+    hide.click(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('iframe')).toBeNull();
+  });
+
+  it('rejects blank-looking names and messages without claiming to send anything', () => {
+    component.contactForm.setValue({ fullName: '   ', email: 'juan@example.com',
+      subject: 'Game Feedback', message: '          ' });
+    component.onSubmit();
+    expect(component.contactForm.invalid).toBe(true);
+    expect(component.feedback()).toBe('');
+  });
+
   it('validates the preview form and explains that no message has been sent', () => {
     component.onSubmit();
     fixture.detectChanges();

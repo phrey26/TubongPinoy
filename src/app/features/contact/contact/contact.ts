@@ -1,13 +1,14 @@
 import { Component, ChangeDetectionStrategy, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Confirmation } from '../../../core/services/confirmation';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SafeUrlPipe } from '../../../shared/pipes/safe-url-pipe';
+import { RouterLink } from '@angular/router';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-contact',
-  imports: [FormsModule, ReactiveFormsModule, SafeUrlPipe],
+  imports: [FormsModule, ReactiveFormsModule, SafeUrlPipe, RouterLink],
   templateUrl: './contact.html',
   styleUrl: './contact.css',
 })
@@ -19,6 +20,7 @@ export class Contact {
 
   isSubmitted = false;
   readonly feedback = signal('');
+  readonly mapEnabled = signal(false);
 
   // 🗺️ Google Maps embed URL
   mapUrl: string =
@@ -41,10 +43,12 @@ export class Contact {
   // ✅ Initialize form
   private initializeForm(): void {
     this.contactForm = this.fb.group({
-      fullName: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
-      subject: ['Game Feedback', Validators.required],
-      message: ['', [Validators.required, Validators.minLength(10)]]
+      fullName: ['', [Validators.required, Validators.maxLength(100),
+        (control: AbstractControl) => String(control.value ?? '').trim().length >= 2 ? null : { fullName: true }]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
+      subject: ['Game Feedback', [Validators.required, (control: AbstractControl) => this.subjects.includes(control.value) ? null : { subject: true }]],
+      message: ['', [Validators.required, Validators.maxLength(5000),
+        (control: AbstractControl) => String(control.value ?? '').trim().length >= 10 ? null : { message: true }]]
     });
   }
 

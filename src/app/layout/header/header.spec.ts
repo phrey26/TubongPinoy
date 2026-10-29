@@ -119,7 +119,7 @@ describe('Header', () => {
     TestBed.inject(AccountState).set({ ...component.auth.user()!, displayName: 'Juan Plays', avatarId: 'miko' });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.header-username').textContent).toContain('Juan Plays');
-    expect(fixture.nativeElement.querySelector('.account-avatar').getAttribute('src')).toBe('assets/avatars/miko.png');
+    expect(fixture.nativeElement.querySelector('.account-avatar').getAttribute('src')).toBe('assets/avatars/miko.webp');
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     component.selectAccountOption('edit-profile');
     expect(navigate).toHaveBeenLastCalledWith('/account/profile');

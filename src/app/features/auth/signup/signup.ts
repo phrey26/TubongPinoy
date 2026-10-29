@@ -4,6 +4,7 @@ import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validator
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { Auth, authErrorMessage, safeReturnUrl } from '../../../core/services/auth';
+import { passwordValidator } from '../../../core/validators/password';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -35,7 +36,7 @@ export class Signup {
   signupForm = new FormGroup({
     username: new FormControl('', [Validators.required, Validators.pattern(/^[A-Za-z0-9_]{3,50}$/)]),
     email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(254)]),
-    password: new FormControl('', [Validators.required, Validators.minLength(8), Validators.maxLength(72)]),
+    password: new FormControl('', [Validators.required, passwordValidator]),
     confirmPassword: new FormControl('', [Validators.required]),
     terms: new FormControl(false, [Validators.requiredTrue])
   }, { validators: this.passwordMatchValidator });

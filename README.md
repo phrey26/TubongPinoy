@@ -7,6 +7,9 @@ PHP/MySQL authentication setup and SQL are documented in [backend/README.md](bac
 The lobby is public; playing games, shopping, and top-ups require login.
 Tansans, Juice, and purchased skin ownership are saved separately for each account.
 
+Website readiness, policy drafts, accessibility limitations, and the planned itch.io
+hosting requirements are documented in [docs/website-readiness.md](docs/website-readiness.md).
+
 ## Requirements
 
 - Node.js 24.22.0 (or a later compatible Node.js 24 release)

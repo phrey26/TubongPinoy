@@ -25,7 +25,7 @@ export class Topup implements OnInit {
   readonly enabled = signal(false);
   readonly errorMessage = signal('');
   readonly message = signal('');
-  heroImage = 'assets/images/tubong-pinoy-cta.png';
+  heroImage = 'assets/images/tubong-pinoy-cta.webp';
 
   ngOnInit(): void {
     this.wallet.catalog().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

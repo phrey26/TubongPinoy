@@ -9,7 +9,7 @@ export const PROFILE_AVATARS = [
 
 export function avatarUrl(id?: string): string {
   const safeId = PROFILE_AVATARS.find(avatar => avatar.id === id)?.id ?? 'sunny';
-  return `assets/avatars/${safeId}.png`;
+  return `assets/avatars/${safeId}.webp`;
 }
 
 export const SLIPPER_COLORS = ['pink', 'blue', 'green', 'orange', 'red', 'yellow'] as const;

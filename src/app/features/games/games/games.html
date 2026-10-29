@@ -22,7 +22,7 @@
           <h2 class="font-extrabold text-yellow-700">Tumbang Preso</h2>
           <p>Pull back, release your slipper, and find a path past the rocks to knock down the can.</p>
           <p class="lobby-cost"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /> Retries cost 20 Juice.</p>
-          <a routerLink="/games/tumbang-preso" class="ui-button ui-button-gold lobby-play">
+          <a routerLink="/games/tumbang-preso" class="ui-button ui-button-gold lobby-play" [attr.aria-label]="account.user() ? 'Play Tumbang Preso' : 'Log in to play Tumbang Preso'">
             <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> {{ account.user() ? 'Play Now' : 'Log in to Play' }}
           </a>
         </div>
@@ -34,7 +34,7 @@
           <h2 class="font-extrabold text-pink-700">Jolens Blast</h2>
           <p>Aim your shooter, knock marbles out of the circle, and grow your collection one shot at a time.</p>
           <p class="lobby-cost"><img src="assets/icons/juice.svg" alt="" aria-hidden="true" class="app-icon" /> Shots within a paid round are free.</p>
-          <a routerLink="/games/jolens-blast" class="ui-button ui-button-pink lobby-play">
+          <a routerLink="/games/jolens-blast" class="ui-button ui-button-pink lobby-play" [attr.aria-label]="account.user() ? 'Play Jolens Blast' : 'Log in to play Jolens Blast'">
             <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> {{ account.user() ? 'Play Now' : 'Log in to Play' }}
           </a>
         </div>

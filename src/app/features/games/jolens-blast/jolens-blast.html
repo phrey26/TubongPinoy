@@ -15,7 +15,7 @@
           <div class="flex items-center justify-end gap-3 mb-2">
             <button type="button" (click)="closeTutorial()" aria-label="Close tutorial" autofocus class="ui-button ui-button-soft ui-button-icon jolens-action tutorial-close">×</button>
           </div>
-          <img src="assets/thumbnails/jolens_blast_thumbnail.png" alt="Colorful marbles being knocked out of a circle"
+          <img src="assets/thumbnails/jolens_blast_thumbnail.webp" alt="Colorful marbles being knocked out of a circle"
             width="1280" height="720" class="w-full rounded-2xl mb-4" />
           <h2 id="jolens-intro-title" class="text-2xl font-black text-blue-700 mb-2">Welcome to Jolens Blast!</h2>
           <p id="jolens-intro-description" class="text-gray-700 mb-4">Jolens are glass marbles. Bring a little Filipino playground rivalry to the circle—aim carefully and grow your collection!</p>
@@ -32,7 +32,7 @@
         <div class="game-stats flex flex-wrap gap-2 justify-between items-center mb-4 px-6 py-2 bg-blue-50 rounded-2xl border-2 border-blue-200">
           <div class="game-values">
             <span class="font-bold text-blue-700"><img src="assets/icons/score.svg" alt="" aria-hidden="true" class="app-icon" /> Final score: {{ showGameOver ? currentScore : 'At session end' }}</span>
-            <span class="font-bold text-pink-600"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ unlimitedJuice ? 'Unlimited' : energyLevel + ' / 100' }}</span>
+            <span class="font-bold text-pink-700"><img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> Juice: {{ unlimitedJuice ? 'Unlimited' : energyLevel + ' / 100' }}</span>
             <app-juice-timer />
             <span class="font-bold text-gray-800"><img src="assets/icons/marble.svg" alt="" aria-hidden="true" class="app-icon" /> Your marbles: {{ marbleInventory }}</span>
           </div>
@@ -51,16 +51,17 @@
         </div>
 
         <div class="board-space">
-        <img class="board-backdrop" src="assets/jolens-blast-assets/background/schoolyard-marbles.png"
+        <img class="board-backdrop" src="assets/jolens-blast-assets/background/schoolyard-marbles.webp"
           alt="" aria-hidden="true" />
         <div class="game-board w-full aspect-[9/16] bg-blue-50 rounded-3xl border-4 border-dashed border-blue-200 relative overflow-hidden mx-auto">
-          <canvas #gameCanvas width="450" height="800"
+          <canvas #gameCanvas width="450" height="800" role="img" aria-label="Jolens Blast board: use a mouse or touch to pull back and release the shooter. Keyboard gameplay is not available."
             class="block w-full h-full cursor-crosshair touch-none"
             (pointerdown)="onPointerDown($event)"
             (pointermove)="onMouseMove($event)"
             (pointerup)="onMouseUp()"
             (pointercancel)="onPointerCancel()"
             (lostpointercapture)="onPointerCancel()">
+            Jolens Blast requires a browser with canvas support. Use a mouse or touch to aim.
           </canvas>
 
           <div *ngIf="!hasStarted" class="absolute inset-0 bg-blue-950/70 backdrop-blur-sm flex items-center justify-center z-30">

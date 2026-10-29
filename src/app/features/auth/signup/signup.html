@@ -23,7 +23,7 @@
           <input id="signup-username" autocomplete="username" maxlength="50" formControlName="username" type="text" placeholder="GamerName"
             [class.border-red-400]="f.username.invalid && f.username.touched" [attr.aria-invalid]="!!(f.username.invalid && f.username.touched)" [attr.aria-describedby]="f.username.invalid && f.username.touched ? 'signup-username-error' : null"
             class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
-          <p *ngIf="f.username.invalid && f.username.touched" id="signup-username-error" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 3–50 letters, numbers or underscores.</p>
+          <p *ngIf="f.username.invalid && f.username.touched" id="signup-username-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 3–50 letters, numbers or underscores.</p>
         </div>
 
         <div>
@@ -31,7 +31,7 @@
           <input id="signup-email" autocomplete="email" maxlength="254" formControlName="email" type="email" placeholder="hello@pinoy.com"
             [class.border-red-400]="f.email.invalid && f.email.touched" [attr.aria-invalid]="!!(f.email.invalid && f.email.touched)" [attr.aria-describedby]="f.email.invalid && f.email.touched ? 'signup-email-error' : null"
             class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-green-200 focus:border-green-400 focus:outline-none transition bg-green-50 text-gray-700 font-medium placeholder-green-300" />
-          <p *ngIf="f.email.invalid && f.email.touched" id="signup-email-error" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter a valid email.</p>
+          <p *ngIf="f.email.invalid && f.email.touched" id="signup-email-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter a valid email.</p>
         </div>
       </div>
 
@@ -46,7 +46,7 @@
               <img [src]="showPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
-          <p *ngIf="f.password.invalid && f.password.touched" id="signup-password-error" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 8–72 characters.</p>
+          <p *ngIf="f.password.invalid && f.password.touched" id="signup-password-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 8–72 UTF-8 bytes without null characters. Some characters use more than one byte.</p>
         </div>
 
         <div class="relative">
@@ -59,13 +59,14 @@
               <img [src]="showConfirmPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showConfirmPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
-          <p *ngIf="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" id="signup-confirmPassword-error" class="text-red-500 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Passwords do not match!</p>
+          <p *ngIf="signupForm.errors?.['passwordMismatch'] && f.confirmPassword.touched" id="signup-confirmPassword-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Passwords do not match!</p>
         </div>
       </div>
 
       <div class="px-1">
-        <label class="ui-check-label"><input type="checkbox" formControlName="terms" class="ui-check" /> <span>I agree to play fair and respect the community guidelines.</span></label>
-        <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-500 text-xs font-bold mt-1 ml-9"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> You must agree to continue.</p>
+        <label class="ui-check-label"><input type="checkbox" formControlName="terms" class="ui-check" aria-describedby="signup-policies" /> <span>I agree to the Terms of Use and have read the Privacy Policy.</span></label>
+        <p id="signup-policies" class="text-sm text-purple-800 ml-8">Read the <a routerLink="/terms" target="_blank" rel="noopener" class="underline font-bold">Terms of Use<span class="sr-only"> (opens in a new tab)</span></a> and <a routerLink="/privacy" target="_blank" rel="noopener" class="underline font-bold">Privacy Policy<span class="sr-only"> (opens in a new tab)</span></a>.</p>
+        <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-700 text-xs font-bold mt-1 ml-9"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> You must agree to continue.</p>
       </div>
 
       <button type="submit" [disabled]="signupForm.invalid || isSubmitting()"

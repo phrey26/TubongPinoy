@@ -50,4 +50,24 @@ describe('Signup', () => {
     expect(component.signupForm.hasError('passwordMismatch')).toBe(true);
     TestBed.inject(HttpTestingController).expectNone('/api/session.php');
   });
+
+  it.each(['short', 'é'.repeat(37), 'password\0'])('rejects passwords that PHP cannot accept', password => {
+    component.signupForm.setValue({ username: 'Player', email: 'player@example.com', password,
+      confirmPassword: password, terms: true });
+    component.onSubmit();
+    expect(component.f.password.invalid).toBe(true);
+    TestBed.inject(HttpTestingController).expectNone('/api/session.php');
+  });
+
+  it('accepts a Unicode password at the byte boundary and requires policy agreement', () => {
+    const password = 'é'.repeat(36);
+    component.signupForm.setValue({ username: 'Player', email: 'player@example.com', password,
+      confirmPassword: password, terms: false });
+    expect(component.f.password.valid).toBe(true);
+    component.onSubmit();
+    TestBed.inject(HttpTestingController).expectNone('/api/session.php');
+    expect(component.f.terms.invalid).toBe(true);
+    expect(fixture.nativeElement.querySelector('a[href="/privacy"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('a[href="/terms"]')).toBeTruthy();
+  });
 });

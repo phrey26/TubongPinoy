@@ -7,13 +7,9 @@ import { AccountState } from '../../../core/services/account-state';
 import { User, SettingsChange } from '../../../core/services/user';
 import { authErrorMessage } from '../../../core/services/auth';
 import { Confirmation } from '../../../core/services/confirmation';
+import { passwordValidator } from '../../../core/validators/password';
 
 type Setting = SettingsChange['action'];
-const passwordValidator: ValidatorFn = control => {
-  const value = String(control.value ?? '');
-  const bytes = new TextEncoder().encode(value).length;
-  return bytes >= 8 && bytes <= 72 && !value.includes('\0') ? null : { password: true };
-};
 const matchesPassword: ValidatorFn = group => group.get('value')?.value === group.get('confirmPassword')?.value
   ? null : { mismatch: true };
 function makeForm(validator: ValidatorFn, password = false) {
