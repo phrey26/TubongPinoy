@@ -94,7 +94,7 @@ try:
           'Inventory includes six slippers and three Jolens shooters')
     check(all((ROOT.parent / 'public' / item['imageUrl']).is_file() for item in items),
           'Every selectable skin has a real local asset')
-    check(all((ROOT.parent / 'public' / 'assets' / 'avatars' / (avatar + '.png')).is_file()
+    check(all((ROOT.parent / 'public' / 'assets' / 'avatars' / (avatar + '.webp')).is_file()
               for avatar in ['sunny', 'lila', 'miko', 'maya']), 'Every profile icon has a local image')
     for invalid in [
         {'game': 'tumbang-preso', 'skinId': 'shooter_gold'},

@@ -24,17 +24,7 @@
                 "glob": "**/*",
                 "input": "public",
                 "ignore": [
-                  "**/.DS_Store",
-                  "**/*.prompt.txt",
-                  "**/prompts.md",
-                  "assets/avatars/*.png",
-                  "assets/images/tubong-pinoy-hero-branded.png",
-                  "assets/images/tubong-pinoy-cta.png",
-                  "assets/images/about-image-bw.png",
-                  "assets/thumbnails/tumbang_preso_thumbnail.png",
-                  "assets/thumbnails/jolens_blast_thumbnail.png",
-                  "assets/tumbang-preso-assets/background/neighborhood-play-v2.png",
-                  "assets/jolens-blast-assets/background/schoolyard-marbles.png"
+                  "**/.DS_Store"
                 ]
               }
             ],

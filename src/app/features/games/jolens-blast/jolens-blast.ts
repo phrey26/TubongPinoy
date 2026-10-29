@@ -16,6 +16,7 @@ import { stepMarbles } from './marble-physics';
 import { scatterMarbles } from './marble-placement';
 import { JOLENS_ASSETS, JOLENS_ASSET_PATHS } from './jolens-assets';
 import { MarbleEffects } from './marble-effects';
+import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedback';
 import { drawPixelText } from '../../../shared/canvas/pixel-text';
 import { gameSkinUrl } from '../../../core/services/customization';
 
@@ -182,6 +183,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   readonly assets = JOLENS_ASSETS;
   private readonly sprites = new Map<string, HTMLImageElement>();
   private readonly effects = new MarbleEffects();
+  private readonly feedback = new GameFeedback();
 
   // Canvas
   private canvasWidth = 450;
@@ -221,7 +223,18 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.ctx = canvas.getContext('2d')!;
 
     this.ctx.imageSmoothingEnabled = false;
-    this.effects.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const motion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const syncMotion = () => {
+      this.effects.reducedMotion = motion?.matches ?? false;
+      this.feedback.reducedMotion = this.effects.reducedMotion;
+      if (this.effects.reducedMotion) {
+        this.effects.clear();
+        this.canvasRef.nativeElement.style.transform = '';
+      }
+    };
+    syncMotion();
+    motion?.addEventListener('change', syncMotion);
+    this.destroyRef.onDestroy(() => motion?.removeEventListener('change', syncMotion));
     for (const path of JOLENS_ASSET_PATHS) {
       const image = new Image();
       image.src = path;
@@ -250,6 +263,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     cancelAnimationFrame(this.animationFrameId);
     this.effects.clear();
+    this.feedback.clear();
     if (this.energySub) this.energySub.unsubscribe();
   }
 
@@ -285,6 +299,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   private initRound() {
     this.effects.clear();
+    this.feedback.clear();
+    this.canvasRef.nativeElement.style.transform = '';
     this.outsideMarbles = [];
     this.marblesOnBoard = [];
     this.showRoundWon = false;
@@ -394,18 +410,27 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.currentShooter.dy = dy * 0.15;
       this.currentShooter.isMoving = true;
       this.effects.play(this.currentShooter.x, this.currentShooter.y + 12, 'dust');
+      this.feedback.launch(this.currentShooter.x, this.currentShooter.y,
+        this.currentShooter.dx, this.currentShooter.dy);
     }
   }
 
   gameLoop(timestamp = performance.now()) {
-    const elapsed = this.lastFrameTime === null ? 0 : Math.min(50, Math.max(0, timestamp - this.lastFrameTime));
+    const paused = this.showIntroduction || !!this.confirmation.active();
+    const elapsed = this.lastFrameTime === null || paused ? 0 : Math.min(50, Math.max(0, timestamp - this.lastFrameTime));
     this.lastFrameTime = timestamp;
+    this.feedback.update(elapsed / 1000);
     this.frameAccumulator += elapsed;
     while (this.frameAccumulator >= 1000 / 60) {
       this.updatePhysics();
       this.frameAccumulator -= 1000 / 60;
     }
     this.effects.update(elapsed / 1000);
+    if (!paused && this.shotInProgress) {
+      this.feedback.trail(this.currentShooter.x, this.currentShooter.y,
+        Math.hypot(this.currentShooter.dx, this.currentShooter.dy), '#bae6fd');
+    }
+    this.canvasRef.nativeElement.style.transform = paused ? '' : this.feedback.canvasTransform;
     for (const popup of this.textPopups) popup.age += elapsed / 1000;
     this.textPopups = this.textPopups.filter(popup => popup.age < 0.9);
     this.draw();
@@ -422,10 +447,14 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     const knockedOut = stepMarbles(this.currentShooter, this.marblesOnBoard,
       { ...this.targetCenter, radius: this.playAreaRadius },
       { width: this.canvasWidth, height: this.canvasHeight },
-      (x, y) => this.effects.play(x, y, 'sparks'),
+      (x, y, speed) => {
+        this.effects.play(x, y, 'sparks');
+        this.feedback.impact(x, y, speed / 20, FEEDBACK_COLORS.glass);
+      },
       [...this.pendingKnockouts, ...this.outsideMarbles]);
     for (const marble of knockedOut) {
       this.effects.play(marble.x, marble.y, 'dust');
+      this.feedback.ripple(marble.x, marble.y, '#facc65');
       this.popText('OUT!', marble.x, marble.y, '#fef08a');
     }
     this.pendingKnockouts.push(...this.marblesOnBoard.filter(marble => knockedOut.has(marble)));
@@ -451,6 +480,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
         this.marbleInventory += this.pendingKnockouts.length;
         this.outsideMarbles.push(...this.pendingKnockouts);
         this.popText(won ? `+${won}` : 'MISS!', this.currentShooter.x, this.currentShooter.y, won ? '#b7f3d0' : '#fef08a');
+        if (won > 0) this.feedback.celebrate(this.currentShooter.x, this.currentShooter.y);
       } else {
         this.marbleInventory--;
         this.returnKnockouts();
@@ -459,7 +489,10 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.pendingKnockouts = [];
       this.spawnShooter();
       this.showRoundWon = this.marblesOnBoard.length === 0;
-      if (this.showRoundWon) this.outsideMarbles = [];
+      if (this.showRoundWon) {
+        this.outsideMarbles = [];
+        this.feedback.celebrate(this.targetCenter.x, this.targetCenter.y);
+      }
       if (this.marbleInventory <= 0) this.endSession();
     }
     this.changeDetector.markForCheck();
@@ -507,6 +540,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.ctx.strokeStyle = '#68421f';
     this.ctx.stroke();
 
+    this.feedback.drawTrails(this.ctx);
     this.marblesOnBoard.forEach(m => this.drawMarble(m));
     // Keep exits visible while the shot is judged and after they are collected.
     // Collected marbles still collide, but cannot be counted twice.
@@ -515,11 +549,14 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.drawMarble(this.currentShooter);
 
     this.effects.draw((...args) => this.drawSprite(...args));
+    this.feedback.draw(this.ctx);
     this.drawTextPopups();
     if (this.isDragging) {
       const dx = this.dragStartX - this.currentMouseX;
       const dy = this.dragStartY - this.currentMouseY;
       const distance = Math.hypot(dx, dy);
+      this.feedback.drawPower(this.ctx, this.currentShooter.x, this.currentShooter.y + 42,
+        distance / this.maxDragDistance);
       if (distance > 4) {
         const length = distance * 1.25;
         for (let step = 18; step < length; step += 18) {
@@ -604,6 +641,10 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.showRoundWon = false;
     this.showOutOfJuice = false;
     this.outsideMarbles = [];
+    if (this.currentScore > 0) {
+      this.feedback.celebrate(100, 210);
+      this.feedback.celebrate(350, 210);
+    }
   }
 
   tryAgain() {
@@ -613,6 +654,9 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.currentScore = 0;
+    this.feedback.clear();
+    this.effects.clear();
+    this.canvasRef.nativeElement.style.transform = '';
     this.hasCompletedShot = false;
     this.marbleInventory = 10;
     this.outsideMarbles = [];

@@ -13,6 +13,7 @@ import { Router, RouterModule } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
 import { ImpactEffects } from './impact-effects';
+import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedback';
 import { drawPixelText } from './pixel-text';
 import { generateLevel } from './level-generation';
 import { launchShot, Obstacle, stepShot } from './shot-physics';
@@ -47,6 +48,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private readonly changeDetector = inject(ChangeDetectorRef);
   private reducedMotion = false;
   private readonly impacts = new ImpactEffects();
+  private readonly feedback = new GameFeedback();
   private lastFrameTime: number | null = null;
   private hitAge = 0;
   private readonly obstacleFlashes = new Map<Obstacle, number>();
@@ -122,6 +124,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.energySub?.unsubscribe();
     cancelAnimationFrame(this.animationFrameId);
     this.impacts.clear();
+    this.feedback.clear();
     this.obstacleFlashes.clear();
     this.bankPopups = [];
   }
@@ -174,7 +177,19 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     if (!this.tutorialLoading() && this.showIntroduction) this.introDialog.nativeElement.showModal?.();
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
     this.ctx.imageSmoothingEnabled = false;
-    this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const motion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const syncMotion = () => {
+      this.reducedMotion = motion?.matches ?? false;
+      this.feedback.reducedMotion = this.reducedMotion;
+      if (this.reducedMotion) {
+        this.impacts.clear();
+        this.obstacleFlashes.clear();
+        this.canvas.nativeElement.style.transform = '';
+      }
+    };
+    syncMotion();
+    motion?.addEventListener('change', syncMotion);
+    this.destroyRef.onDestroy(() => motion?.removeEventListener('change', syncMotion));
     for (const path of [
       'assets/tumbang-preso-assets/background/street_bg_clean.png',
       'assets/tumbang-preso-assets/can/can_standing.png',
@@ -286,6 +301,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.velocity.y = (this.dragStart.y - this.dragCurrent.y) * 0.22;
     this.angularVelocity = launchShot(this.velocity.x, this.velocity.y).spin;
     if (!this.reducedMotion) this.impacts.play(this.slipperPos.x, this.slipperPos.y + 12, 'dust');
+    this.feedback.launch(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
     this.isLaunched = true;
   }
 
@@ -303,6 +319,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
     const bounces = Number(result.wallBounce) + result.rockBounces.length;
     if (bounces > 0) {
+      this.feedback.impact(shot.x, shot.y, Math.hypot(shot.vx, shot.vy) / 18, FEEDBACK_COLORS.dust);
       this.shotBounces += bounces;
       for (let bounce = 0; bounce < bounces; bounce++) {
         this.bankPopups.push({ x: shot.x, y: shot.y, age: 0 });
@@ -322,6 +339,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.angularVelocity = 0;
       this.hitAge = 0.001;
       if (!this.reducedMotion) this.impacts.play(this.canPos.x, this.canPos.y, 'spark');
+      this.feedback.impact(this.canPos.x, this.canPos.y, 1, FEEDBACK_COLORS.tin);
+      this.feedback.celebrate(this.canPos.x, this.canPos.y);
       this.showNiceShot = this.reducedMotion;
       this.currentScore += 100;
       this.changeDetector.markForCheck();
@@ -375,6 +394,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.shotBounces = 0;
     this.bankPopups = [];
     this.impacts.clear();
+    this.feedback.clear();
+    this.canvas.nativeElement.style.transform = '';
     this.obstacleFlashes.clear();
   }
 
@@ -383,9 +404,16 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private render(timestamp = performance.now()) {
-    const seconds = this.lastFrameTime === null ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
+    const paused = this.showIntroduction || !!this.confirmation.active();
+    const seconds = this.lastFrameTime === null || paused ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
     this.lastFrameTime = timestamp;
-    if (this.isLaunched && !this.showIntroduction && !this.confirmation.active()) this.updatePhysics();
+    this.feedback.update(seconds);
+    if (this.isLaunched && !paused) {
+      this.feedback.trail(this.slipperPos.x, this.slipperPos.y,
+        Math.hypot(this.velocity.x, this.velocity.y), '#f9a8d4');
+      this.updatePhysics();
+    }
+    this.canvas.nativeElement.style.transform = paused ? '' : this.feedback.canvasTransform;
     for (const popup of this.bankPopups) popup.age += seconds;
     this.bankPopups = this.bankPopups.filter(popup => popup.age < 0.6);
     this.impacts.update(seconds);
@@ -404,8 +432,10 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.drawSprite('assets/tumbang-preso-assets/background/street_bg_clean.png', 0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
     this.drawObstacles();
     this.drawCan();
+    this.feedback.drawTrails(this.ctx);
     this.drawSlipper();
     this.impacts.draw(this.ctx, this.sprites.get('assets/tumbang-preso-assets/effects/impact-sheet.png'));
+    this.feedback.draw(this.ctx);
     this.drawBankPopups();
     this.drawHitScore();
 
@@ -513,6 +543,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     const dx = this.dragStart.x - this.dragCurrent.x;
     const dy = this.dragStart.y - this.dragCurrent.y;
     const distance = Math.hypot(dx, dy);
+    this.feedback.drawPower(this.ctx, this.slipperPos.x, this.slipperPos.y + 42, distance / this.PULL_LIMIT);
     if (distance > 4) {
       const length = Math.min(150, distance * 2);
       for (let step = 20; step < length; step += 20) {

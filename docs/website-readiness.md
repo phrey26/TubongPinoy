@@ -22,7 +22,7 @@ They do not deploy the project or make the existing build ready to upload to itc
 | Basic accessibility | Skip link, labels, visible focus, native FAQ controls, page-change focus, accessible game links, error contrast, and descriptive canvas names. Automated checks do not establish full accessibility conformance. |
 | Forms | Existing signup/login/profile/inventory/settings/shop tests retained; added UTF-8 password, policy-agreement, whitespace-validation, and map-choice coverage. Contact is a preview; top-up/payment controls are intentionally disabled. |
 | Links | New internal routes are public and linked from the footer; fake support email removed. Policy links in signup open a new tab so the signup draft is retained. |
-| Performance | Secondary routes and games load on demand. Large images use WebP; avatars are sized for their rendered use. Original PNGs remain in source, but superseded files and asset prompt files are excluded from the build. |
+| Performance | Secondary routes and games load on demand. Large images use WebP; avatars are sized for their rendered use. Superseded PNG originals, generation prompt files, unused icons, the old favicon, and the unused Jolens preview background have been removed. |
 
 ## Before an itch.io release
 
@@ -72,8 +72,8 @@ descriptions; it is not resolved by alt text or an automated accessibility scan.
 - Existing backend smoke suites are described in `backend/README.md` and use
   temporary accounts with cleanup.
 
-Image optimization uses derived WebP assets while retaining original artwork. The
-eleven optimized files total about 1.81 MB, compared with 20.70 MB of originals.
+Image optimization uses derived WebP assets. The eleven optimized files total
+about 1.81 MB; the 20.70 MB of superseded PNG originals have been removed.
 The initial production JS/CSS bundle was reduced from about 570.59 kB to 392.41 kB
 (about 104 kB estimated transfer).
 
