@@ -7,6 +7,7 @@ import { AccountState } from '../../../core/services/account-state';
 import { User, SettingsChange } from '../../../core/services/user';
 import { authErrorMessage } from '../../../core/services/auth';
 import { Confirmation } from '../../../core/services/confirmation';
+import { AudioSettingsPanel } from '../../../shared/audio-settings/audio-settings';
 import { passwordValidator } from '../../../core/validators/password';
 
 type Setting = SettingsChange['action'];
@@ -21,7 +22,7 @@ function makeForm(validator: ValidatorFn, password = false) {
 }
 
 @Component({
-  selector: 'app-settings', imports: [ReactiveFormsModule, RouterLink],
+  selector: 'app-settings', imports: [ReactiveFormsModule, RouterLink, AudioSettingsPanel],
   templateUrl: './settings.html', styleUrls: ['../account.css', './settings.css'],
 })
 export class Settings {

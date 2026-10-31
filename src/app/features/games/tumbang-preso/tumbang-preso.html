@@ -41,6 +41,9 @@
             <span class="font-bold text-purple-700">Level {{ currentLevel }}</span>
           </div>
           <div class="game-tools">
+          <button type="button" class="ui-button fullscreen-button" [attr.aria-pressed]="audio.settings().muted"
+            [attr.aria-label]="audio.settings().muted ? 'Unmute game sound' : 'Mute game sound'"
+            (click)="audio.toggleMute()">{{ audio.settings().muted ? 'Sound off' : 'Sound on' }}</button>
           <button type="button" class="ui-button fullscreen-button" [disabled]="tutorialLoading()" (click)="openTutorial()">How to Play</button>
           <button type="button" class="ui-button fullscreen-button" (click)="toggleFullscreen()"
             [attr.aria-pressed]="isFullscreen" [attr.aria-label]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
@@ -49,6 +52,11 @@
           </div>
           @if (accountError()) {
             <p role="alert" class="game-account-error w-full text-sm text-red-700">{{ accountError() }}</p>
+          }
+          @if (audio.error()) {
+            <div class="w-full text-sm text-purple-800" role="status">{{ audio.error() }}
+              <button type="button" class="ui-button ui-button-soft" [disabled]="audio.loading()" (click)="audio.activate()">Retry sound</button>
+            </div>
           }
         </div>
 
@@ -128,6 +136,7 @@
     </section>
 
     <aside class="game-sidebar flex flex-col gap-6">
+      <a routerLink="/account/settings" fragment="sound-settings" class="ui-button ui-button-soft">Sound settings</a>
       <app-leaderboard game="tumbang-preso" [score]="currentScore" />
       <button routerLink="/games" class="ui-button return-to-games">
         <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m10 5-7 7 7 7M3 12h18" /></svg>

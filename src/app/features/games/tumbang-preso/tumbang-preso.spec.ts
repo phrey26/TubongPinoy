@@ -1,3 +1,5 @@
+import { signal } from '@angular/core';
+import { TumbangAudio, DEFAULT_AUDIO } from '../../../core/services/tumbang-audio';
 import { Confirmation } from '../../../core/services/confirmation';
 import { AccountState } from '../../../core/services/account-state';
 import { Game } from '../../../core/services/game';
@@ -30,7 +32,11 @@ describe('TumbangPreso', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 
     await TestBed.configureTestingModule({
-      providers: [{ provide: Game, useValue: { tutorial: () => of({ seen: false }), markTutorialSeen: () => of({ seen: true }), scores: () => of({ highScores: [], personalBest: 0 }), saveScore: () => of({ highScores: [], personalBest: 0 }) } }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
+      providers: [{ provide: TumbangAudio, useFactory: () => ({
+        settings: signal({ ...DEFAULT_AUDIO }), loading: signal(false), error: signal(''),
+        start: vi.fn(), stop: vi.fn(), play: vi.fn(), activate: vi.fn(), setPaused: vi.fn(),
+        resetAttempt: vi.fn(), toggleMute: vi.fn(),
+      }) }, { provide: Game, useValue: { tutorial: () => of({ seen: false }), markTutorialSeen: () => of({ seen: true }), scores: () => of({ highScores: [], personalBest: 0 }), saveScore: () => of({ highScores: [], personalBest: 0 }) } }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
       imports: [TumbangPreso],
     }).compileComponents();
 

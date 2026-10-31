@@ -17,6 +17,7 @@ import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedb
 import { drawPixelText } from './pixel-text';
 import { generateLevel } from './level-generation';
 import { launchShot, Obstacle, stepShot } from './shot-physics';
+import { TumbangAudio } from '../../../core/services/tumbang-audio';
 import { gameSkinUrl, SLIPPER_COLORS } from '../../../core/services/customization';
 
 @Component({
@@ -27,6 +28,7 @@ import { gameSkinUrl, SLIPPER_COLORS } from '../../../core/services/customizatio
   styleUrl: './tumbang-preso.css',
 })
 export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
+  readonly audio = inject(TumbangAudio);
 
   @ViewChild('gameCanvas') canvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('gamePanel') gamePanel!: ElementRef<HTMLDivElement>;
@@ -121,6 +123,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.audio.stop();
     this.energySub?.unsubscribe();
     cancelAnimationFrame(this.animationFrameId);
     this.impacts.clear();
@@ -226,12 +229,15 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
     if (Math.hypot(x - this.slipperPos.x, y - this.slipperPos.y) < 40) {
       this.isDragging = true;
+      void this.audio.activate();
+      this.audio.play('aim');
     }
   }
 
   startGame(): void {
     if (this.showIntroduction || this.hasStarted) return;
     this.hasStarted = true;
+    this.audio.start();
   }
 
   private loadTutorial(): void {
@@ -256,12 +262,14 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     if (this.showIntroduction) return;
     this.isDragging = false;
     this.showIntroduction = true;
+    this.audio.setPaused(true);
     this.introDialog.nativeElement.showModal?.();
   }
 
   closeTutorial(): void {
     this.isDragging = false;
     this.showIntroduction = false;
+    this.audio.setPaused(!!this.confirmation.active());
     this.introDialog.nativeElement.close?.();
     if (!this.tutorialSeen && !this.savingTutorial && !this.tutorialLoading()) {
       this.savingTutorial = true;
@@ -299,6 +307,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.isDragging = false;
     this.velocity.x = (this.dragStart.x - this.dragCurrent.x) * 0.22;
     this.velocity.y = (this.dragStart.y - this.dragCurrent.y) * 0.22;
+    this.audio.play('throw', Math.hypot(this.velocity.x, this.velocity.y) / 17.6);
     this.angularVelocity = launchShot(this.velocity.x, this.velocity.y).spin;
     if (!this.reducedMotion) this.impacts.play(this.slipperPos.x, this.slipperPos.y + 12, 'dust');
     this.feedback.launch(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
@@ -327,14 +336,18 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.changeDetector.markForCheck();
     }
     if (result.wallBounce) {
+      this.audio.play('wall', Math.hypot(shot.vx, shot.vy) / 14);
       if (!this.reducedMotion) this.impacts.play(shot.x, shot.y, 'dust');
     }
     for (const obstacle of result.rockBounces) {
+      this.audio.play('rock', Math.hypot(shot.vx, shot.vy) / 14);
       if (!this.reducedMotion) this.impacts.play(shot.x, shot.y, 'dust');
       if (!this.reducedMotion) this.obstacleFlashes.set(obstacle, 0.16);
     }
 
     if (result.hit) {
+      this.audio.play('can');
+      this.audio.play('win', .85, .14);
       this.isLaunched = false;
       this.angularVelocity = 0;
       this.hitAge = 0.001;
@@ -348,6 +361,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     }
 
     if (result.missed) {
+      this.audio.play('miss');
       this.isLaunched = false;
       this.angularVelocity = 0;
       this.showTryAgain = true;
@@ -359,6 +373,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   nextLevel() {
     this.currentLevel++;
     this.resetSlipper();
+    this.audio.play('click');
     this.showNiceShot = false;
 
     this.obstacles = generateLevel(this.currentLevel).obstacles;
@@ -367,6 +382,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   tryAgain() {
     if (!this.showTryAgain || this.savingJuice()) return;
     if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
+      if (!this.showOutOfJuice) this.audio.play('empty');
       this.showOutOfJuice = true;
       return;
     }
@@ -375,12 +391,13 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.energyService.consumeEnergy('tumbang_retry').pipe(
       finalize(() => this.savingJuice.set(false)),
     ).subscribe({
-      next: () => { this.resetSlipper(); this.showOutOfJuice = false; },
+      next: () => { this.resetSlipper(); this.showOutOfJuice = false; this.audio.play('click'); },
       error: (error: unknown) => this.accountError.set(authErrorMessage(error)),
     });
   }
 
   resetSlipper() {
+    this.audio.resetAttempt();
     this.slipperSprite = gameSkinUrl('tumbang-preso', this.account.user()?.equippedSkins?.['tumbang-preso']);
     this.isLaunched = false;
     this.showTryAgain = false;
@@ -405,6 +422,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   private render(timestamp = performance.now()) {
     const paused = this.showIntroduction || !!this.confirmation.active();
+    this.audio.setPaused(paused);
     const seconds = this.lastFrameTime === null || paused ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
     this.lastFrameTime = timestamp;
     this.feedback.update(seconds);

@@ -1,0 +1,42 @@
+<section id="sound-settings" class="sound-card" aria-labelledby="sound-heading">
+  <div class="sound-heading">
+    <div>
+      <span class="eyebrow">TUNE YOUR PLAYGROUND</span>
+      <h2 id="sound-heading">Sound &amp; volume</h2>
+      <p>Make Tumbang Preso sound just right for you.</p>
+    </div>
+    <button type="button" class="ui-button ui-button-soft" [attr.aria-pressed]="audio.settings().muted"
+      (click)="audio.toggleMute()">{{ audio.settings().muted ? 'Unmute all' : 'Mute all' }}</button>
+  </div>
+  <div class="master-control">
+    <div class="slider-heading"><label for="audio-master">Master volume</label><output for="audio-master">{{ audio.settings().master }}%</output></div>
+    <input id="audio-master" type="range" min="0" max="100" step="1" [value]="audio.settings().master"
+      [attr.aria-valuetext]="audio.settings().master + ' percent'" aria-describedby="master-help" (input)="changeVolume('master', $event)" />
+    <p id="master-help">Controls the overall loudness of every sound.</p>
+  </div>
+  <div class="mixer-grid">
+    @for (mixer of mixers; track mixer.id) {
+      <div class="mixer">
+        <span class="mixer-symbol" aria-hidden="true">{{ mixer.symbol }}</span>
+        <div class="slider-heading"><label [for]="'audio-' + mixer.id">{{ mixer.name }}</label><output [attr.for]="'audio-' + mixer.id">{{ audio.settings()[mixer.id] }}%</output></div>
+        <p [id]="'audio-help-' + mixer.id">{{ mixer.description }}</p>
+        <input [id]="'audio-' + mixer.id" type="range" min="0" max="100" step="1" [value]="audio.settings()[mixer.id]"
+          [attr.aria-valuetext]="audio.settings()[mixer.id] + ' percent'" [attr.aria-describedby]="'audio-help-' + mixer.id"
+          (input)="changeVolume(mixer.id, $event)" />
+        <button type="button" class="ui-button ui-button-soft" (click)="audio.preview(mixer.id)"
+          [disabled]="audio.loading() || audio.settings().muted || !audio.settings().master || !audio.settings()[mixer.id]"
+          [attr.aria-label]="'Preview ' + mixer.name">{{ audio.error() ? 'Retry sound' : 'Preview' }}</button>
+      </div>
+    }
+  </div>
+  <div class="sound-footer">
+    <p>{{ audio.storageError() ? 'Volume changes work now, but this browser could not save them.' : 'Changes apply immediately and are saved for your account on this browser.' }}</p>
+    <button type="button" class="ui-button ui-button-soft" (click)="audio.reset()">Restore sound defaults</button>
+  </div>
+  <p class="sound-status" role="status">
+    @if (audio.loading()) { Loading sounds… }
+    @else if (audio.error()) { {{ audio.error() }} }
+    @else if (audio.settings().muted) { All sounds are muted. Your volume levels are kept for when you unmute. }
+    @else if (!audio.settings().master) { Master volume is at zero. Raise it to hear sounds. }
+  </p>
+</section>

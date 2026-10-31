@@ -3,6 +3,8 @@ import { provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
+import { afterEach } from 'vitest';
+import { TumbangAudio, DEFAULT_AUDIO } from '../../../core/services/tumbang-audio';
 import { Settings } from './settings';
 import { User } from '../../../core/services/user';
 import { AccountState } from '../../../core/services/account-state';
@@ -10,6 +12,7 @@ import { Confirmation } from '../../../core/services/confirmation';
 import { AuthUser } from '../../../core/services/auth';
 
 describe('Account settings', () => {
+  afterEach(() => localStorage.clear());
   const player: AuthUser = { id: 1, username: 'Juan', email: 'j@example.com', tansans: 0, juice: 100 };
   function setup() {
     const service = { saveSettings: vi.fn(() => of({ user: player })) };
@@ -20,6 +23,29 @@ describe('Account settings', () => {
     fixture.detectChanges();
     return { fixture, component: fixture.componentInstance, service, state, confirmation: TestBed.inject(Confirmation) };
   }
+
+  it('restores immediately saved sound sliders without making an account credential draft', () => {
+    const { fixture, component, service } = setup();
+    const audio = TestBed.inject(TumbangAudio);
+    for (const channel of ['master', 'effects', 'interface'] as const) {
+      const slider = fixture.nativeElement.querySelector(`#audio-${channel}`) as HTMLInputElement;
+      expect(fixture.nativeElement.querySelector(`label[for="audio-${channel}"]`)).toBeTruthy();
+      slider.value = '42'; slider.dispatchEvent(new Event('input', { bubbles: true })); fixture.detectChanges();
+      expect(audio.settings()[channel]).toBe(42); expect(slider.getAttribute('aria-valuetext')).toBe('42 percent');
+    }
+    expect(component.hasDraft).toBe(false); expect(service.saveSettings).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem('tubong.audio.v1.1')!).effects).toBe(42);
+  });
+
+  it('previews, mutes, and restores the sound mixer', () => {
+    const { fixture } = setup(); const audio = TestBed.inject(TumbangAudio);
+    const preview = vi.spyOn(audio, 'preview').mockResolvedValue();
+    const button = fixture.nativeElement.querySelector('[aria-label="Preview Game effects"]') as HTMLButtonElement;
+    button.click(); expect(preview).toHaveBeenCalledWith('effects');
+    audio.toggleMute(); fixture.detectChanges(); expect(button.disabled).toBe(true);
+    audio.reset(); fixture.detectChanges(); expect(audio.settings()).toEqual(DEFAULT_AUDIO); expect(button.disabled).toBe(false);
+    const stop = vi.spyOn(audio, 'stopPreview'); fixture.destroy(); expect(stop).toHaveBeenCalled();
+  });
 
   it.each(['username', 'email', 'password'] as const)('requires confirmation before changing %s', action => {
     const { component, service, confirmation } = setup();

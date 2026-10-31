@@ -4,13 +4,14 @@
     <header class="account-heading">
       <span class="eyebrow">YOUR ACCOUNT, YOUR DETAILS</span>
       <h1>Account settings</h1>
-      <p>Keep your sign-in details up to date.</p>
+      <p>Adjust your game audio and keep your sign-in details up to date.</p>
     </header>
     <nav class="account-tabs" aria-label="Account pages">
       <a routerLink="/account/profile" class="ui-button ui-button-soft">Edit profile</a>
       <a routerLink="/account/inventory" class="ui-button ui-button-soft">Inventory</a>
       <a routerLink="/account/settings" class="ui-button" aria-current="page">Settings</a>
     </nav>
+    <app-audio-settings />
     <section class="account-card settings-summary" aria-label="Current sign-in details">
       <div><span class="eyebrow">USERNAME</span><strong>{{ account.user()?.username }}</strong></div>
       <div><span class="eyebrow">EMAIL ADDRESS</span><strong>{{ account.user()?.email }}</strong></div>
