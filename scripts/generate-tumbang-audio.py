@@ -151,6 +151,39 @@ def shoot():
     return track
 
 
+def interface_click():
+    """A tiny rubbery pop with a bright, rounded button-click finish."""
+    track = blank(.12)
+    for i in range(len(track)):
+        t = i / RATE
+        # Fast falling bubble pitch gives the click a tactile, playful pop.
+        phase = 2 * math.pi * (290 * t + 540 * .012 * (1 - math.exp(-t / .012)))
+        envelope = min(1, t / .0015) * math.exp(-t / .017)
+        pop = math.sin(phase) + .18 * math.sin(phase * 2)
+        sparkle = .13 * math.sin(2 * math.pi * 1174.66 * t) * math.exp(-t / .025)
+        track[i] = pop * envelope + sparkle * min(1, t / .002)
+    return track
+
+
+def low_juice():
+    """Two attention pings followed by an audible draining/powering-down tail."""
+    track = blank(.86)
+    for start in [0, .14]:
+        for i in range(round(.10 * RATE)):
+            t = i / RATE
+            phase = 2 * math.pi * 880 * t
+            envelope = min(1, t / .004) * min(1, (.10 - t) / .018) * math.exp(-t / .05)
+            track[round(start * RATE) + i] += (math.sin(phase) + .18 * math.sin(phase * 2)) * envelope * .52
+    # The descending, weakening tail makes the resource warning distinct from a miss.
+    for i in range(round(.51 * RATE)):
+        t = i / RATE
+        phase = 2 * math.pi * (110 * t + 470 * .12 * (1 - math.exp(-t / .12)))
+        envelope = min(1, t / .008) * min(1, (.51 - t) / .035) * math.exp(-t / .19)
+        wobble = .85 + .15 * math.cos(2 * math.pi * 19 * t)
+        track[round(.29 * RATE) + i] += (math.sin(phase) + .12 * math.sin(phase * 2)) * envelope * wobble * .65
+    return track
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for material, name, peak in [(sidewalk, 'wall', .68), (rock, 'rock', .65), (can, 'can-hit', .73)]:
@@ -160,13 +193,8 @@ def main():
     save('throw', shoot(), .38)
     save('win', jingle(True), .46)
     save('miss', jingle(False), .36)
-    track = blank(.08)
-    rubber(track, 0, .3)
-    save('click', track, .22)
-    track = blank(.26)
-    rubber(track, 0, .3)
-    rubber(track, .13, .22)
-    save('empty', track, .24)
+    save('click', interface_click(), .30)
+    save('empty', low_juice(), .38)
 
 
 if __name__ == '__main__':

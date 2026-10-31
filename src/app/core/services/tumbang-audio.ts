@@ -189,7 +189,7 @@ export class TumbangAudio {
       : (last + 1 + Math.floor(Math.random() * (buffers.length - 1))) % buffers.length;
     this.lastVariant.set(sound, variant);
     source.buffer = buffers[variant];
-    const jingle = sound === 'win' || sound === 'miss';
+    const jingle = sound === 'win' || sound === 'miss' || sound === 'empty';
     if (!jingle) {
       const high = !this.highPitch.get(sound);
       this.highPitch.set(sound, high);

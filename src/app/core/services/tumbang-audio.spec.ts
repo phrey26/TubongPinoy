@@ -71,7 +71,7 @@ describe('Tumbang audio', () => {
         previous = source;
       }
     }
-    for (const sound of ['win', 'miss', 'win', 'miss'] as const) {
+    for (const sound of ['win', 'miss', 'empty', 'win', 'miss', 'empty'] as const) {
       audio.play(sound); expect(context.sources.at(-1)!.playbackRate.value).toBe(1);
     }
   });

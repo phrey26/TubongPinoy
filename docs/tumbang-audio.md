@@ -1,8 +1,9 @@
 # Tumbang Preso audio
 
-The restored pack contains the same 15 WAV files as the last working production
-build. Every file was verified byte for byte with SHA-256; the reference hashes
-are in `docs/tumbang-audio-sha256.json`. There is no background music.
+The pack contains 15 WAV files. Reference SHA-256 hashes for the current versions
+are in `docs/tumbang-audio-sha256.json`. The restored gameplay sounds are preserved;
+the interface click and low-Juice warning have been redesigned. There is no
+background music.
 
 Regenerate all files with `python3 scripts/generate-tumbang-audio.py`.
 The generator uses only Python's standard library and a fixed random seed.
@@ -18,11 +19,11 @@ The sounds are original procedural effects, not field recordings. Files are
 | can-hit.wav, can-hit-2.wav, can-hit-3.wav | Hollow tin impact and irregular tumbling clatter |
 | win.wav | 0.90-second ascending four-note win jingle |
 | miss.wav | 0.72-second descending three-note miss jingle |
-| click.wav | Soft tap for start, next level, and purchased retry |
-| empty.wav | Two muted taps for insufficient Juice |
+| click.wav | Playful 0.12-second rubbery pop with a bright click finish |
+| empty.wav | 0.86-second low-Juice warning: two alert pings and a draining, powering-down tail |
 
 Material impacts have three takes, with no immediate repeats. Cues alternate
-small pitch offsets (1.8–5%) and vary gain by up to 6%; win and miss jingles keep
+small pitch offsets (1.8–5%) and vary gain by up to 6%; win, miss, and low-Juice jingles keep
 their original pitch, timing, and gain. Throw and bounce loudness follows shot
 strength. All cues are finite one-shots; idle gameplay becomes silent.
 
@@ -40,7 +41,7 @@ game, account changes, or resetting an attempt. Twelve-source polyphony and a
 headroom; separate effects/interface gains feed the master.
 
 Run `npm test -- --watch=false` and `npm run build` to verify integration.
-To verify the restored files against the recorded hashes:
+To verify the restored files against the current reference hashes:
 
 ```sh
 python3 - <<'PY'
@@ -51,6 +52,6 @@ expected = json.loads(Path('docs/tumbang-audio-sha256.json').read_text())
 assert {p.name for p in root.glob('*.wav')} == set(expected)
 for name, digest in expected.items():
     assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, name
-print('All 15 sounds match the restored originals.')
+print('All 15 sounds match their reference hashes.')
 PY
 ```
