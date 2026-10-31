@@ -29,6 +29,7 @@ strength. All cues are finite one-shots; idle gameplay becomes silent.
 
 Settings → Sound & volume provides Master, Game effects, and Interface mixers,
 individual previews, mute, restore defaults, and Save / Discard sound changes.
+The mixers also control [Jolens Blast](jolens-audio.md), with a separate marble-effect preview.
 Edits remain in a draft. Previews use draft levels without writing preferences.
 Save opens the shared “Are you sure?” dialog with a summary of the mixer levels;
 only confirmation saves them per account on this browser under

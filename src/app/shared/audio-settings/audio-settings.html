@@ -3,7 +3,7 @@
     <div>
       <span class="eyebrow">TUNE YOUR PLAYGROUND</span>
       <h2 id="sound-heading">Sound &amp; volume</h2>
-      <p>Make Tumbang Preso sound just right for you.</p>
+      <p>Make Tumbang Preso and Jolens Blast sound just right for you.</p>
     </div>
     <button type="button" class="ui-button ui-button-soft" [attr.aria-pressed]="draft().muted"
       (click)="toggleMute()" [disabled]="pending()">{{ draft().muted ? 'Unmute all' : 'Mute all' }}</button>
@@ -26,6 +26,10 @@
         <button type="button" class="ui-button ui-button-soft" (click)="preview(mixer.id)"
           [disabled]="pending() || audio.loading() || draft().muted || !draft().master || !draft()[mixer.id]"
           [attr.aria-label]="'Preview ' + mixer.name">{{ audio.error() ? 'Retry sound' : 'Preview' }}</button>
+        @if (mixer.id === 'effects') {
+          <button type="button" class="ui-button ui-button-soft" (click)="previewMarbles()"
+            [disabled]="pending() || audio.loading() || draft().muted || !draft().master || !draft().effects">Preview marbles</button>
+        }
       </div>
     }
   </div>

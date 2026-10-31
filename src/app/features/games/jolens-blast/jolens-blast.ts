@@ -19,6 +19,7 @@ import { MarbleEffects } from './marble-effects';
 import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedback';
 import { drawPixelText } from '../../../shared/canvas/pixel-text';
 import { gameSkinUrl } from '../../../core/services/customization';
+import { TumbangAudio } from '../../../core/services/tumbang-audio';
 
 interface Marble {
   sprite?: string;
@@ -59,6 +60,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   hasCompletedShot = false;
   showIntroduction = true;
   readonly tutorialLoading = signal(true);
+  readonly audio = inject(TumbangAudio);
   private readonly gameService = inject(Game);
   private readonly confirmation = inject(Confirmation);
   private readonly account = inject(AccountState);
@@ -89,12 +91,14 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (this.showIntroduction) return;
     this.isDragging = false;
     this.showIntroduction = true;
+    this.audio.setPaused(true);
     this.introDialog.nativeElement.showModal?.();
   }
 
   closeTutorial(): void {
     this.isDragging = false;
     this.showIntroduction = false;
+    this.audio.setPaused(!!this.confirmation.active());
     this.introDialog.nativeElement.close?.();
     if (!this.tutorialSeen && !this.savingTutorial && !this.tutorialLoading()) {
       this.savingTutorial = true;
@@ -110,6 +114,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   play(): void {
     if (this.showIntroduction || this.hasStarted) return;
     this.hasStarted = true;
+    this.audio.start('jolens');
     this.showBetSetup = true;
     this.showCashOut = (this.energyLevel < 20 && !this.energyService.hasUnlimited());
   }
@@ -158,7 +163,10 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (this.isDragging) this.canvasRef.nativeElement.setPointerCapture?.(event.pointerId);
   }
 
-  onPointerCancel(): void { this.isDragging = false; }
+  onPointerCancel(): void {
+    if (this.isDragging) this.audio.resetAttempt();
+    this.isDragging = false;
+  }
 
   readonly savingJuice = signal(false);
   readonly accountError = signal('');
@@ -262,6 +270,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     cancelAnimationFrame(this.animationFrameId);
+    this.audio.stop();
     this.effects.clear();
     this.feedback.clear();
     if (this.energySub) this.energySub.unsubscribe();
@@ -270,13 +279,17 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   get maxBet(): number { return Math.max(0, Math.min(5, this.marbleInventory - 1)); }
 
   selectBet(bet: number): void {
-    if (!this.savingJuice() && !this.showIntroduction && this.showBetSetup && Number.isInteger(bet) && bet >= 1 && bet <= this.maxBet) this.selectedBet = bet;
+    if (!this.savingJuice() && !this.showIntroduction && this.showBetSetup && Number.isInteger(bet) && bet >= 1 && bet <= this.maxBet && bet !== this.selectedBet) {
+      this.selectedBet = bet;
+      this.audio.play('click');
+    }
   }
 
   startRound(): void {
     if (this.savingJuice() || this.showIntroduction || !this.hasStarted || this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
         this.selectedBet < 1 || this.selectedBet > this.maxBet) return;
     if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
+      if (!this.showCashOut) this.audio.play('empty');
       this.showCashOut = true;
       return;
     }
@@ -298,6 +311,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initRound() {
+    this.audio.resetAttempt();
+    this.audio.play('click');
     this.effects.clear();
     this.feedback.clear();
     this.canvasRef.nativeElement.style.transform = '';
@@ -360,6 +375,9 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     const mouseY = (event.clientY - rect.top) * (this.canvasHeight / rect.height);
 
     if (Math.hypot(mouseX - this.currentShooter.x, mouseY - this.currentShooter.y) < this.marbleRadius * 2) {
+      void this.audio.activate();
+      this.audio.resetAttempt();
+      this.audio.play('aim');
       this.isDragging = true;
       this.dragStartX = mouseX;
       this.dragStartY = mouseY;
@@ -398,6 +416,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     const dx = this.dragStartX - this.currentMouseX;
     const dy = this.dragStartY - this.currentMouseY;
     const dragDistance = Math.hypot(dx, dy);
+    this.audio.resetAttempt();
 
     if (dragDistance > 10) {
       if (this.marbleInventory < 1) return;
@@ -409,6 +428,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.currentShooter.dx = dx * 0.15;
       this.currentShooter.dy = dy * 0.15;
       this.currentShooter.isMoving = true;
+      this.audio.play('throw', dragDistance / this.maxDragDistance);
       this.effects.play(this.currentShooter.x, this.currentShooter.y + 12, 'dust');
       this.feedback.launch(this.currentShooter.x, this.currentShooter.y,
         this.currentShooter.dx, this.currentShooter.dy);
@@ -417,6 +437,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   gameLoop(timestamp = performance.now()) {
     const paused = this.showIntroduction || !!this.confirmation.active();
+    this.audio.setPaused(paused);
     const elapsed = this.lastFrameTime === null || paused ? 0 : Math.min(50, Math.max(0, timestamp - this.lastFrameTime));
     this.lastFrameTime = timestamp;
     this.feedback.update(elapsed / 1000);
@@ -448,6 +469,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       { ...this.targetCenter, radius: this.playAreaRadius },
       { width: this.canvasWidth, height: this.canvasHeight },
       (x, y, speed) => {
+        this.audio.play('clink', speed / 18);
         this.effects.play(x, y, 'sparks');
         this.feedback.impact(x, y, speed / 20, FEEDBACK_COLORS.glass);
       },
@@ -457,6 +479,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.feedback.ripple(marble.x, marble.y, '#facc65');
       this.popText('OUT!', marble.x, marble.y, '#fef08a');
     }
+    if (knockedOut.size) this.audio.play('knockout', .7);
     this.pendingKnockouts.push(...this.marblesOnBoard.filter(marble => knockedOut.has(marble)));
     this.marblesOnBoard = this.marblesOnBoard.filter(marble => !knockedOut.has(marble));
     const allTargets = [...this.marblesOnBoard, ...this.pendingKnockouts, ...this.outsideMarbles];
@@ -475,6 +498,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.pendingKnockouts = this.pendingKnockouts.filter(marble => !reentered.includes(marble));
       const shooterOutside = Math.hypot(this.currentShooter.x - this.targetCenter.x,
         this.currentShooter.y - this.targetCenter.y) - this.currentShooter.radius > this.playAreaRadius;
+      const collected = shooterOutside ? this.pendingKnockouts.length : 0;
       if (shooterOutside) {
         const won = this.pendingKnockouts.length;
         this.marbleInventory += this.pendingKnockouts.length;
@@ -489,6 +513,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.pendingKnockouts = [];
       this.spawnShooter();
       this.showRoundWon = this.marblesOnBoard.length === 0;
+      this.audio.play(this.showRoundWon ? 'win' : collected > 0 ? 'collect' : 'miss');
       if (this.showRoundWon) {
         this.outsideMarbles = [];
         this.feedback.celebrate(this.targetCenter.x, this.targetCenter.y);
@@ -634,6 +659,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   endSession(): void {
     if (!this.canEndSession) return;
+    this.audio.setPaused(false);
     this.showCashOut = false;
     this.currentScore = this.hasCompletedShot ? this.marbleInventory * 50 : 0;
     this.showGameOver = true;
@@ -642,6 +668,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.showOutOfJuice = false;
     this.outsideMarbles = [];
     if (this.currentScore > 0) {
+      this.audio.resetAttempt();
+      this.audio.play('win');
       this.feedback.celebrate(100, 210);
       this.feedback.celebrate(350, 210);
     }
@@ -650,10 +678,13 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   tryAgain() {
     if (!this.showGameOver) return;
     if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
+      if (!this.showOutOfJuice) this.audio.play('empty');
       this.showOutOfJuice = true;
       return;
     }
     this.currentScore = 0;
+    this.audio.resetAttempt();
+    this.audio.play('click');
     this.feedback.clear();
     this.effects.clear();
     this.canvasRef.nativeElement.style.transform = '';
@@ -674,9 +705,11 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   chooseNextBet(): void {
     if (!this.showRoundWon) return;
+    this.audio.resetAttempt();
     this.showRoundWon = false;
     this.showBetSetup = this.maxBet >= 1;
     this.showCashOut = this.showBetSetup && (this.energyLevel < 20 && !this.energyService.hasUnlimited());
+    this.audio.play(this.showCashOut ? 'empty' : 'click');
     if (!this.showBetSetup) this.endSession();
     this.selectedBet = Math.min(this.selectedBet, this.maxBet);
     this.marblesOnBoard = [];

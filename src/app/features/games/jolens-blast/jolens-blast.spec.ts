@@ -360,6 +360,7 @@ describe('JolensBlast', () => {
   });
 
   it('lets a winning final shot finish and keeps score when advancing', () => {
+    const sound = vi.spyOn(component.audio, 'play');
     const target = { x: 395, y: 300, radius: 20, color: '#ef4444', dx: 1, dy: 0, isMoving: true };
     component['marblesOnBoard'] = [target];
     component['currentShooter'] = { ...target, x: 225, y: 80, dx: 1, dy: 0, isMoving: true };
@@ -368,12 +369,16 @@ describe('JolensBlast', () => {
     expect(component.currentScore).toBe(0);
     expect(component.showRoundWon).toBe(false);
     expect(component['pendingKnockouts']).toContain(target);
+    expect(sound).toHaveBeenCalledWith('knockout', .7);
+    expect(sound).not.toHaveBeenCalledWith('win');
     expect(component.marbleInventory).toBe(1);
     const draw = vi.spyOn(component, 'drawMarble');
     component.draw();
     expect(draw).toHaveBeenCalledWith(target);
     for (let tick = 0; tick < 601; tick++) component.updatePhysics();
     expect(component.showRoundWon).toBe(true);
+    expect(sound.mock.calls.filter(([cue]) => cue === 'win')).toHaveLength(1);
+    expect(sound).not.toHaveBeenCalledWith('collect');
     expect(component.showGameOver).toBe(false);
     expect(component.currentScore).toBe(0);
     expect(component['outsideMarbles']).toHaveLength(0);
@@ -387,6 +392,7 @@ describe('JolensBlast', () => {
   });
 
   it('returns knocked-out marbles to the middle and forfeits points when the shooter stays inside', () => {
+    const sound = vi.spyOn(component.audio, 'play');
     const target = { x: 396, y: 300, radius: 20, color: '#ef4444', dx: 0, dy: 0, isMoving: false };
     component['marblesOnBoard'] = [target];
     component['currentShooter'] = { ...target, x: 225, y: 300 };
@@ -402,6 +408,9 @@ describe('JolensBlast', () => {
     expect([target.x, target.y]).toEqual([225, 300]);
     expect(component.showRoundWon).toBe(false);
     expect(component.showGameOver).toBe(true);
+    expect(sound).toHaveBeenCalledWith('miss');
+    expect(sound).not.toHaveBeenCalledWith('win');
+    expect(sound).not.toHaveBeenCalledWith('collect');
     expect(component['currentShooter']).not.toBe(oldShooter);
     expect(component['textPopups'].some(popup => popup.text === '-1')).toBe(true);
   });
@@ -453,6 +462,7 @@ describe('JolensBlast', () => {
   });
 
   it('transfers momentum between different colors without scoring on contact', () => {
+    const sound = vi.spyOn(component.audio, 'play');
     const target = { x: 225, y: 300, radius: 20, color: '#ef4444', dx: 0, dy: 0, isMoving: false };
     component['marblesOnBoard'] = [target];
     component['currentShooter'] = { ...target, color: '#3b82f6', y: 340, dy: -10, isMoving: true };
@@ -461,6 +471,8 @@ describe('JolensBlast', () => {
     expect(target.dy).toBeLessThan(0);
     expect(component.currentScore).toBe(0);
     expect(component['shotInProgress']).toBe(true);
+    expect(sound).toHaveBeenCalledWith('clink', expect.any(Number));
+    expect(sound).not.toHaveBeenCalledWith('collect');
   });
 
   it('lets a paid round continue at zero juice without charging for shots', () => {

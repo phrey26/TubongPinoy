@@ -19,6 +19,22 @@ export const TUMBANG_SOUNDS = {
   empty: { files: ['empty.wav'], channel: 'interface' },
 } as const;
 export type TumbangSound = keyof typeof TUMBANG_SOUNDS;
+export const JOLENS_SOUNDS = {
+  aim: { files: ['aim.wav'], channel: 'effects' },
+  throw: { files: ['throw.wav'], channel: 'effects' },
+  clink: { files: ['clink.wav', 'clink-2.wav', 'clink-3.wav'], channel: 'effects' },
+  knockout: { files: ['knockout.wav'], channel: 'effects' },
+  collect: { files: ['collect.wav'], channel: 'effects' },
+  win: { files: ['win.wav'], channel: 'effects' },
+  miss: { files: ['miss.wav'], channel: 'effects' },
+  click: TUMBANG_SOUNDS.click,
+  empty: TUMBANG_SOUNDS.empty,
+} as const;
+export type AudioBank = 'tumbang' | 'jolens';
+type GameSound = TumbangSound | keyof typeof JOLENS_SOUNDS;
+const SOUND_BANKS: Record<AudioBank, Partial<Record<GameSound, { files: readonly string[]; channel: AudioChannel }>>> = {
+  tumbang: TUMBANG_SOUNDS, jolens: JOLENS_SOUNDS,
+};
 
 export function normalizeAudioSettings(value: unknown): AudioSettings {
   const raw = value && typeof value === 'object' ? value as Record<string, unknown> : {};
@@ -39,15 +55,17 @@ export class TumbangAudio {
   private context?: AudioContext;
   private master?: GainNode;
   private channels?: Record<AudioChannel, GainNode>;
-  private readonly buffers = new Map<TumbangSound, AudioBuffer[]>();
-  private loadingBank?: Promise<boolean>;
+  private bank: AudioBank = 'tumbang';
+  private readonly buffers = new Map<string, AudioBuffer[]>();
+  private readonly loadingBanks = new Map<AudioBank, Promise<boolean>>();
   private readonly voices = new Map<AudioBufferSourceNode, GainNode>();
-  private readonly lastVariant = new Map<TumbangSound, number>();
-  private readonly highPitch = new Map<TumbangSound, boolean>();
+  private readonly lastVariant = new Map<string, number>();
+  private readonly highPitch = new Map<string, boolean>();
   private active = false;
   private paused = false;
   private generation = 0;
   private lastBounce = -Infinity;
+  private lastKnockout = -Infinity;
   private previewSettings?: AudioSettings;
 
   private get mixSettings(): AudioSettings { return this.previewSettings ?? this.settings(); }
@@ -111,7 +129,9 @@ export class TumbangAudio {
     }
     if (settings.muted || settings.master === 0) { this.generation++; this.silence(); }
   }
-  start(): void { this.stop(); this.active = true; this.paused = false; void this.activate(true); }
+  start(bank: AudioBank = 'tumbang'): void {
+    this.stop(); this.bank = bank; this.active = true; this.paused = false; void this.activate(true);
+  }
   async activate(click = false): Promise<void> {
     const generation = this.generation;
     if (this.settings().muted || this.settings().master === 0) return;
@@ -124,7 +144,7 @@ export class TumbangAudio {
     if (paused) { this.generation++; this.silence(); }
   }
   stop(): void {
-    this.active = false; this.generation++; this.lastBounce = -Infinity;
+    this.active = false; this.generation++; this.lastBounce = this.lastKnockout = -Infinity;
     this.previewSettings = undefined; this.silence(); this.applyMix();
   }
   stopPreview(): void {
@@ -132,19 +152,23 @@ export class TumbangAudio {
       this.generation++; this.silence(); this.previewSettings = undefined; this.applyMix();
     }
   }
-  resetAttempt(): void { this.silence(); this.lastBounce = -Infinity; }
+  resetAttempt(): void { this.silence(); this.lastBounce = this.lastKnockout = -Infinity; }
   private get canPlay(): boolean {
     return this.active && !this.paused && !document.hidden && !this.settings().muted && this.settings().master > 0;
   }
-  play(sound: TumbangSound, strength = 1, delay = 0): void {
+  play(sound: GameSound, strength = 1, delay = 0): void {
     if (!this.canPlay || this.context?.state !== 'running') return;
-    if (sound === 'wall' || sound === 'rock') {
+    if (sound === 'wall' || sound === 'rock' || sound === 'clink') {
       if (this.context.currentTime - this.lastBounce < .055) return;
       this.lastBounce = this.context.currentTime;
     }
+    if (sound === 'knockout') {
+      if (this.context.currentTime - this.lastKnockout < .09) return;
+      this.lastKnockout = this.context.currentTime;
+    }
     this.spawn(sound, Math.max(.2, Math.min(1, strength)), delay);
   }
-  async preview(channel: AudioChannel, draft?: AudioSettings): Promise<void> {
+  async preview(channel: AudioChannel, draft?: AudioSettings, bank: AudioBank = 'tumbang'): Promise<void> {
     if (this.active) return;
     this.stopPreview();
     const generation = this.generation;
@@ -152,10 +176,10 @@ export class TumbangAudio {
     if (settings.muted || !settings.master || !settings[channel]) return;
     this.previewSettings = settings;
     this.applyMix();
-    if (!await this.prepare() || generation !== this.generation || document.hidden) return;
-    this.spawn(channel === 'effects' ? 'can' : 'click', 1);
+    if (!await this.prepare(bank) || generation !== this.generation || document.hidden) return;
+    this.spawn(channel === 'effects' ? bank === 'jolens' ? 'clink' : 'can' : 'click', 1, 0, bank);
   }
-  private async prepare(): Promise<boolean> {
+  private async prepare(bank: AudioBank = this.bank): Promise<boolean> {
     this.error.set('');
     try {
       if (!this.context) {
@@ -172,34 +196,39 @@ export class TumbangAudio {
       }
       if (this.context.state !== 'running') await this.context.resume();
       if (this.context.state !== 'running') throw new Error('Audio suspended');
-      if (this.buffers.size === Object.keys(TUMBANG_SOUNDS).length) return true;
-      if (!this.loadingBank) {
+      const sounds = SOUND_BANKS[bank];
+      if (Object.keys(sounds).every(name => this.buffers.has(`${bank}:${name}`))) return true;
+      let loadingBank = this.loadingBanks.get(bank);
+      if (!loadingBank) {
         const context = this.context;
         this.loading.set(true);
-        this.loadingBank = Promise.all(Object.entries(TUMBANG_SOUNDS).map(async ([name, sound]) => {
+        loadingBank = Promise.all(Object.entries(sounds).map(async ([name, sound]) => {
           const buffers = await Promise.all(sound.files.map(async file => {
-            const response = await fetch(`assets/tumbang-preso-assets/audio/${file}`, { signal: AbortSignal.timeout(10000) });
+            const directory = bank === 'jolens' && name !== 'click' && name !== 'empty' ? 'jolens-blast-assets' : 'tumbang-preso-assets';
+            const response = await fetch(`assets/${directory}/audio/${file}`, { signal: AbortSignal.timeout(10000) });
             if (!response.ok) throw new Error('Sound download failed');
             return context.decodeAudioData(await response.arrayBuffer());
           }));
-          return [name as TumbangSound, buffers] as const;
+          return [`${bank}:${name}`, buffers] as const;
         })).then(entries => {
           for (const [name, buffers] of entries) this.buffers.set(name, buffers);
           return true;
         }).catch(() => { this.error.set('Sounds could not load. Use Retry sound to try again.'); return false; })
-          .finally(() => { this.loading.set(false); this.loadingBank = undefined; });
+          .finally(() => { this.loadingBanks.delete(bank); this.loading.set(this.loadingBanks.size > 0); });
+        this.loadingBanks.set(bank, loadingBank);
       }
-      return await this.loadingBank;
+      return await loadingBank;
     } catch {
       this.error.set('Sound is unavailable. Use Retry sound or check your browser’s audio permissions.');
       return false;
     }
   }
-  private spawn(sound: TumbangSound, strength: number, delay = 0): void {
+  private spawn(sound: GameSound, strength: number, delay = 0, bank: AudioBank = this.bank): void {
     const context = this.context;
-    const buffers = this.buffers.get(sound);
-    const channel = TUMBANG_SOUNDS[sound].channel;
-    if (!context || context.state !== 'running' || !buffers?.length || !this.channels ||
+    const key = `${bank}:${sound}`;
+    const buffers = this.buffers.get(key);
+    const channel = SOUND_BANKS[bank][sound]?.channel;
+    if (!context || context.state !== 'running' || !buffers?.length || !channel || !this.channels ||
         this.mixSettings.muted || !this.mixSettings.master || !this.mixSettings[channel]) return;
     if (this.voices.size >= 12) {
       const oldest = this.voices.keys().next().value;
@@ -207,15 +236,15 @@ export class TumbangAudio {
     }
     const source = context.createBufferSource();
     const gain = context.createGain();
-    const last = this.lastVariant.get(sound);
+    const last = this.lastVariant.get(key);
     const variant = buffers.length === 1 ? 0 : last === undefined ? Math.floor(Math.random() * buffers.length)
       : (last + 1 + Math.floor(Math.random() * (buffers.length - 1))) % buffers.length;
-    this.lastVariant.set(sound, variant);
+    this.lastVariant.set(key, variant);
     source.buffer = buffers[variant];
-    const jingle = sound === 'win' || sound === 'miss' || sound === 'empty';
+    const jingle = sound === 'win' || sound === 'miss' || sound === 'empty' || sound === 'collect';
     if (!jingle) {
-      const high = !this.highPitch.get(sound);
-      this.highPitch.set(sound, high);
+      const high = !this.highPitch.get(key);
+      this.highPitch.set(key, high);
       source.playbackRate.value = 1 + (high ? 1 : -1) * (.018 + Math.random() * .032);
     }
     gain.gain.value = strength * (jingle ? 1 : .94 + Math.random() * .06);

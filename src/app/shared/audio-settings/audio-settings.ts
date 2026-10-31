@@ -28,7 +28,7 @@ export class AudioSettingsPanel implements OnDestroy {
   });
   private revision = 0;
   readonly mixers: { id: AudioChannel; name: string; description: string; symbol: string }[] = [
-    { id: 'effects', name: 'Game effects', description: 'Slipper throws, concrete thuds, rock clacks, and tin-can clatter.', symbol: '✦' },
+    { id: 'effects', name: 'Game effects', description: 'Slipper throws, can hits, glass-marble clinks, and game jingles.', symbol: '✦' },
     { id: 'interface', name: 'Interface', description: 'Button cues and the low-Juice alert.', symbol: '◉' },
   ];
 
@@ -61,6 +61,7 @@ export class AudioSettingsPanel implements OnDestroy {
   toggleMute(): void { this.edit({ ...this.draft(), muted: !this.draft().muted }); }
   restoreDefaults(): void { this.edit({ ...DEFAULT_AUDIO }); }
   preview(channel: AudioChannel): void { void this.audio.preview(channel, this.draft()); }
+  previewMarbles(): void { void this.audio.preview('effects', this.draft(), 'jolens'); }
 
   save(): void {
     if (this.pending() || !this.hasChanges()) return;

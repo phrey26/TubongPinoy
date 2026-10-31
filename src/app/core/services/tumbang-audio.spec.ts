@@ -54,6 +54,55 @@ describe('Tumbang audio', () => {
     audio.toggleMute(); expect(audio['voices'].size).toBe(0);
     audio.play('click'); expect(context.sources).toHaveLength(2);
   });
+  it('loads only the requested game bank and keeps identically named cues separate across games', async () => {
+    const audio = TestBed.inject(TumbangAudio);
+    audio.start('jolens');
+    await vi.waitFor(() => expect(FakeContext.instances[0].sources).toHaveLength(1));
+    const context = FakeContext.instances[0];
+    const urls = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
+    expect(urls.filter(url => url.includes('jolens-blast-assets'))).toHaveLength(9);
+    expect(urls.filter(url => url.includes('tumbang-preso-assets'))).toEqual([
+      'assets/tumbang-preso-assets/audio/click.wav', 'assets/tumbang-preso-assets/audio/empty.wav',
+    ]);
+    audio.play('win'); const marbleWin = context.sources.at(-1)!.buffer;
+    audio.start();
+    await vi.waitFor(() => expect(context.sources).toHaveLength(3));
+    audio.play('win'); expect(context.sources.at(-1)!.buffer).not.toBe(marbleWin);
+    const downloads = vi.mocked(fetch).mock.calls.length;
+    audio.start('jolens');
+    await vi.waitFor(() => expect(context.sources).toHaveLength(5));
+    audio.play('win'); expect(context.sources.at(-1)!.buffer).toBe(marbleWin);
+    expect(fetch).toHaveBeenCalledTimes(downloads);
+  });
+  it('unmutes into the marble bank, varies clinks, and limits simultaneous collision and exit cues', async () => {
+    const audio = TestBed.inject(TumbangAudio);
+    audio.toggleMute(); audio.start('jolens');
+    expect(fetch).not.toHaveBeenCalled();
+    audio.toggleMute();
+    await vi.waitFor(() => expect(audio['buffers'].size).toBe(9));
+    const context = FakeContext.instances[0];
+    audio.play('clink', .4); const first = context.sources.at(-1)!;
+    for (let i = 0; i < 10; i++) audio.play('clink');
+    expect(context.sources).toHaveLength(1);
+    context.currentTime += .06; audio.play('clink');
+    expect(context.sources.at(-1)!.buffer).not.toBe(first.buffer);
+    expect(context.sources.at(-1)!.playbackRate.value).not.toBe(first.playbackRate.value);
+    for (let i = 0; i < 10; i++) audio.play('knockout');
+    expect(context.sources).toHaveLength(3);
+    for (const sound of ['collect', 'win', 'miss'] as const) {
+      audio.play(sound); expect(context.sources.at(-1)!.playbackRate.value).toBe(1);
+    }
+    audio.toggleMute(); expect(audio['voices'].size).toBe(0);
+  });
+  it('previews marble effects using draft volumes and discards them when leaving settings', async () => {
+    const audio = TestBed.inject(TumbangAudio);
+    await audio.preview('effects', { ...DEFAULT_AUDIO, effects: 24 }, 'jolens');
+    expect(FakeContext.instances[0].sources).toHaveLength(1);
+    expect(audio['channels']!.effects.gain.setTargetAtTime).toHaveBeenLastCalledWith(.24, 10, .015);
+    expect(audio.settings()).toEqual(DEFAULT_AUDIO);
+    audio.stopPreview(); expect(audio['voices'].size).toBe(0);
+    expect(audio['channels']!.effects.gain.setTargetAtTime).toHaveBeenLastCalledWith(.85, 10, .015);
+  });
   it('never repeats an impact take or pitch immediately, but preserves result jingle tuning', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(.5);
     const audio = await start(); const context = FakeContext.instances[0];
