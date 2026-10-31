@@ -5,7 +5,7 @@
       <p class="eyebrow">{{ page() === 'not-found' ? '404 · PAGE NOT FOUND' : 'TUBONG PINOY · HH productions' }}</p>
       <h1>{{ heading() }}</h1>
       @if (page() === 'privacy' || page() === 'terms') {
-        <p class="updated">Draft updated October 29, 2026</p>
+        <p class="updated">Draft updated October 31, 2026</p>
         <p class="ui-feedback">This is a development draft. Operator contact details and final hosting information will be added before public launch.</p>
       }
     </header>
@@ -19,20 +19,22 @@
         <section>
           <h2>Information used by the app</h2>
           <ul>
-            <li><strong>Account details:</strong> your username, email address, and a password hash used to verify your password. Passwords are not stored as readable text.</li>
+            <li><strong>Account details:</strong> your username and a password hash used to verify your password. Passwords are not stored as readable text.</li>
             <li><strong>Profile and play:</strong> your display name, chosen avatar, equipped skins, purchased collectibles, Tansans, Juice, tutorial preferences, and personal best scores.</li>
             <li><strong>Account activity:</strong> wallet operation records, account update timestamps, and session information needed to sign you in and protect account changes.</li>
-            <li><strong>Security:</strong> request limits use hashed identifiers derived from a network address, login identity, or account ID. The web server may also keep request and error logs.</li>
+            <li><strong>Security:</strong> registration uses a short arithmetic challenge tied to your session. Its verification data expires after five minutes and is replaced after an attempt or a new question. No third-party CAPTCHA service is loaded. Request limits use hashed identifiers derived from a network address, login identity, or account ID. The web server may also keep request and error logs.</li>
           </ul>
+          <p>Account registration and sign-in use a username and password, without collecting an email address.</p>
           <p>This information supports sign-in, saved game features, balance recovery, account preferences, and protection against duplicate charges and abusive requests. The app has no advertising or third-party analytics integration.</p>
         </section>
         <section>
           <h2>What other players can see</h2>
-          <p>Signed-in players can view game leaderboards containing account IDs, usernames, display names, avatars, and scores. Your email, password hash, and wallet records are not included in leaderboard responses. Choose a display name that you are comfortable sharing with other players.</p>
+          <p>Signed-in players can view game leaderboards containing account IDs, usernames, display names, avatars, and scores. Your password hash and wallet records are not included in leaderboard responses. Choose a display name that you are comfortable sharing with other players.</p>
         </section>
         <section id="cookies">
-          <h2>Cookies and optional maps</h2>
+          <h2>Browser storage and optional maps</h2>
           <p>The essential <code>tubong_session</code> cookie supports sign-in and request protection. A normal login expires after up to eight hours; Remember Me keeps the login for up to 30 days. Logging out ends the current session. Blocking this cookie prevents account features from working.</p>
+          <p>Saved sound settings use local storage for the current account on this browser. They are not sent to the account service. Clearing site data resets them.</p>
           <p>The Contact page loads Google Maps only when you select “Load Google Map.” Loading it connects your browser to Google, which may receive your IP address and browser information and use cookies under its <a href="https://policies.google.com/privacy">Privacy Policy</a>. You can remove the map from the page using “Hide map.” This stops displaying the embed; it does not erase information already received by Google or cookies it has set.</p>
           <p>The map choice is kept only while that page is open. You can manage stored cookies in your browser settings. No optional analytics cookies are set by this app.</p>
         </section>
@@ -43,7 +45,7 @@
         <section>
           <h2>Storage and your choices</h2>
           <p>Account and game records are stored in the project’s database. Signing out does not delete them. This development version does not yet offer account deletion or an automatic retention schedule. The final hosting providers, retention periods, and a working privacy request contact still need to be confirmed before launch.</p>
-          <p>You can change your profile, equipment, username, email, and password from the account menu. Depending on applicable law, you may have rights to access, correct, object to, or request erasure of your personal information. Learn more from the <a href="https://privacy.gov.ph/data-subject-rights/">Philippine National Privacy Commission</a>.</p>
+          <p>You can change your profile, equipment, username and password from the account menu. Depending on applicable law, you may have rights to access, correct, object to, or request erasure of your personal information. Learn more from the <a href="https://privacy.gov.ph/data-subject-rights/">Philippine National Privacy Commission</a>.</p>
           <p>HH productions has not yet published a verified support or privacy email address. The Contact preview cannot receive privacy requests.</p>
         </section>
         <section>
@@ -58,8 +60,8 @@
         </section>
         <section>
           <h2>Your account</h2>
-          <p>Keep your sign-in details private, use an email address you control, and do not use someone else’s account. Your display name must not impersonate another person or contain abusive content. If you are under the age of legal majority where you live, involve a parent or guardian before creating an account.</p>
-          <p>Account access is separate from any itch.io account. Password reset and email verification are not available in this version. Read the <a routerLink="/privacy">Privacy Policy</a> to understand the account information that is stored and shared.</p>
+          <p>Choose a username, keep your password private, and do not use someone else’s account. Registration does not require an email address. Avoid putting your real name or contact details in a public username. Your display name must not impersonate another person or contain abusive content. If you are under the age of legal majority where you live, involve a parent or guardian before creating an account.</p>
+          <p>Account access is separate from any itch.io account. Password recovery is not available in this version, and accounts have no recovery email. Keep your username and password somewhere safe. Read the <a routerLink="/privacy">Privacy Policy</a> to understand the account information that is stored and shared.</p>
         </section>
         <section>
           <h2>Play fairly</h2>
@@ -69,7 +71,7 @@
         <section>
           <h2>Juice, Tansans, and virtual items</h2>
           <p>Juice is used for Tumbang Preso retries and new Jolens Blast rounds. It also refills for free over time. Tansans can be spent in the in-game store. These are virtual game resources with no cash redemption or transfer feature.</p>
-          <p>Store collectibles currently have no playable artwork. Free starter slippers and shooters can be equipped from Inventory. The store displays each item’s price before you confirm a purchase.</p>
+          <p>Store skins are coming soon, and skin purchases are disabled. Free starter slippers and shooters can be equipped from Inventory. The store displays each item’s price before you confirm a purchase.</p>
           <p>Real-money top-ups are unavailable. Any enabled development top-up is a simulation and takes no payment. Planned prices and payment options are previews, not offers to accept money. Payment and refund terms must be supplied if real purchases are introduced.</p>
         </section>
         <section>
@@ -91,14 +93,16 @@
         <p class="intro">The essentials, from your first shot to your next refill.</p>
         <div class="faq-list">
           <details><summary>Do I need an account to play?</summary><p>You can browse the home page, game catalog, help, and policies without signing in. Playing either game, using the store, and saving a profile require a Tubong Pinoy account. <a routerLink="/signup">Create an account</a> or <a routerLink="/login">log in</a> to get started.</p></details>
+          <details><summary>Do I need an email address to register?</summary><p>No. Choose a unique username and password, confirm your password, answer the short human-check question, and agree to the Terms of Use. Usernames use 3–50 letters, numbers, or underscores and are not case-sensitive for uniqueness. If you see “Username is taken,” choose another name. Keep your login details safe: password recovery is not available.</p></details>
+          <details><summary>Why is there a human check during signup?</summary><p>The short question, hidden spam field, and request limits help reduce automated registrations. A question expires after five minutes and each verification attempt uses it once. If an answer is rejected or the question expires, use the new question shown below the form. You can also choose a different question. No external CAPTCHA account is needed.</p></details>
           <details><summary>What do new players start with?</summary><p>Each new account starts with 100 Juice, 0 Tansans, six free slipper colors, and three free Jolens shooter styles. Starter skins are available in <a routerLink="/account/inventory">Inventory</a>.</p></details>
           <details><summary>How does Juice refill?</summary><p>You recover 1 Juice every 2 minutes and 24 seconds, up to 100. A full refill from zero takes four hours. Recovery also works while you are away or logged out. The timer shows when the next point is due; an internet connection is needed to confirm the new balance.</p></details>
           <details><summary>When does a game spend Juice?</summary><p>Tumbang Preso’s first attempt is free. Choosing Try Again after a miss costs 20 Juice. In Jolens Blast, each confirmed round costs 20 Juice; individual shots are free. Spending your final 20 Juice still lets you finish that attempt or round. An active unlimited pass prevents these costs.</p></details>
           <details><summary>How do the games award points?</summary><p>Tumbang Preso awards 100 points per can hit and saves your cumulative high score as you progress. Jolens Blast awards 50 points per marble you own when you end a session after completing a shot. Use End Session to save that result before leaving. Points do not award Tansans.</p></details>
           <details><summary>What happens when I leave a game?</summary><p>Your account balances, equipment, tutorial preferences, and saved personal bests remain on your account. An unfinished level or Jolens session resets when you leave or reload. If a score could not be saved, use Retry saving score before leaving the game page.</p></details>
           <details><summary>Can I buy Tansans or cash out marbles?</summary><p>Real-money top-ups are coming soon and payment buttons are disabled. Jolens marbles become game points at session end, not cash or Tansans. No cash-out feature is available.</p></details>
-          <details><summary>Can I equip items from the store?</summary><p>Purchased store collectibles are saved to your account but do not have playable skins yet. You can equip any free starter slipper or shooter from <a routerLink="/account/inventory">Inventory</a> without spending Tansans.</p></details>
-          <details><summary>How do I change my account or recover a password?</summary><p>Use the account menu to edit your profile or open <a routerLink="/account/settings">Settings</a>. Changing your username, email, or password requires your current password and signs out other sessions. Password recovery is not available yet.</p></details>
+          <details><summary>Can I equip items from the store?</summary><p>Store skins are coming soon and cannot be purchased yet. Any previously owned collectibles remain on your account. You can equip any free starter slipper or shooter from <a routerLink="/account/inventory">Inventory</a> without spending Tansans.</p></details>
+          <details><summary>How do I change my account or recover a password?</summary><p>Use the account menu to edit your profile or open <a routerLink="/account/settings">Settings</a>. Changing your username or password requires your current password and signs out other sessions. Password recovery is not available yet.</p></details>
           <details><summary>Does the app track me or send my contact message?</summary><p>Third-party analytics are disabled. Account features use an essential session cookie, and the optional Google map only loads when you choose it. The Contact form is a preview and sends no message. Read the <a routerLink="/privacy">Privacy Policy</a> for details.</p></details>
           <details><summary>Which controls can I use?</summary><p>Both games use a pull-back aiming action. Jolens Blast supports mouse and touch controls. Tumbang Preso currently requires a mouse or similar pointing device. The game canvases do not yet offer keyboard-only gameplay; page navigation, help, and forms support the keyboard.</p></details>
         </div>

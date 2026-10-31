@@ -4,7 +4,7 @@ $body = json_input();
 $user = require_user();
 $action = input_string($body, 'action');
 $currentPassword = input_string($body, 'currentPassword');
-if (!in_array($action, ['username', 'email', 'password'], true)) {
+if (!in_array($action, ['username', 'password'], true)) {
     respond(['message' => 'Choose a supported account setting.'], 422);
 }
 if ($currentPassword === '' || strlen($currentPassword) > 72 || str_contains($currentPassword, "\0")) {
@@ -14,11 +14,6 @@ if ($action === 'username') {
     $value = trim(input_string($body, 'username'));
     if (!preg_match('/\A[A-Za-z0-9_]{3,50}\z/', $value)) {
         respond(['message' => 'Use 3–50 letters, numbers or underscores for your username.'], 422);
-    }
-} elseif ($action === 'email') {
-    $value = strtolower(trim(input_string($body, 'email')));
-    if (strlen($value) > 254 || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-        respond(['message' => 'Enter a valid email address.'], 422);
     }
 } else {
     $value = input_string($body, 'newPassword');
@@ -56,7 +51,7 @@ try {
     // Freeze the existing display name before changing a login username.
     $db->prepare('INSERT IGNORE INTO user_profiles (user_id, display_name) VALUES (?, ?)')
         ->execute([$user['id'], $row['username']]);
-    $column = ['username' => 'username', 'email' => 'email', 'password' => 'password_hash'][$action];
+    $column = ['username' => 'username', 'password' => 'password_hash'][$action];
     $stored = $action === 'password' ? password_hash($value, PASSWORD_DEFAULT) : $value;
     $db->prepare("UPDATE users SET $column = ? WHERE id = ?")->execute([$stored, $user['id']]);
     $db->prepare('INSERT INTO account_security (user_id, version) VALUES (?, 1)
@@ -69,7 +64,7 @@ try {
 } catch (Throwable $error) {
     if ($db->inTransaction()) $db->rollBack();
     if ($error instanceof PDOException && ($error->errorInfo[1] ?? null) === 1062) {
-        respond(['message' => 'That username or email is already registered.'], 409);
+        respond(['message' => 'Username is taken.'], 409);
     }
     throw $error;
 }

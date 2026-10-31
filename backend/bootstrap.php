@@ -86,12 +86,12 @@ function public_user(array $row): array
     $db = database();
     $ownTransaction = !$db->inTransaction();
     if ($ownTransaction) $db->beginTransaction();
-    $query = $db->prepare('SELECT id, username, email, tansans, juice FROM users WHERE id = ? FOR UPDATE');
+    $query = $db->prepare('SELECT id, username, tansans, juice FROM users WHERE id = ? FOR UPDATE');
     $query->execute([$row['id']]);
     [$row, $state] = recover_account_juice($db, $query->fetch());
     $query = $db->prepare('SELECT skin_id FROM user_skins WHERE user_id = ? ORDER BY skin_id');
     $query->execute([$row['id']]);
-    $result = ['id' => (int) $row['id'], 'username' => $row['username'], 'email' => $row['email'],
+    $result = ['id' => (int) $row['id'], 'username' => $row['username'],
         'tansans' => (int) $row['tansans'], 'juice' => (int) $row['juice'],
         'ownedSkins' => $query->fetchAll(PDO::FETCH_COLUMN),
         'unlimitedJuiceUntil' => (int) $state['unlimited_until'] * 1000,
@@ -107,7 +107,7 @@ function public_user(array $row): array
 function current_user(): ?array
 {
     if (!isset($_SESSION['user_id'])) return null;
-    $query = database()->prepare('SELECT u.id, u.username, u.email, u.tansans, u.juice,
+    $query = database()->prepare('SELECT u.id, u.username, u.tansans, u.juice,
         COALESCE(s.version, 0) AS auth_version FROM users u
         LEFT JOIN account_security s ON s.user_id = u.id WHERE u.id = ?');
     $query->execute([$_SESSION['user_id']]);

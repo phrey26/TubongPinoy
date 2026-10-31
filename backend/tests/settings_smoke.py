@@ -1,5 +1,6 @@
 """Verify credential changes using isolated temporary accounts, removed on exit."""
 from concurrent.futures import ThreadPoolExecutor
+from human_check import answer_signup_challenge
 import http.cookiejar
 import json
 import os
@@ -15,7 +16,6 @@ ROOT = Path(__file__).resolve().parents[1]
 prefix = 'tp_settings_' + secrets.token_hex(6)
 names = [prefix + '_a', prefix + '_b']
 new_name = prefix + '_new'
-new_email = prefix + '_new@example.com'
 password, new_password = secrets.token_urlsafe(20), secrets.token_urlsafe(20)
 ids = []
 passed = 0
@@ -29,6 +29,10 @@ class Client:
         self.request('session.php')
 
     def request(self, endpoint, data=None, csrf=True):
+        if endpoint == 'signup.php' and data is not None and 'challengeId' not in data:
+            status, challenge = self.request('signup-challenge.php')
+            assert status == 200, challenge
+            data = {**data, **answer_signup_challenge(challenge)}
         headers = {'Content-Type': 'application/json'} if data is not None else {}
         if csrf and self.token and data is not None:
             headers['X-CSRF-Token'] = self.token
@@ -71,7 +75,7 @@ try:
     check(guest.request('settings.php')[0] == 405, 'Credential updates require POST')
     for client, name in zip([a, b], names):
         status, result = client.request('signup.php', {
-            'username': name, 'email': name + '@example.com', 'password': password, 'terms': True})
+            'username': name, 'password': password, 'terms': True})
         assert status == 201, result.get('message')
         ids.append(result['user']['id'])
     assert a.login(names[0], remember=True)[0] == 200
@@ -95,9 +99,8 @@ try:
     check(True, 'Invalid actions, types, usernames, emails and passwords are rejected')
     check(a.change('username', secret='incorrect-password', username=new_name)[0] == 422 and a.user()['username'] == names[0],
           'Wrong current password leaves credentials and the current session unchanged')
-    check(a.change('username', username=names[1])[0] == 409 and
-          a.change('email', email=names[1] + '@example.com')[0] == 409,
-          'Duplicate usernames and emails are rejected')
+    check(a.change('username', username=names[1])[1]['message'] == 'Username is taken.',
+          'Duplicate usernames are explained clearly')
     check(a.change('username', username=names[0])[0] == 422 and
           a.change('password', newPassword=password, confirmPassword=password)[0] == 422,
           'Unchanged credentials are rejected')
@@ -106,7 +109,7 @@ try:
     saved = result['user']
     check(status == 200 and saved['username'] == new_name and saved['displayName'] == names[0],
           'Username updates preserve the existing display name')
-    check(all(saved[key] == initial[key] for key in ['id', 'email', 'avatarId', 'equippedSkins', 'tansans', 'juice', 'ownedSkins']),
+    check(all(saved[key] == initial[key] for key in ['id', 'avatarId', 'equippedSkins', 'tansans', 'juice', 'ownedSkins']),
           'Credential changes preserve identity, profile, inventory and balances')
     check(saved['walletVersion'] > initial['walletVersion'], 'Credential changes advance the account snapshot version')
     check(a.cookie().value != initial_cookie and a.token != initial_token and a.cookie().expires == initial_expiry,
@@ -117,11 +120,7 @@ try:
           'Login accepts the new username and rejects the old one')
     a.request('profile.php', {'displayName': 'Settings Player', 'avatarId': 'miko'})
     a.request('inventory.php', {'game': 'tumbang-preso', 'skinId': 'slipper_green'})
-    status, result = a.change('email', email='  ' + new_email.upper() + '  ')
-    check(status == 200 and result['user']['email'] == new_email, 'Email changes are normalized and saved')
-    check(guest.user() is None, 'Email changes also invalidate other sessions')
-    check(guest.login(names[0] + '@example.com')[0] == 401 and guest.login(new_email)[0] == 200,
-          'Login accepts the new email and rejects the old email')
+    check(a.change('email', email='unused@example.com')[0] == 422, 'Email settings are no longer supported')
     old_token = a.token
     status, result = a.change('password', newPassword=new_password, confirmPassword=new_password)
     check(status == 200 and a.user()['id'] == ids[0] and guest.user() is None,
@@ -132,18 +131,18 @@ try:
     check(a.change('username', secret=new_password, username=prefix + '_unused')[0] == 403,
           'The previous CSRF token cannot authorize further changes')
     a.user()
-    check(guest.login(new_name)[0] == 401 and guest.login(new_email, new_password)[0] == 200,
-          'Old passwords fail and the new password works with the saved email')
+    check(guest.login(new_name)[0] == 401 and guest.login(new_name, new_password)[0] == 200,
+          'Old passwords fail and the new password works with the saved username')
     restored = guest.user()
     check(restored['displayName'] == 'Settings Player' and restored['avatarId'] == 'miko' and
           restored['equippedSkins']['tumbang-preso'] == 'slipper_green',
           'Profile and equipped skins survive all credential changes and a fresh login')
-    check(b.user()['username'] == names[1] and b.user()['email'] == names[1] + '@example.com',
+    check(b.user()['username'] == names[1] and 'email' not in b.user(),
           'Client-supplied identity cannot alter another account')
     # Only one of two sessions can change credentials with the same security version.
     with ThreadPoolExecutor(max_workers=2) as pool:
         first = pool.submit(a.change, 'username', secret=new_password, username=prefix + '_race')
-        second = pool.submit(guest.change, 'email', secret=new_password, email=prefix + '_race@example.com')
+        second = pool.submit(guest.change, 'username', secret=new_password, username=prefix + '_race_other')
         results = [first.result(), second.result()]
     check(sorted(status for status, _ in results) == [200, 401],
           'Concurrent credential changes invalidate the losing session')
@@ -160,10 +159,10 @@ finally:
     $prefix = $argv[2];
     if (!preg_match('/\Atp_settings_[a-f0-9]{12}\z/', $prefix)) exit(2);
     foreach (array_slice($argv, 3) as $id) {
-        $query = $db->prepare('SELECT username, email FROM users WHERE id = ?');
+        $query = $db->prepare('SELECT username FROM users WHERE id = ?');
         $query->execute([$id]);
         $row = $query->fetch();
-        if (!$row || !str_starts_with($row['username'], $prefix . '_') || !str_starts_with($row['email'], $prefix . '_')) exit(3);
+        if (!$row || !str_starts_with($row['username'], $prefix . '_')) exit(3);
         $db->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
         $db->prepare('DELETE FROM auth_rate_limits WHERE bucket = ?')->execute([hash('sha256', 'settings:' . $id)]);
     }

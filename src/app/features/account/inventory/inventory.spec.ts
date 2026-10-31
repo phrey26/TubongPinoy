@@ -10,7 +10,7 @@ import { GameSkin } from '../../../core/services/customization';
 import { Confirmation } from '../../../core/services/confirmation';
 
 describe('Inventory', () => {
-  const player: AuthUser = { id: 1, username: 'Juan', email: 'j@example.com', tansans: 0, juice: 100,
+  const player: AuthUser = { id: 1, username: 'Juan', tansans: 0, juice: 100,
     equippedSkins: { 'tumbang-preso': 'slipper_pink', 'jolens-blast': 'shooter_chrome' } };
   const items: GameSkin[] = [
     { id: 'slipper_pink', name: 'Pink Slipper', game: 'tumbang-preso', imageUrl: '' },

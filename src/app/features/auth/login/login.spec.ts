@@ -46,7 +46,7 @@ describe('Login', () => {
     component.loginForm.setValue({ identity: 'Player', password: 'incorrect', rememberMe: false });
     component.onSubmit();
     http.expectOne('/api/session.php').flush({ user: null, csrfToken: 'token' });
-    http.expectOne('/api/login.php').flush({ message: 'Incorrect username/email or password.' },
+    http.expectOne('/api/login.php').flush({ message: 'Incorrect username or password.' },
       { status: 401, statusText: 'Unauthorized' });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Incorrect');

@@ -44,7 +44,7 @@ describe('Header', () => {
   });
 
   function signIn(): HTMLButtonElement {
-    TestBed.inject(AccountState).set({ id: 1, username: 'Juan', email: 'juan@example.com', tansans: 0, juice: 100 });
+    TestBed.inject(AccountState).set({ id: 1, username: 'Juan', tansans: 0, juice: 100 });
     fixture.detectChanges();
     return fixture.nativeElement.querySelector('.account-trigger');
   }

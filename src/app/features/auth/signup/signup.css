@@ -1,1 +1,9 @@
 /* Shared form layout is defined in shared/styles/auth-ui.css. */
+
+.human-check { padding: 20px; border: 2px solid #e9d5ff; border-radius: 18px; background: #faf5ff; }
+.human-check h2 { color: #6b21a8; font-size: 18px; font-weight: 800; }
+.human-check p { margin: 8px 0 12px; font-size: 14px; line-height: 1.6; }
+.human-check label { display: block; margin-bottom: 8px; color: #581c87; font-weight: 800; }
+.human-check input { display: block; width: 100%; max-width: 180px; padding: 10px 14px; border: 2px solid #c084fc; border-radius: 12px; background: #fff; }
+.human-check button { margin-top: 8px; }
+.signup-trap { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

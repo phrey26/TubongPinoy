@@ -5,38 +5,48 @@
       <h2 id="sound-heading">Sound &amp; volume</h2>
       <p>Make Tumbang Preso sound just right for you.</p>
     </div>
-    <button type="button" class="ui-button ui-button-soft" [attr.aria-pressed]="audio.settings().muted"
-      (click)="audio.toggleMute()">{{ audio.settings().muted ? 'Unmute all' : 'Mute all' }}</button>
+    <button type="button" class="ui-button ui-button-soft" [attr.aria-pressed]="draft().muted"
+      (click)="toggleMute()" [disabled]="pending()">{{ draft().muted ? 'Unmute all' : 'Mute all' }}</button>
   </div>
   <div class="master-control">
-    <div class="slider-heading"><label for="audio-master">Master volume</label><output for="audio-master">{{ audio.settings().master }}%</output></div>
-    <input id="audio-master" type="range" min="0" max="100" step="1" [value]="audio.settings().master"
-      [attr.aria-valuetext]="audio.settings().master + ' percent'" aria-describedby="master-help" (input)="changeVolume('master', $event)" />
+    <div class="slider-heading"><label for="audio-master">Master volume</label><output for="audio-master">{{ draft().master }}%</output></div>
+    <input id="audio-master" type="range" min="0" max="100" step="1" [value]="draft().master"
+      [attr.aria-valuetext]="draft().master + ' percent'" aria-describedby="master-help" [disabled]="pending()" (input)="changeVolume('master', $event)" />
     <p id="master-help">Controls the overall loudness of every sound.</p>
   </div>
   <div class="mixer-grid">
     @for (mixer of mixers; track mixer.id) {
       <div class="mixer">
         <span class="mixer-symbol" aria-hidden="true">{{ mixer.symbol }}</span>
-        <div class="slider-heading"><label [for]="'audio-' + mixer.id">{{ mixer.name }}</label><output [attr.for]="'audio-' + mixer.id">{{ audio.settings()[mixer.id] }}%</output></div>
+        <div class="slider-heading"><label [for]="'audio-' + mixer.id">{{ mixer.name }}</label><output [attr.for]="'audio-' + mixer.id">{{ draft()[mixer.id] }}%</output></div>
         <p [id]="'audio-help-' + mixer.id">{{ mixer.description }}</p>
-        <input [id]="'audio-' + mixer.id" type="range" min="0" max="100" step="1" [value]="audio.settings()[mixer.id]"
-          [attr.aria-valuetext]="audio.settings()[mixer.id] + ' percent'" [attr.aria-describedby]="'audio-help-' + mixer.id"
-          (input)="changeVolume(mixer.id, $event)" />
-        <button type="button" class="ui-button ui-button-soft" (click)="audio.preview(mixer.id)"
-          [disabled]="audio.loading() || audio.settings().muted || !audio.settings().master || !audio.settings()[mixer.id]"
+        <input [id]="'audio-' + mixer.id" type="range" min="0" max="100" step="1" [value]="draft()[mixer.id]"
+          [attr.aria-valuetext]="draft()[mixer.id] + ' percent'" [attr.aria-describedby]="'audio-help-' + mixer.id"
+          [disabled]="pending()" (input)="changeVolume(mixer.id, $event)" />
+        <button type="button" class="ui-button ui-button-soft" (click)="preview(mixer.id)"
+          [disabled]="pending() || audio.loading() || draft().muted || !draft().master || !draft()[mixer.id]"
           [attr.aria-label]="'Preview ' + mixer.name">{{ audio.error() ? 'Retry sound' : 'Preview' }}</button>
       </div>
     }
   </div>
   <div class="sound-footer">
-    <p>{{ audio.storageError() ? 'Volume changes work now, but this browser could not save them.' : 'Changes apply immediately and are saved for your account on this browser.' }}</p>
-    <button type="button" class="ui-button ui-button-soft" (click)="audio.reset()">Restore sound defaults</button>
+    <p id="sound-save-help">Preview your levels, then save to keep them for your account on this browser.</p>
+    <button type="button" class="ui-button ui-button-soft" [disabled]="pending()" (click)="restoreDefaults()">Restore sound defaults</button>
   </div>
+  <div class="sound-actions">
+    <span class="sound-draft" role="status">{{ hasChanges() ? 'You have unsaved sound changes.' : 'Your saved sound settings are up to date.' }}</span>
+    <div class="sound-action-buttons">
+      <button type="button" class="ui-button ui-button-soft" [disabled]="pending() || !hasChanges()" (click)="discard()">Discard sound changes</button>
+      <button type="button" class="ui-button ui-button-green" aria-describedby="sound-save-help"
+        [disabled]="pending() || !hasChanges()" (click)="save()">{{ pending() ? 'Confirming…' : 'Save sound settings' }}</button>
+    </div>
+  </div>
+  @if (saveError()) { <p class="sound-save-error" role="alert">{{ saveError() }}</p> }
+  @if (message()) { <p class="sound-success" role="status">{{ message() }}</p> }
   <p class="sound-status" role="status">
     @if (audio.loading()) { Loading sounds… }
     @else if (audio.error()) { {{ audio.error() }} }
-    @else if (audio.settings().muted) { All sounds are muted. Your volume levels are kept for when you unmute. }
-    @else if (!audio.settings().master) { Master volume is at zero. Raise it to hear sounds. }
+    @else if (draft().muted) { Your current selection mutes all sounds. Save to keep this setting. }
+    @else if (!draft().master) { Master volume is at zero. Raise it to preview sounds. }
   </p>
 </section>

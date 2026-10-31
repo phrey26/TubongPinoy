@@ -24,7 +24,7 @@ export class Login {
   constructor(private auth: Auth) {}
 
   loginForm = new FormGroup({
-    identity: new FormControl('', [Validators.required, Validators.maxLength(254)]),
+    identity: new FormControl('', [Validators.required, Validators.maxLength(50)]),
     password: new FormControl('', [Validators.required]),
     rememberMe: new FormControl(false)
   });

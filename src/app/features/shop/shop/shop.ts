@@ -31,6 +31,7 @@ export class Shop implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmation = inject(Confirmation);
   readonly cosmeticSkins = signal<Skin[]>([]);
+  readonly skinsAvailable = false;
   readonly pending = signal(false);
   readonly pendingItem = signal<string | null>(null);
   readonly loadingSkins = signal(true);
@@ -81,6 +82,7 @@ export class Shop implements OnInit {
     return this.userCoins < item.price ? 'Not enough Tansans' : 'Buy refill';
   }
   skinButtonLabel(skin: Skin): string {
+    if (!this.skinsAvailable) return 'Coming soon';
     if (this.pendingItem() === skin.id) return 'Saving…';
     if (this.owns(skin.id)) return 'In your collection';
     return this.userCoins < skin.price ? 'Not enough Tansans' : 'Buy skin';
@@ -90,7 +92,7 @@ export class Shop implements OnInit {
     const item = this.refills.find(refill => refill.id === id);
     if (item && !this.refillUnavailable(item)) this.purchase(id);
   }
-  buyCosmetic(id: string): void { if (!this.owns(id)) this.purchase(id); }
+  buyCosmetic(id: string): void { if (this.skinsAvailable && !this.owns(id)) this.purchase(id); }
 
   private purchase(id: string): void {
     if (this.pending()) return;

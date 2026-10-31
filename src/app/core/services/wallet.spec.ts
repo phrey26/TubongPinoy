@@ -8,9 +8,9 @@ import { Energy } from './energy';
 import { Wallet } from './wallet';
 
 describe('Per-account balances and inventory', () => {
-  const alice = { id: 1, username: 'Alice', email: 'alice@example.com', tansans: 700, juice: 80,
+  const alice = { id: 1, username: 'Alice', tansans: 700, juice: 80,
     ownedSkins: ['skin_1'], walletVersion: 3, unlimitedJuiceUntil: 0 };
-  const bob = { id: 2, username: 'Bob', email: 'bob@example.com', tansans: 1000, juice: 100,
+  const bob = { id: 2, username: 'Bob', tansans: 1000, juice: 100,
     ownedSkins: [], walletVersion: 0, unlimitedJuiceUntil: 0 };
   let state: AccountState;
   let http: HttpTestingController;

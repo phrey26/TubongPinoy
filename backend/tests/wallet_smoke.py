@@ -1,5 +1,6 @@
 """Verify ownership, persistence, idempotency and concurrent purchases using temporary accounts."""
 from concurrent.futures import ThreadPoolExecutor
+from human_check import answer_signup_challenge
 import http.cookiejar
 import json
 import os
@@ -26,6 +27,10 @@ class Client:
         self.request('session')
 
     def request(self, endpoint, data=None, csrf=True):
+        if endpoint == 'signup' and data is not None and 'challengeId' not in data:
+            status, challenge = self.request('signup-challenge')
+            assert status == 200, challenge
+            data = {**data, **answer_signup_challenge(challenge)}
         headers = {}
         if data is not None:
             headers['Content-Type'] = 'application/json'
@@ -43,7 +48,7 @@ class Client:
         return response.status, result
 
     def signup(self, name):
-        return self.request('signup', {'username': name, 'email': name + '@example.com', 'password': password, 'terms': True})
+        return self.request('signup', {'username': name, 'password': password, 'terms': True})
 
     def login(self, name):
         self.request('session')
@@ -78,7 +83,7 @@ def fixture_database(mode, name):
     if (!preg_match('/\Atp_wallet_[a-f0-9]{12}\z/', $name)) exit(2);
     $db = database();
     if ($argv[3] === 'cleanup') {
-        $db->prepare('DELETE FROM users WHERE username = ? AND email = ?')->execute([$name, $name . '@example.com']);
+        $db->prepare('DELETE FROM users WHERE username = ?')->execute([$name]);
     } elseif ($argv[3] === 'expire') {
         $db->prepare('UPDATE account_state a JOIN users u ON a.user_id = u.id SET a.unlimited_until = 1, a.version = a.version + 1 WHERE u.username = ?')->execute([$name]);
     } elseif ($argv[3] === 'concurrency') {

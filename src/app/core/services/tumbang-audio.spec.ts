@@ -77,7 +77,7 @@ describe('Tumbang audio', () => {
   });
   it('restores separate account preferences and safely validates old or blocked storage', () => {
     const state = TestBed.inject(AccountState);
-    const user = { id: 1, username: 'one', email: 'one@example.test', tansans: 0, juice: 100 };
+    const user = { id: 1, username: 'one', tansans: 0, juice: 100 };
     state.set(user); const audio = TestBed.inject(TumbangAudio);
     audio.setVolume('master', 32); audio.toggleMute();
     state.set({ ...user, id: 2 }); expect(audio.settings()).toEqual(DEFAULT_AUDIO);
@@ -108,6 +108,30 @@ describe('Tumbang audio', () => {
     await vi.waitFor(() => expect(fetch).toHaveBeenCalled()); audio.stopPreview();
     resolve({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) } as Response);
     await preview; expect(FakeContext.instances[0].sources).toHaveLength(0);
+  });
+  it('previews unsaved mixer levels without changing stored preferences, then restores saved gains', async () => {
+    const audio = TestBed.inject(TumbangAudio);
+    audio.toggleMute();
+    const saved = localStorage.getItem('tubong.audio.v1.guest');
+    await audio.preview('effects', { ...DEFAULT_AUDIO, master: 40, effects: 25 });
+    expect(FakeContext.instances[0].sources).toHaveLength(1);
+    expect(audio['master']!.gain.setTargetAtTime).toHaveBeenLastCalledWith(.4, 10, .015);
+    expect(audio['channels']!.effects.gain.setTargetAtTime).toHaveBeenLastCalledWith(.25, 10, .015);
+    expect(audio.settings().muted).toBe(true);
+    expect(localStorage.getItem('tubong.audio.v1.guest')).toBe(saved);
+    audio.stopPreview();
+    expect(audio['voices'].size).toBe(0);
+    expect(audio['master']!.gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 10, .015);
+  });
+  it('only commits explicitly saved mixer values when persistence succeeds', () => {
+    const audio = TestBed.inject(TumbangAudio);
+    const write = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Blocked'); });
+    expect(audio.saveSettings({ ...DEFAULT_AUDIO, master: 30 })).toBe(false);
+    expect(audio.settings()).toEqual(DEFAULT_AUDIO);
+    write.mockRestore();
+    expect(audio.saveSettings({ ...DEFAULT_AUDIO, master: 30 })).toBe(true);
+    expect(audio.settings().master).toBe(30);
+    expect(JSON.parse(localStorage.getItem('tubong.audio.v1.guest')!).master).toBe(30);
   });
   it('allows failed downloads to retry without blocking the game', async () => {
     vi.mocked(fetch).mockRejectedValue(new Error('Offline'));

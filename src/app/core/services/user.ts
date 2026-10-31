@@ -9,7 +9,6 @@ import { Collectible, GameSkin } from './customization';
 
 export type SettingsChange =
   | { action: 'username'; username: string; currentPassword: string }
-  | { action: 'email'; email: string; currentPassword: string }
   | { action: 'password'; newPassword: string; confirmPassword: string; currentPassword: string };
 
 @Injectable({

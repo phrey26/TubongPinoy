@@ -7,7 +7,7 @@ import { JuiceRecovery } from './juice-recovery';
 
 describe('Passive Juice recovery', () => {
   const now = 1800000000000;
-  const user = { id: 1, username: 'Juan', email: 'juan@example.com', tansans: 0, juice: 80,
+  const user = { id: 1, username: 'Juan', tansans: 0, juice: 80,
     nextJuiceAt: now + 144000, serverTime: now, walletVersion: 1 };
   let state: AccountState;
   let recovery: JuiceRecovery;

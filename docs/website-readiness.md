@@ -1,6 +1,6 @@
 # Website readiness
 
-Updated October 30, 2026. These changes target the current local Angular/PHP app.
+Updated October 31, 2026. These changes target the current local Angular/PHP app.
 They do not deploy the project or make the existing build ready to upload to itch.io.
 
 ## Requested checklist
@@ -52,8 +52,12 @@ canonical URLs, a sitemap of public pages, robots rules, and host-level 404 hand
 
 “HH productions” is the requested working name. A working privacy/support contact,
 operator details, retention schedule, data-request process, and hosting disclosures
-must be finalized before the legal drafts become release policies. The app has no
-self-service account deletion or password recovery. The contact preview cannot
+must be finalized before the legal drafts become release policies. Accounts now use usernames and passwords with a built-in registration challenge
+and request limits. Email registration, email login, and email settings have been
+removed. Existing databases need the explicit email-removal migration in
+`backend/migrations/2026-10-31-remove-account-email.sql` before deploying these APIs.
+This reduces collected data but does not secure a misconfigured host or remove
+old database exports. The app has no self-service account deletion or password recovery. The contact preview cannot
 receive support or privacy requests.
 
 Privacy reference: [National Privacy Commission — data subject rights](https://privacy.gov.ph/data-subject-rights/).

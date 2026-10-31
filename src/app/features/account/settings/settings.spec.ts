@@ -13,7 +13,7 @@ import { AuthUser } from '../../../core/services/auth';
 
 describe('Account settings', () => {
   afterEach(() => localStorage.clear());
-  const player: AuthUser = { id: 1, username: 'Juan', email: 'j@example.com', tansans: 0, juice: 100 };
+  const player: AuthUser = { id: 1, username: 'Juan', tansans: 0, juice: 100 };
   function setup() {
     const service = { saveSettings: vi.fn(() => of({ user: player })) };
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: User, useValue: service }] });
@@ -24,32 +24,97 @@ describe('Account settings', () => {
     return { fixture, component: fixture.componentInstance, service, state, confirmation: TestBed.inject(Confirmation) };
   }
 
-  it('restores immediately saved sound sliders without making an account credential draft', () => {
-    const { fixture, component, service } = setup();
-    const audio = TestBed.inject(TumbangAudio);
-    for (const channel of ['master', 'effects', 'interface'] as const) {
-      const slider = fixture.nativeElement.querySelector(`#audio-${channel}`) as HTMLInputElement;
-      expect(fixture.nativeElement.querySelector(`label[for="audio-${channel}"]`)).toBeTruthy();
-      slider.value = '42'; slider.dispatchEvent(new Event('input', { bubbles: true })); fixture.detectChanges();
-      expect(audio.settings()[channel]).toBe(42); expect(slider.getAttribute('aria-valuetext')).toBe('42 percent');
-    }
-    expect(component.hasDraft).toBe(false); expect(service.saveSettings).not.toHaveBeenCalled();
+  function editSound(fixture: ReturnType<typeof setup>['fixture'], channel = 'master', value = '42') {
+    const slider = fixture.nativeElement.querySelector(`#audio-${channel}`) as HTMLInputElement;
+    expect(fixture.nativeElement.querySelector(`label[for="audio-${channel}"]`)).toBeTruthy();
+    slider.value = value; slider.dispatchEvent(new Event('input', { bubbles: true })); fixture.detectChanges();
+    expect(slider.getAttribute('aria-valuetext')).toBe(`${value} percent`);
+  }
+
+  it('keeps sound changes in a draft until the user confirms Save', () => {
+    const { fixture, component, service, confirmation } = setup();
+    const audio = TestBed.inject(TumbangAudio), panel = component.soundPanel()!;
+    for (const channel of ['master', 'effects', 'interface']) editSound(fixture, channel);
+    expect(audio.settings()).toEqual(DEFAULT_AUDIO);
+    expect(localStorage.getItem('tubong.audio.v1.1')).toBeNull();
+    expect(component.hasDraft).toBe(false); expect(panel.hasChanges()).toBe(true);
+    panel.save(); panel.save();
+    expect(confirmation.active()?.title).toContain('Are you sure');
+    expect(confirmation.active()?.message).toContain('Master 42%');
+    confirmation.respond(false);
+    expect(panel.hasChanges()).toBe(true); expect(audio.settings()).toEqual(DEFAULT_AUDIO);
+    panel.save(); confirmation.respond(true); fixture.detectChanges();
+    expect(audio.settings()).toEqual({ master: 42, effects: 42, interface: 42, muted: false });
     expect(JSON.parse(localStorage.getItem('tubong.audio.v1.1')!).effects).toBe(42);
+    expect(panel.hasChanges()).toBe(false); expect(panel.message()).toContain('saved');
+    expect(service.saveSettings).not.toHaveBeenCalled(); expect(component.confirmLeave()).toBe(true);
   });
 
-  it('previews, mutes, and restores the sound mixer', () => {
-    const { fixture } = setup(); const audio = TestBed.inject(TumbangAudio);
-    const preview = vi.spyOn(audio, 'preview').mockResolvedValue();
+  it('previews draft levels without saving and confirms discarding defaults or mute edits', () => {
+    const { fixture, component, confirmation } = setup(); const panel = component.soundPanel()!;
+    const audio = TestBed.inject(TumbangAudio), preview = vi.spyOn(audio, 'preview').mockResolvedValue();
+    editSound(fixture, 'effects', '35');
     const button = fixture.nativeElement.querySelector('[aria-label="Preview Game effects"]') as HTMLButtonElement;
-    button.click(); expect(preview).toHaveBeenCalledWith('effects');
-    audio.toggleMute(); fixture.detectChanges(); expect(button.disabled).toBe(true);
-    audio.reset(); fixture.detectChanges(); expect(audio.settings()).toEqual(DEFAULT_AUDIO); expect(button.disabled).toBe(false);
+    button.click(); expect(preview).toHaveBeenCalledWith('effects', { ...DEFAULT_AUDIO, effects: 35 });
+    panel.toggleMute(); fixture.detectChanges(); expect(button.disabled).toBe(true); expect(audio.settings().muted).toBe(false);
+    panel.discard(); confirmation.respond(false); expect(panel.draft().muted).toBe(true);
+    panel.discard(); confirmation.respond(true); fixture.detectChanges();
+    expect(panel.draft()).toEqual(DEFAULT_AUDIO); expect(button.disabled).toBe(false); expect(panel.hasChanges()).toBe(false);
+    audio.setVolume('effects', 25); fixture.detectChanges();
+    panel.restoreDefaults(); expect(panel.hasChanges()).toBe(true); expect(audio.settings().effects).toBe(25);
     const stop = vi.spyOn(audio, 'stopPreview'); fixture.destroy(); expect(stop).toHaveBeenCalled();
   });
 
-  it.each(['username', 'email', 'password'] as const)('requires confirmation before changing %s', action => {
+  it('warns for sound-only and combined drafts on navigation and browser tab close', () => {
+    const { fixture, component, confirmation } = setup(); editSound(fixture);
+    const unload = new Event('beforeunload', { cancelable: true });
+    component.onBeforeUnload(unload as BeforeUnloadEvent); expect(unload.defaultPrevented).toBe(true);
+    const answer = component.confirmLeave(); let leave: boolean | undefined;
+    if (typeof answer !== 'boolean') answer.subscribe(value => leave = value);
+    expect(confirmation.active()?.message).toContain('sound settings'); confirmation.respond(false);
+    expect(leave).toBe(false); expect(component.soundPanel()!.draft().master).toBe(42);
+    component.forms.username.patchValue({ value: 'NewName', currentPassword: 'old-password' });
+    const combined = component.confirmLeave();
+    if (typeof combined !== 'boolean') combined.subscribe(value => leave = value);
+    expect(confirmation.active()?.message).toContain('sign-in changes'); confirmation.respond(true); expect(leave).toBe(true);
+    fixture.destroy(); expect(TestBed.inject(TumbangAudio).settings()).toEqual(DEFAULT_AUDIO);
+    expect(localStorage.getItem('tubong.audio.v1.1')).toBeNull();
+  });
+
+  it('clears tab-close protection after saving or discarding the sound draft', () => {
+    const { fixture, component, confirmation } = setup(); const panel = component.soundPanel()!;
+    editSound(fixture); panel.save(); confirmation.respond(true); fixture.detectChanges();
+    const savedUnload = new Event('beforeunload', { cancelable: true });
+    component.onBeforeUnload(savedUnload as BeforeUnloadEvent); expect(savedUnload.defaultPrevented).toBe(false);
+    editSound(fixture, 'master', '58'); panel.discard(); confirmation.respond(true); fixture.detectChanges();
+    expect(panel.draft().master).toBe(42); expect(component.confirmLeave()).toBe(true);
+  });
+
+  it('keeps unsaved levels and leave protection if browser storage rejects a save', () => {
+    const { fixture, component, confirmation } = setup(); const panel = component.soundPanel()!;
+    const storage = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Blocked'); });
+    try {
+      editSound(fixture); panel.save(); confirmation.respond(true); fixture.detectChanges();
+      expect(panel.saveError()).toContain('could not save'); expect(panel.draft().master).toBe(42);
+      expect(panel.hasChanges()).toBe(true); expect(TestBed.inject(TumbangAudio).settings()).toEqual(DEFAULT_AUDIO);
+      expect(localStorage.getItem('tubong.audio.v1.1')).toBeNull();
+    } finally { storage.mockRestore(); }
+    panel.save(); confirmation.respond(true); fixture.detectChanges(); expect(panel.hasChanges()).toBe(false);
+  });
+
+  it('retains sound edits during same-account updates, but rejects stale confirmations after an account switch', () => {
+    const { fixture, component, confirmation, state } = setup(); const panel = component.soundPanel()!;
+    editSound(fixture); state.set({ ...player, username: 'JuanNew' }); fixture.detectChanges();
+    expect(panel.draft().master).toBe(42);
+    panel.save(); state.set({ ...player, id: 2 }); fixture.detectChanges(); confirmation.respond(true);
+    expect(TestBed.inject(TumbangAudio).settings()).toEqual(DEFAULT_AUDIO);
+    expect(panel.draft()).toEqual(DEFAULT_AUDIO); expect(panel.hasChanges()).toBe(false);
+    expect(localStorage.getItem('tubong.audio.v1.1')).toBeNull(); expect(localStorage.getItem('tubong.audio.v1.2')).toBeNull();
+  });
+
+  it.each(['username', 'password'] as const)('requires confirmation before changing %s', action => {
     const { component, service, confirmation } = setup();
-    const value = action === 'username' ? 'JuanNew' : action === 'email' ? 'new@example.com' : 'new-password-123';
+    const value = action === 'username' ? 'JuanNew' : 'new-password-123';
     component.forms[action].setValue({ value, currentPassword: 'old-password', confirmPassword: value });
     component.save(action);
     expect(service.saveSettings).not.toHaveBeenCalled();
@@ -75,7 +140,7 @@ describe('Account settings', () => {
     const { component, service, confirmation } = setup();
     for (const [action, value, confirmPassword, currentPassword] of [
       ['username', 'NewName', '', ''], ['username', 'bad username', '', 'old-password'],
-      ['email', 'bad-email', '', 'old-password'], ['password', 'short', 'short', 'old-password'],
+['password', 'short', 'short', 'old-password'],
       ['password', 'new-password', 'mismatch', 'old-password'],
       ['password', 'é'.repeat(37), 'é'.repeat(37), 'old-password'],
       ['password', 'password\0', 'password\0', 'old-password'],
@@ -88,14 +153,14 @@ describe('Account settings', () => {
     expect(service.saveSettings).not.toHaveBeenCalled();
   });
 
-  it('keeps rejected email edits for retry, clears the password, and preserves the session', () => {
+  it('keeps rejected username edits for retry, clears the password, and preserves the session', () => {
     const { component, service, confirmation, state } = setup();
     service.saveSettings.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 422, error: { message: 'Your current password is incorrect.' } })));
-    component.forms.email.setValue({ value: 'new@example.com', currentPassword: 'wrong-password', confirmPassword: '' });
-    component.save('email'); confirmation.respond(true);
+    component.forms.username.setValue({ value: 'JuanNew', currentPassword: 'wrong-password', confirmPassword: '' });
+    component.save('username'); confirmation.respond(true);
     expect(component.error()).toContain('current password is incorrect');
-    expect(component.forms.email.controls.value.value).toBe('new@example.com');
-    expect(component.forms.email.controls.currentPassword.value).toBe('');
+    expect(component.forms.username.controls.value.value).toBe('JuanNew');
+    expect(component.forms.username.controls.currentPassword.value).toBe('');
     expect(state.user()).toEqual(player);
     expect(component.pending()).toBeNull();
   });
@@ -105,13 +170,13 @@ describe('Account settings', () => {
     const request = new Subject<{ user: AuthUser }>();
     service.saveSettings.mockReturnValue(request);
     component.forms.username.patchValue({ value: 'NewName', currentPassword: 'old-password' });
-    component.forms.email.controls.currentPassword.setValue('old-password');
+    component.forms.password.controls.currentPassword.setValue('old-password');
     component.save('username'); component.save('username');
     confirmation.respond(true);
     component.save('username');
     expect(service.saveSettings).toHaveBeenCalledTimes(1);
     request.next({ user: { ...player, username: 'NewName' } }); request.complete();
-    expect(component.forms.email.controls.currentPassword.value).toBe('');
+    expect(component.forms.password.controls.currentPassword.value).toBe('');
     expect(component.hasDraft).toBe(false);
   });
 

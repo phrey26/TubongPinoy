@@ -82,9 +82,12 @@
       <div class="section-heading">
         <div>
           <h2 id="skins-heading">Skin Collection</h2>
-          <p class="text-sm">These store collectibles do not have playable skins yet. Choose free slipper and shooter colors in your <a routerLink="/account/inventory" class="underline font-bold">inventory</a>.</p>
+          <p class="text-sm">Skins are coming soon and can’t be purchased yet. Choose free slipper and shooter colors in your <a routerLink="/account/inventory" class="underline font-bold">inventory</a>.</p>
         </div>
-        <span class="shop-badge">{{ ownedCount }} owned</span>
+        <div class="flex flex-wrap gap-2">
+          <span class="shop-badge">Coming soon</span>
+          <span class="shop-badge">{{ ownedCount }} owned</span>
+        </div>
       </div>
 
       @if (loadingSkins()) {
@@ -109,7 +112,7 @@
               <div class="product-footer mt-auto pt-3">
                 <p class="product-price"><img class="w-6 h-6" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ skin.price | number }} <span>Tansans</span></p>
                 <button type="button" class="ui-button shop-button w-full text-sm" [class.shop-button-owned]="owns(skin.id)"
-                  [disabled]="pending() || owns(skin.id) || userCoins < skin.price" (click)="buyCosmetic(skin.id)"
+                  [disabled]="!skinsAvailable || pending() || owns(skin.id) || userCoins < skin.price" (click)="buyCosmetic(skin.id)"
                   [attr.aria-label]="skin.name + ': ' + skinButtonLabel(skin)">
                   {{ skinButtonLabel(skin) }}
                 </button>

@@ -1,4 +1,5 @@
 """Local integration test. Creates and removes one uniquely named test account."""
+from human_check import answer_signup_challenge
 import http.cookiejar
 import json
 import os
@@ -19,6 +20,10 @@ passed = 0
 
 
 def request(endpoint, body=None, token=None, opener=client, method=None):
+    if endpoint == 'signup' and body is not None and 'challengeId' not in body:
+        status, challenge, _ = request('signup-challenge', opener=opener)
+        assert status == 200, challenge
+        body = {**body, **answer_signup_challenge(challenge)}
     headers = {}
     if body is not None:
         headers['Content-Type'] = 'application/json'
@@ -58,8 +63,8 @@ def inspect_database(cleanup=False):
     if (!preg_match('/\Atp_test_[a-f0-9]{12}\z/', $name)) exit(2);
     $db = database();
     if ($argv[3] === 'cleanup') {
-        $db->prepare('DELETE FROM users WHERE username = ? AND email = ?')
-            ->execute([$name, $name . '@example.com']);
+        $db->prepare('DELETE FROM users WHERE username = ?')
+            ->execute([$name]);
         foreach ([$name, $name . '_missing'] as $identity) {
             $db->prepare('DELETE FROM auth_rate_limits WHERE bucket = ?')
                 ->execute([hash('sha256', 'login-identity:' . $identity)]);
@@ -86,11 +91,12 @@ try:
           'Session cookies use HttpOnly and SameSite=Lax')
     check(request('me')[0] == 401, 'Protected profile rejects anonymous requests')
     check(request('login')[0] == 405, 'Login rejects GET requests')
-    signup = {'username': username, 'email': username + '@example.com', 'password': password, 'terms': True}
+    signup = {'username': username, 'password': password, 'terms': True}
     check(request('signup', signup)[0] == 403, 'Signup rejects missing CSRF tokens')
     check(request('signup', {**signup, 'terms': False}, token)[0] == 422, 'Signup requires agreement')
     check(request('signup', {**signup, 'password': 'short'}, token)[0] == 422, 'Signup rejects short passwords')
     check(request('signup', {**signup, 'username': []}, token)[0] == 422, 'Signup rejects invalid field types')
+    check(request('signup', {**signup, 'challengeId': 'missing', 'challengeAnswer': '0'}, token)[0] == 422, 'Missing or forged human verification cannot create an account')
     old_cookie = cookie_value()
     status, result, _ = request('signup', signup, token)
     check(status == 201 and result['user']['username'] == username, 'Signup creates and authenticates an account')
@@ -98,13 +104,14 @@ try:
     check(cookie_value() != old_cookie, 'Signup rotates the session ID')
     check('password_hash' not in result['user'] and 'password' not in result['user'], 'API omits passwords and hashes')
     check(result['user']['juice'] == 100 and result['user']['tansans'] == 0, 'New accounts start with 0 Tansans and 100 Juice')
+    check('email' not in result['user'], 'Account responses contain no email field')
     inspect_database()
     check(True, 'Stored password is hashed and verifiable')
     check(request('session')[1]['user']['username'] == username, 'Session survives subsequent requests')
     check(request('me')[0] == 200, 'Authenticated profile is accessible')
     check(request('session', opener=replay_cookie(old_cookie))[1]['user'] is None, 'Old session IDs cannot access the new login')
-    check(request('signup', signup, token)[0] == 409, 'Duplicate username/email is rejected')
-    check(request('signup', {**signup, 'username': username + '_other'}, token)[0] == 409, 'Duplicate email is rejected independently')
+    check(request('signup', signup, token)[1]['message'] == 'Username is taken.', 'Duplicate username is explained clearly')
+    check(request('signup', {**signup, 'username': username.upper()}, token)[0] == 409, 'Case-variant usernames are also taken')
     authenticated_cookie = cookie_value()
     check(request('logout', {}, token)[0] == 200, 'Logout succeeds')
     check(request('me')[0] == 401, 'Logout removes access to protected data')
@@ -113,8 +120,8 @@ try:
     check(request('login', {'identity': username, 'password': 'wrong-password'}, token)[0] == 401, 'Wrong password is rejected')
     check(request('login', {'identity': "' OR 1=1 --", 'password': password}, token)[0] == 401, 'SQL injection does not authenticate')
     old_cookie = cookie_value()
-    status, result, headers = request('login', {'identity': signup['email'], 'password': password, 'rememberMe': True}, token)
-    check(status == 200 and result['user']['username'] == username, 'Login works with email')
+    status, result, headers = request('login', {'identity': username, 'password': password, 'rememberMe': True}, token)
+    check(status == 200 and result['user']['username'] == username, 'Login works with username')
     check(cookie_value() != old_cookie, 'Login rotates the session ID')
     check(next(cookie.expires for cookie in jar if cookie.name == 'tubong_session') is not None,
           'Remember Me sets a persistent cookie')
@@ -123,7 +130,7 @@ try:
     request('logout', {}, token)
     token = request('session')[1]['csrfToken']
     status, result, _ = request('login', {'identity': username, 'password': password}, token)
-    check(status == 200, 'Login also works with username')
+    check(status == 200, 'Username login survives a fresh session')
     request('logout', {}, result['csrfToken'])
     token = request('session')[1]['csrfToken']
     for _ in range(16):

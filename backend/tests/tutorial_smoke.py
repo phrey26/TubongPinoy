@@ -1,5 +1,6 @@
 """Verify per-account, per-game tutorial preferences using temporary accounts, removed on exit."""
 from concurrent.futures import ThreadPoolExecutor
+from human_check import answer_signup_challenge
 import http.cookiejar
 import json
 import os
@@ -24,6 +25,10 @@ class Client:
         self.request('session.php')
 
     def request(self, endpoint, data=None, csrf=True):
+        if endpoint == 'signup.php' and data is not None and 'challengeId' not in data:
+            status, challenge = self.request('signup-challenge.php')
+            assert status == 200, challenge
+            data = {**data, **answer_signup_challenge(challenge)}
         headers = {'Content-Type': 'application/json'} if data is not None else {}
         if csrf and self.token and data is not None:
             headers['X-CSRF-Token'] = self.token
@@ -57,7 +62,7 @@ try:
     ids = []
     for client, name in zip([a, b], names):
         status, body = client.request('signup.php', {
-            'username': name, 'email': name + '@example.com', 'password': password, 'terms': True})
+            'username': name, 'password': password, 'terms': True})
         assert status == 201
         ids.append(body['user']['id'])
     check(not a.request(endpoint)[1]['seen'], 'A new account has not seen Tumbang Preso instructions')
@@ -86,8 +91,8 @@ finally:
     $db = database();
     foreach (array_slice($argv, 2) as $name) {
         if (!preg_match('/\Atp_tutorial_[a-f0-9]{12}\z/', $name)) exit(2);
-        $db->prepare('DELETE FROM users WHERE username = ? AND email = ?')
-            ->execute([$name, $name . '@example.com']);
+        $db->prepare('DELETE FROM users WHERE username = ?')
+            ->execute([$name]);
         $db->prepare('DELETE FROM auth_rate_limits WHERE bucket = ?')
             ->execute([hash('sha256', 'login-identity:' . $name)]);
     }

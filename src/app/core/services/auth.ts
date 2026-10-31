@@ -6,7 +6,6 @@ import { AccountState } from './account-state';
 export interface AuthUser {
   id: number;
   username: string;
-  email: string;
   displayName?: string;
   avatarId?: string;
   equippedSkins?: Partial<Record<'tumbang-preso' | 'jolens-blast', string>>;
@@ -24,6 +23,7 @@ export interface AuthSession {
   user: AuthUser | null;
   csrfToken: string;
 }
+export interface SignupChallenge { id: string; question: string; expiresAt: number; }
 
 @Injectable({ providedIn: 'root' })
 export class Auth {
@@ -50,7 +50,11 @@ export class Auth {
     return this.sessionRequest;
   }
 
-  signup(data: { username: string; email: string; password: string; terms: boolean }): Observable<AuthSession> {
+  signupChallenge(): Observable<SignupChallenge> {
+    return this.http.get<SignupChallenge>('/api/signup-challenge.php').pipe(timeout(8000));
+  }
+
+  signup(data: { username: string; password: string; terms: boolean; challengeId: string; challengeAnswer: string; website: string }): Observable<AuthSession> {
     return this.authenticate('signup', data);
   }
 

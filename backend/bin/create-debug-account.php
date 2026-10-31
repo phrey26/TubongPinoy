@@ -18,8 +18,8 @@ try {
     $userId = $query->fetchColumn();
     $hash = password_hash($password, PASSWORD_DEFAULT);
     if ($userId === false) {
-        $db->prepare('INSERT INTO users (username, email, password_hash, tansans, juice) VALUES (?, ?, ?, 999999, 100)')
-            ->execute([$username, strtolower($username) . '@example.test', $hash]);
+        $db->prepare('INSERT INTO users (username, password_hash, tansans, juice) VALUES (?, ?, 999999, 100)')
+            ->execute([$username, $hash]);
         $userId = (int) $db->lastInsertId();
     } else {
         $db->prepare('UPDATE users SET password_hash = ?, tansans = 999999, juice = 100 WHERE id = ?')

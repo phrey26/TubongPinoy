@@ -28,9 +28,16 @@ their original pitch, timing, and gain. Throw and bounce loudness follows shot
 strength. All cues are finite one-shots; idle gameplay becomes silent.
 
 Settings → Sound & volume provides Master, Game effects, and Interface mixers,
-individual previews, mute, and restore defaults. Preferences apply immediately
-and are saved per account on this browser under `tubong.audio.v1.<id>`; blocked
-storage displays a notice while retaining working controls. The game toolbar
+individual previews, mute, restore defaults, and Save / Discard sound changes.
+Edits remain in a draft. Previews use draft levels without writing preferences.
+Save opens the shared “Are you sure?” dialog with a summary of the mixer levels;
+only confirmation saves them per account on this browser under
+`tubong.audio.v1.<id>`. A failed storage write keeps the draft and displays an
+error with a retry option. Discard requires confirmation and restores saved levels.
+Unsaved sound and credential changes share one leave-page confirmation. Closing
+or reloading the browser tab uses the browser’s native unsaved-changes warning.
+No warning remains after saving or discarding. Switching accounts clears the
+draft and invalidates pending saves. The game’s quick mute still applies immediately. The game toolbar
 provides quick mute and its sidebar links to Sound settings.
 
 Audio initializes only after a user gesture. Loading failures offer Retry sound

@@ -9,7 +9,7 @@ import { Confirmation } from '../../../core/services/confirmation';
 import { AuthUser } from '../../../core/services/auth';
 
 describe('Edit profile', () => {
-  const player: AuthUser = { id: 1, username: 'Juan', email: 'j@example.com', tansans: 0, juice: 100, displayName: 'Juan Plays', avatarId: 'sunny' };
+  const player: AuthUser = { id: 1, username: 'Juan', tansans: 0, juice: 100, displayName: 'Juan Plays', avatarId: 'sunny' };
   function setup() {
     const service = { saveProfile: vi.fn(() => of({ user: player })) };
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: User, useValue: service }] });

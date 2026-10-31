@@ -14,7 +14,6 @@
     <app-audio-settings />
     <section class="account-card settings-summary" aria-label="Current sign-in details">
       <div><span class="eyebrow">USERNAME</span><strong>{{ account.user()?.username }}</strong></div>
-      <div><span class="eyebrow">EMAIL ADDRESS</span><strong>{{ account.user()?.email }}</strong></div>
       <p class="muted">Each change needs your current password and confirmation. Other sessions will be signed out after saving.</p>
     </section>
     @if (error()) { <p role="alert" class="ui-feedback ui-feedback-error feedback">{{ error() }}</p> }
@@ -32,13 +31,13 @@
             <p class="muted setting-help" [id]="section.action + '-help'">{{ section.help }}</p>
             <label [for]="section.action + '-value'">{{ section.label }}</label>
             <input [id]="section.action + '-value'" formControlName="value" class="name-input"
-              [type]="section.action === 'password' ? (showPasswords() ? 'text' : 'password') : section.action === 'email' ? 'email' : 'text'"
+              [type]="section.action === 'password' ? (showPasswords() ? 'text' : 'password') : 'text'"
               [attr.autocomplete]="section.action === 'password' ? 'new-password' : section.action"
               [attr.aria-invalid]="form.controls.value.touched && form.controls.value.invalid"
               [attr.aria-describedby]="section.action + '-help ' + section.action + '-error'" />
             <p [id]="section.action + '-error'" class="field-error">
               @if (form.controls.value.touched && form.controls.value.invalid) {
-                {{ section.action === 'username' ? 'Use 3–50 letters, numbers or underscores.' : section.action === 'email' ? 'Enter a valid email address.' : 'Use 8–72 bytes. Your password cannot contain a null character.' }}
+                {{ section.action === 'username' ? 'Use 3–50 letters, numbers or underscores.' : 'Use 8–72 bytes. Your password cannot contain a null character.' }}
               }
             </p>
             @if (section.action === 'password') {

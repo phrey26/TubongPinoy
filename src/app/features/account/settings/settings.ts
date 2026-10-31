@@ -1,4 +1,4 @@
-import { Component, DestroyRef, HostListener, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, effect, inject, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -26,6 +26,7 @@ function makeForm(validator: ValidatorFn, password = false) {
   templateUrl: './settings.html', styleUrls: ['../account.css', './settings.css'],
 })
 export class Settings {
+  readonly soundPanel = viewChild(AudioSettingsPanel);
   readonly account = inject(AccountState);
   private readonly service = inject(User);
   private readonly confirmation = inject(Confirmation);
@@ -36,23 +37,21 @@ export class Settings {
   readonly showPasswords = signal(false);
   readonly forms = {
     username: makeForm(Validators.pattern(/^[A-Za-z0-9_]{3,50}$/)),
-    email: makeForm(Validators.compose([Validators.email, Validators.maxLength(254)])!),
     password: makeForm(passwordValidator, true),
   };
   readonly sections: { action: Setting; title: string; label: string; help: string }[] = [
     { action: 'username', title: 'Change username', label: 'New username', help: '3–50 letters, numbers or underscores. Use this username to sign in.' },
-    { action: 'email', title: 'Change email', label: 'New email address', help: 'Use an email address you can access. You can also use it to sign in.' },
     { action: 'password', title: 'Change password', label: 'New password', help: 'Use 8–72 bytes. Symbols and spaces are welcome; some characters use more than one byte.' },
   ];
   private editingAccountId?: number;
-  private saved = { username: '', email: '' };
+  private saved = { username: '' };
 
   constructor() {
     effect(() => {
       const user = this.account.user();
       if (user?.id === this.editingAccountId) return;
       this.editingAccountId = user?.id;
-      this.saved = { username: user?.username || '', email: user?.email || '' };
+      this.saved = { username: user?.username || '' };
       this.resetForms();
       this.message.set('');
       this.error.set('');
@@ -60,7 +59,7 @@ export class Settings {
   }
 
   get hasDraft(): boolean {
-    return !!this.account.user() && (this.changed('username') || this.changed('email') ||
+    return !!this.account.user() && (this.changed('username') ||
       Object.values(this.forms).some(form => !!form.controls.currentPassword.value) ||
       !!this.forms.password.controls.value.value || !!this.forms.password.controls.confirmPassword.value);
   }
@@ -78,9 +77,7 @@ export class Settings {
     const value = form.getRawValue();
     const change: SettingsChange = action === 'password'
       ? { action, currentPassword: value.currentPassword, newPassword: value.value, confirmPassword: value.confirmPassword }
-      : action === 'username'
-        ? { action, currentPassword: value.currentPassword, username: value.value.trim() }
-        : { action, currentPassword: value.currentPassword, email: value.value.trim().toLowerCase() };
+      : { action, currentPassword: value.currentPassword, username: value.value.trim() };
     this.pending.set(action);
     this.error.set('');
     this.message.set('');
@@ -123,23 +120,27 @@ export class Settings {
   }
 
   private resetForms(): void {
-    for (const action of ['username', 'email', 'password'] as const) {
+    for (const action of ['username', 'password'] as const) {
       this.forms[action].reset({ value: action === 'password' ? '' : this.saved[action], currentPassword: '', confirmPassword: '' });
     }
     this.showPasswords.set(false);
   }
 
   confirmLeave() {
-    return !this.hasDraft || this.confirmation.ask({
+    const soundChanges = !!this.soundPanel()?.hasChanges();
+    return !(this.hasDraft || soundChanges) || this.confirmation.ask({
       title: 'Are you sure you want to leave?',
       message: this.pending() ? 'Your account change is still processing and may complete after you leave.'
-        : 'Your unsaved sign-in changes and entered passwords will be discarded.',
+        : soundChanges
+          ? this.hasDraft ? 'Your unsaved sound settings, sign-in changes, and entered passwords will be discarded.'
+            : 'Your unsaved sound settings will be discarded. Your last saved levels will be kept.'
+          : 'Your unsaved sign-in changes and entered passwords will be discarded.',
       confirmLabel: 'Leave page', cancelLabel: 'Keep editing',
     });
   }
 
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent): void {
-    if (this.hasDraft) { event.preventDefault(); event.returnValue = ''; }
+    if (this.hasDraft || this.soundPanel()?.hasChanges()) { event.preventDefault(); event.returnValue = ''; }
   }
 }

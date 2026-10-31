@@ -20,7 +20,7 @@
       }
 
       <div class="relative">
-        <label for="login-identity" class="block text-purple-700 font-bold mb-2 ml-1">Username or Email</label>
+        <label for="login-identity" class="block text-purple-700 font-bold mb-2 ml-1">Username</label>
         <input
           formControlName="identity"
           id="login-identity" autocomplete="username" maxlength="254"
@@ -30,7 +30,7 @@
           class="auth-input w-full px-5 py-4 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
 
         <div *ngIf="f.identity.invalid && f.identity.touched" id="login-identity-error" class="text-red-700 text-xs font-bold mt-1 ml-2">
-          <img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter your username or email.
+          <img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter your username.
         </div>
       </div>
 

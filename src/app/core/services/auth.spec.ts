@@ -6,7 +6,7 @@ import { Auth, safeReturnUrl } from './auth';
 describe('Auth', () => {
   let service: Auth;
   let http: HttpTestingController;
-  const user = { id: 1, username: 'Player', email: 'player@example.com', tansans: 1000, juice: 100 };
+  const user = { id: 1, username: 'Player', tansans: 1000, juice: 100 };
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });

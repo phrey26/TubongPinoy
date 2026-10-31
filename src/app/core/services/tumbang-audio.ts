@@ -48,6 +48,9 @@ export class TumbangAudio {
   private paused = false;
   private generation = 0;
   private lastBounce = -Infinity;
+  private previewSettings?: AudioSettings;
+
+  private get mixSettings(): AudioSettings { return this.previewSettings ?? this.settings(); }
 
   constructor() {
     inject(AccountState).changes$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
@@ -81,6 +84,17 @@ export class TumbangAudio {
     if (!this.settings().muted && this.active) void this.activate();
   }
   reset(): void { this.save({ ...DEFAULT_AUDIO }); }
+  /** Commit an explicit Settings save; keep the saved levels unchanged on failure. */
+  saveSettings(value: AudioSettings): boolean {
+    const settings = normalizeAudioSettings(value);
+    try { localStorage.setItem(this.storageKey, JSON.stringify(settings)); }
+    catch { this.storageError.set(true); return false; }
+    this.storageError.set(false);
+    this.state.set(settings);
+    this.stopPreview();
+    this.applyMix();
+    return true;
+  }
   private save(settings: AudioSettings): void {
     this.state.set(settings);
     try { localStorage.setItem(this.storageKey, JSON.stringify(settings)); this.storageError.set(false); }
@@ -88,7 +102,7 @@ export class TumbangAudio {
     this.applyMix();
   }
   private applyMix(): void {
-    const settings = this.settings();
+    const settings = this.mixSettings;
     if (this.context && this.master && this.channels) {
       this.master.gain.setTargetAtTime(settings.muted ? 0 : settings.master / 100, this.context.currentTime, .015);
       for (const channel of ['effects', 'interface'] as const) {
@@ -109,8 +123,15 @@ export class TumbangAudio {
     this.paused = paused;
     if (paused) { this.generation++; this.silence(); }
   }
-  stop(): void { this.active = false; this.generation++; this.lastBounce = -Infinity; this.silence(); }
-  stopPreview(): void { if (!this.active) { this.generation++; this.silence(); } }
+  stop(): void {
+    this.active = false; this.generation++; this.lastBounce = -Infinity;
+    this.previewSettings = undefined; this.silence(); this.applyMix();
+  }
+  stopPreview(): void {
+    if (!this.active) {
+      this.generation++; this.silence(); this.previewSettings = undefined; this.applyMix();
+    }
+  }
   resetAttempt(): void { this.silence(); this.lastBounce = -Infinity; }
   private get canPlay(): boolean {
     return this.active && !this.paused && !document.hidden && !this.settings().muted && this.settings().master > 0;
@@ -123,12 +144,14 @@ export class TumbangAudio {
     }
     this.spawn(sound, Math.max(.2, Math.min(1, strength)), delay);
   }
-  async preview(channel: AudioChannel): Promise<void> {
+  async preview(channel: AudioChannel, draft?: AudioSettings): Promise<void> {
     if (this.active) return;
     this.stopPreview();
     const generation = this.generation;
-    const settings = this.settings();
+    const settings = normalizeAudioSettings(draft ?? this.settings());
     if (settings.muted || !settings.master || !settings[channel]) return;
+    this.previewSettings = settings;
+    this.applyMix();
     if (!await this.prepare() || generation !== this.generation || document.hidden) return;
     this.spawn(channel === 'effects' ? 'can' : 'click', 1);
   }
@@ -177,7 +200,7 @@ export class TumbangAudio {
     const buffers = this.buffers.get(sound);
     const channel = TUMBANG_SOUNDS[sound].channel;
     if (!context || context.state !== 'running' || !buffers?.length || !this.channels ||
-        this.settings().muted || !this.settings().master || !this.settings()[channel]) return;
+        this.mixSettings.muted || !this.mixSettings.master || !this.mixSettings[channel]) return;
     if (this.voices.size >= 12) {
       const oldest = this.voices.keys().next().value;
       if (oldest) this.release(oldest);

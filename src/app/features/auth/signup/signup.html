@@ -9,7 +9,7 @@
 
     <div class="text-center mb-10">
       <h1 class="text-4xl font-extrabold text-purple-700 drop-shadow-sm mb-2">Join the Tribe!</h1>
-      <p class="text-gray-600 font-medium">Create your account to play games and visit the shop.</p>
+      <p class="text-gray-600 font-medium">Choose a username and password to play. No email address needed.</p>
     </div>
 
     <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-6">
@@ -17,21 +17,14 @@
         <p role="alert" class="ui-feedback ui-feedback-error">{{ errorMessage() }}</p>
       }
 
-      <div class="grid md:grid-cols-2 gap-6">
+      <div>
         <div>
           <label for="signup-username" class="block text-purple-700 font-bold mb-2 ml-1">Username</label>
           <input id="signup-username" autocomplete="username" maxlength="50" formControlName="username" type="text" placeholder="GamerName"
-            [class.border-red-400]="f.username.invalid && f.username.touched" [attr.aria-invalid]="!!(f.username.invalid && f.username.touched)" [attr.aria-describedby]="f.username.invalid && f.username.touched ? 'signup-username-error' : null"
+            [class.border-red-400]="(f.username.invalid && f.username.touched) || usernameTaken()" [attr.aria-invalid]="!!((f.username.invalid && f.username.touched) || usernameTaken())" [attr.aria-describedby]="usernameTaken() ? 'signup-username-taken' : f.username.invalid && f.username.touched ? 'signup-username-error' : null"
             class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
           <p *ngIf="f.username.invalid && f.username.touched" id="signup-username-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 3–50 letters, numbers or underscores.</p>
-        </div>
-
-        <div>
-          <label for="signup-email" class="block text-purple-700 font-bold mb-2 ml-1">Email Address</label>
-          <input id="signup-email" autocomplete="email" maxlength="254" formControlName="email" type="email" placeholder="hello@pinoy.com"
-            [class.border-red-400]="f.email.invalid && f.email.touched" [attr.aria-invalid]="!!(f.email.invalid && f.email.touched)" [attr.aria-describedby]="f.email.invalid && f.email.touched ? 'signup-email-error' : null"
-            class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-green-200 focus:border-green-400 focus:outline-none transition bg-green-50 text-gray-700 font-medium placeholder-green-300" />
-          <p *ngIf="f.email.invalid && f.email.touched" id="signup-email-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Enter a valid email.</p>
+          @if (usernameTaken()) { <p id="signup-username-taken" class="text-red-700 text-xs font-bold mt-1 ml-2">Username is taken. Try another name.</p> }
         </div>
       </div>
 
@@ -64,12 +57,35 @@
       </div>
 
       <div class="px-1">
-        <label class="ui-check-label"><input type="checkbox" formControlName="terms" class="ui-check" aria-describedby="signup-policies" /> <span>I agree to the Terms of Use and have read the Privacy Policy.</span></label>
+        <section class="human-check" aria-labelledby="human-check-heading">
+        <h2 id="human-check-heading">A quick human check</h2>
+        <p id="human-check-help">Answer this short question to help prevent automated signups. Checks expire after 5 minutes.</p>
+        @if (challengeLoading()) { <p role="status">Loading your question…</p> }
+        @if (challengeError()) { <p role="alert" class="text-red-700">{{ challengeError() }}</p> }
+        @if (challenge(); as check) {
+          <label for="signup-answer">{{ check.question }}</label>
+          <input id="signup-answer" type="text" inputmode="numeric" autocomplete="off" maxlength="2" formControlName="challengeAnswer"
+            class="auth-input" [attr.aria-invalid]="f.challengeAnswer.invalid && f.challengeAnswer.touched"
+            aria-describedby="human-check-help human-check-error" />
+          <p id="human-check-error" class="text-red-700 text-xs font-bold">
+            @if (f.challengeAnswer.invalid && f.challengeAnswer.touched) { Enter the answer using numbers. }
+          </p>
+        }
+        <button type="button" class="ui-button ui-button-soft" [disabled]="challengeLoading() || isSubmitting()" (click)="refreshChallenge()">
+          {{ challengeError() ? 'Retry human check' : 'Try a different question' }}
+        </button>
+      </section>
+      <div class="signup-trap" aria-hidden="true">
+        <label for="signup-website">Leave this field empty</label>
+        <input id="signup-website" type="text" formControlName="website" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <label class="ui-check-label"><input type="checkbox" formControlName="terms" class="ui-check" aria-describedby="signup-policies" /> <span>I agree to the Terms of Use and have read the Privacy Policy.</span></label>
         <p id="signup-policies" class="text-sm text-purple-800 ml-8">Read the <a routerLink="/terms" target="_blank" rel="noopener" class="underline font-bold">Terms of Use<span class="sr-only"> (opens in a new tab)</span></a> and <a routerLink="/privacy" target="_blank" rel="noopener" class="underline font-bold">Privacy Policy<span class="sr-only"> (opens in a new tab)</span></a>.</p>
         <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-700 text-xs font-bold mt-1 ml-9"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> You must agree to continue.</p>
       </div>
 
-      <button type="submit" [disabled]="signupForm.invalid || isSubmitting()"
+      <button type="submit" [disabled]="signupForm.invalid || isSubmitting() || challengeLoading() || !challenge()"
         class="ui-button ui-button-pink w-full py-4 text-base tracking-wide">
         <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="app-icon" /> {{ isSubmitting() ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT' }}
       </button>

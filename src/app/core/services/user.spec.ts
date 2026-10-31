@@ -6,7 +6,7 @@ import { AccountState } from './account-state';
 import { User } from './user';
 
 describe('Account customization API', () => {
-  const alice = { id: 1, username: 'Alice', email: 'a@example.com', tansans: 100, juice: 80, walletVersion: 1 };
+  const alice = { id: 1, username: 'Alice', tansans: 100, juice: 80, walletVersion: 1 };
   const bob = { ...alice, id: 2, username: 'Bob' };
   let service: User;
   let state: AccountState;
@@ -34,7 +34,7 @@ describe('Account customization API', () => {
 
   it('keeps the session after an incorrect confirmation password', () => {
     let status = 0;
-    service.saveSettings({ action: 'email', email: 'new@example.com', currentPassword: 'wrong' })
+    service.saveSettings({ action: 'username', username: 'AliceNew', currentPassword: 'wrong' })
       .subscribe({ error: error => status = error.status });
     http.expectOne('/api/session.php').flush({ user: alice, csrfToken: 'token' });
     http.expectOne('/api/settings.php').flush({ message: 'Your current password is incorrect.' }, { status: 422, statusText: 'Invalid' });

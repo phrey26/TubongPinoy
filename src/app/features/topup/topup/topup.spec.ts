@@ -31,7 +31,7 @@ describe('Topup', () => {
 
   it('submits a fixed demo package once and saves the returned balance', () => {
     const http = TestBed.inject(HttpTestingController);
-    const user = { id: 1, username: 'Player', email: 'player@example.com', tansans: 1000, juice: 100 };
+    const user = { id: 1, username: 'Player', tansans: 1000, juice: 100 };
     TestBed.inject(AccountState).set(user);
     component.selectPackage(500, 199);
     component.processPayment();

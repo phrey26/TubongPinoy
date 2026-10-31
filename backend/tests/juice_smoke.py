@@ -1,5 +1,6 @@
 """Verify server-authoritative passive Juice recovery using temporary accounts."""
 from concurrent.futures import ThreadPoolExecutor
+from human_check import answer_signup_challenge
 import http.cookiejar
 import json
 import os
@@ -26,6 +27,10 @@ class Client:
         self.request('session')
 
     def request(self, endpoint, data=None, csrf=True):
+        if endpoint == 'signup' and data is not None and 'challengeId' not in data:
+            status, challenge = self.request('signup-challenge')
+            assert status == 200, challenge
+            data = {**data, **answer_signup_challenge(challenge)}
         headers = {}
         if data is not None:
             headers['Content-Type'] = 'application/json'
@@ -43,7 +48,7 @@ class Client:
         return response.status, result
 
     def signup(self, name):
-        return self.request('signup', {'username': name, 'email': name + '@example.com', 'password': password, 'terms': True})
+        return self.request('signup', {'username': name, 'password': password, 'terms': True})
 
     def login(self, name):
         self.request('session')
@@ -149,8 +154,8 @@ finally:
     $db = database();
     foreach (array_slice($argv, 2) as $name) {
         if (!preg_match('/\Atp_juice_[a-f0-9]{12}\z/', $name)) exit(2);
-        $db->prepare('DELETE FROM users WHERE username = ? AND email = ?')
-            ->execute([$name, $name . '@example.com']);
+        $db->prepare('DELETE FROM users WHERE username = ?')
+            ->execute([$name]);
         $db->prepare('DELETE FROM auth_rate_limits WHERE bucket = ?')
             ->execute([hash('sha256', 'login-identity:' . $name)]);
     }

@@ -27,7 +27,7 @@ describe('Home', () => {
   it('keeps the clock visible and shows next-point and exact full-refill details on hover', () => {
     const now = Date.now();
     const fullAt = now + 44000 + 19 * 144000;
-    TestBed.inject(AccountState).set({ id: 1, username: 'Juan', email: 'juan@example.com',
+    TestBed.inject(AccountState).set({ id: 1, username: 'Juan', 
       tansans: 0, juice: 80, serverTime: now, nextJuiceAt: now + 44000 });
     fixture.detectChanges();
     const clock = fixture.nativeElement.querySelector('.home-clock') as HTMLButtonElement;
@@ -45,7 +45,7 @@ describe('Home', () => {
   });
 
   it('opens details on focus or tap and closes them on Escape or an outside click', () => {
-    TestBed.inject(AccountState).set({ id: 1, username: 'Juan', email: 'juan@example.com', tansans: 0, juice: 100 });
+    TestBed.inject(AccountState).set({ id: 1, username: 'Juan', tansans: 0, juice: 100 });
     fixture.detectChanges();
     const clock = fixture.nativeElement.querySelector('.home-clock') as HTMLButtonElement;
     clock.dispatchEvent(new FocusEvent('focus'));

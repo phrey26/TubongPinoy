@@ -36,7 +36,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/account/profile/profile').then(module => module.Profile) },
   { path: 'account/inventory', title: 'Your Inventory | Tubong Pinoy', data: { noindex: true, description: 'Equip free starter skins and view the collectibles saved to your account.' }, canActivate: [authGuard], canDeactivate: [leaveGuard],
     loadComponent: () => import('./features/account/inventory/inventory').then(module => module.Inventory) },
-  { path: 'account/settings', title: 'Account Settings | Tubong Pinoy', data: { noindex: true, description: 'Manage your Tubong Pinoy username, email address, and password.' }, canActivate: [authGuard], canDeactivate: [leaveGuard],
+  { path: 'account/settings', title: 'Account Settings | Tubong Pinoy', data: { noindex: true, description: 'Manage your Tubong Pinoy username, password, and game audio.' }, canActivate: [authGuard], canDeactivate: [leaveGuard],
     loadComponent: () => import('./features/account/settings/settings').then(module => module.Settings) },
 
   { path: 'contact', title: 'Contact & Feedback | Tubong Pinoy', data: { description: 'Meet HH productions and preview your feedback for Tubong Pinoy. Message delivery is coming soon.' },

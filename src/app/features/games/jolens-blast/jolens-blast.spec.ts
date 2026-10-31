@@ -191,7 +191,7 @@ describe('JolensBlast', () => {
   });
 
   it('confirms leaving an active game and retains progress when cancelled', () => {
-    TestBed.inject(AccountState).set({ id: 1, username: 'Player', email: 'p@example.com', tansans: 0, juice: 100 });
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', tansans: 0, juice: 100 });
     const confirmation = TestBed.inject(Confirmation);
     component.currentScore = 200;
     let leave: boolean | undefined;
@@ -233,11 +233,11 @@ describe('JolensBlast', () => {
 
   it('uses the saved shooter style and restores the default for another account', () => {
     const state = TestBed.inject(AccountState);
-    state.set({ id: 1, username: 'Juan', email: 'j@example.com', tansans: 0, juice: 100,
+    state.set({ id: 1, username: 'Juan', tansans: 0, juice: 100,
       equippedSkins: { 'jolens-blast': 'shooter_gold' } });
     component.spawnShooter();
     expect(component['currentShooter'].sprite).toBe('assets/jolens-blast-assets/shooters/shooter_gold.png');
-    state.set({ id: 2, username: 'Maria', email: 'm@example.com', tansans: 0, juice: 100 });
+    state.set({ id: 2, username: 'Maria', tansans: 0, juice: 100 });
     component.spawnShooter();
     expect(component['currentShooter'].sprite).toBe('assets/jolens-blast-assets/shooters/shooter_chrome.png');
   });

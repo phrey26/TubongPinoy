@@ -16,7 +16,8 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
    /Applications/MAMP/bin/php/php8.3.30/bin/php backend/bin/setup.php
    ```
 
-   This creates missing tables without dropping existing accounts, including
+   For an existing installation with an email column, see the migration section
+   below before deploying the new APIs. Fresh setup creates missing tables, including
    profile preferences and account session versions used by Settings.
 4. Link **only `backend/public`** to MAMP's document root:
 
@@ -36,16 +37,23 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
 | Method | Path | Behavior |
 | --- | --- | --- |
 | GET | `/api/session.php` | Current user (or null) and a CSRF token |
+| GET | `/api/signup-challenge.php` | Issue a session-bound, expiring registration question |
 | POST | `/api/signup.php` | Create an account and sign in |
-| POST | `/api/login.php` | Sign in with username/email and password |
+| POST | `/api/login.php` | Sign in with username and password |
 | POST | `/api/logout.php` | Destroy the session and expire its cookie |
 | GET | `/api/me.php` | Authenticated profile; returns 401 to guests |
 | GET | `/api/catalog.php` | Available skins and whether simulated top-ups are enabled |
 | POST | `/api/wallet.php` | Authenticated Juice consumption, shop purchases, or demo top-ups |
-| POST | `/api/settings.php` | Change username, email, or password after verifying the current password |
+| POST | `/api/settings.php` | Change username or password after verifying the current password |
 
 POST requests require JSON and the `X-CSRF-Token` from the session endpoint.
-Signup accepts `username`, `email`, `password`, and `terms: true`.
+Signup accepts `username`, `password`, `terms: true`, `challengeId`, `challengeAnswer`,
+and an empty `website` honeypot. GET `/api/signup-challenge.php` first with the same
+session cookie. The challenge is a basic arithmetic question, valid for five
+minutes and one verification attempt, with a two-second minimum completion time.
+Refresh it after any failed signup. Questions are limited to 40 and signup POSTs
+to 20 per IP per 15 minutes. These are basic bot deterrents, not a guarantee
+against sophisticated automation; no external service or key is needed.
 Login accepts `identity`, `password`, and optional `rememberMe`.
 Passwords use PHP password hashing and are never returned in JSON. PDO prepared
 statements handle user input. Login and signup have database-backed request limits.
@@ -94,8 +102,7 @@ Future skins can be added to the `skins` table (`id`, `name`, `type`, `price`,
 `image_url`, `active`); the shop reads that catalog automatically. The current
 skin catalog uses placeholder artwork. Ownership is implemented; those store collectibles
 do not have playable artwork yet. Free starter game skins can be equipped from Inventory.
-Game high scores are documented below. Email verification and password recovery
-are not implemented in this backend.
+Game high scores are documented below. Email is not collected or used for login. Password recovery is not implemented.
 
 For local debugging, `backend/bin/create-debug-account.php` reads a JSON object
 with `username` and `password` from standard input. It creates or resets that
@@ -258,3 +265,40 @@ from accepting an obsolete password with a new session version.
 Run `python3 backend/tests/settings_smoke.py` to verify validation, uniqueness,
 current-password checks, rotation, session invalidation, persistence and
 concurrent credential updates. Only its temporary fixture accounts are removed.
+
+
+## Username-only account migration
+
+Fresh installations use `schema.sql` without an email column. For an existing
+database, review `migrations/2026-10-31-remove-account-email.sql`. It permanently
+removes the account email column and its unique index while preserving IDs,
+usernames, password hashes, balances, profiles, inventory, and scores. Existing
+users continue signing in with their usernames and current passwords.
+
+After reviewing the target database, run:
+
+```sh
+/Applications/MAMP/bin/php/php8.3.30/bin/php backend/bin/setup.php --remove-legacy-emails
+```
+
+On hosting without CLI access, run the migration SQL in the database management
+tool, then run the rest of `schema.sql` if tables are missing. Deploy the
+username-only frontend and APIs together after migration. Setup refuses to delete
+existing email data without the explicit flag; rerunning setup after migration
+is safe. The application no longer returns an email field or supports email
+login/settings. Duplicate usernames (including case variations under the schema's
+case-insensitive collation) return HTTP 409 with `Username is taken.`
+
+Removing an active database column does not erase old backups or exported SQL.
+Review and securely remove legacy copies containing email addresses according to
+your retention requirements. Keep any retained backup private and outside the
+web root. Hosting must expose only `backend/public`, use HTTPS, and keep database
+credentials, sessions, logs, source files, and SQL exports inaccessible from the
+web. Never upload the entire backend folder as a public download.
+
+`backend/tests/signup_challenge_test.php` verifies expiration, single use,
+wrong/forged answers, session binding, timing, honeypot values, and invalid types.
+Smoke tests answer the basic check as test fixtures; no production bypass exists.
+This limited check should be reconsidered if abuse persists. See the
+[OWASP bot-management guidance](https://cheatsheetseries.owasp.org/cheatsheets/Bot_Management_and_Anti-Automation_Cheat_Sheet.html)
+for the limits of individual defenses.
