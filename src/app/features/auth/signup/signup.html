@@ -18,14 +18,12 @@
       }
 
       <div>
-        <div>
-          <label for="signup-username" class="block text-purple-700 font-bold mb-2 ml-1">Username</label>
-          <input id="signup-username" autocomplete="username" maxlength="50" formControlName="username" type="text" placeholder="GamerName"
-            [class.border-red-400]="(f.username.invalid && f.username.touched) || usernameTaken()" [attr.aria-invalid]="!!((f.username.invalid && f.username.touched) || usernameTaken())" [attr.aria-describedby]="usernameTaken() ? 'signup-username-taken' : f.username.invalid && f.username.touched ? 'signup-username-error' : null"
-            class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
-          <p *ngIf="f.username.invalid && f.username.touched" id="signup-username-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 3–50 letters, numbers or underscores.</p>
-          @if (usernameTaken()) { <p id="signup-username-taken" class="text-red-700 text-xs font-bold mt-1 ml-2">Username is taken. Try another name.</p> }
-        </div>
+        <label for="signup-username" class="block text-purple-700 font-bold mb-2 ml-1">Username</label>
+        <input id="signup-username" autocomplete="username" maxlength="50" formControlName="username" type="text" placeholder="GamerName"
+          [class.border-red-400]="(f.username.invalid && f.username.touched) || usernameTaken()" [attr.aria-invalid]="!!((f.username.invalid && f.username.touched) || usernameTaken())" [attr.aria-describedby]="usernameTaken() ? 'signup-username-taken' : f.username.invalid && f.username.touched ? 'signup-username-error' : null"
+          class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
+        <p *ngIf="f.username.invalid && f.username.touched" id="signup-username-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 3–50 letters, numbers or underscores.</p>
+        @if (usernameTaken()) { <p id="signup-username-taken" class="text-red-700 text-xs font-bold mt-1 ml-2">Username is taken. Try another name.</p> }
       </div>
 
       <div class="grid md:grid-cols-2 gap-6">
@@ -56,8 +54,7 @@
         </div>
       </div>
 
-      <div class="px-1">
-        <section class="human-check" aria-labelledby="human-check-heading">
+      <section class="human-check" aria-labelledby="human-check-heading">
         <h2 id="human-check-heading">A quick human check</h2>
         <p id="human-check-help">Answer this short question to help prevent automated signups. Checks expire after 5 minutes.</p>
         @if (challengeLoading()) { <p role="status">Loading your question…</p> }
@@ -80,7 +77,8 @@
         <input id="signup-website" type="text" formControlName="website" tabindex="-1" autocomplete="off" />
       </div>
 
-      <label class="ui-check-label"><input type="checkbox" formControlName="terms" class="ui-check" aria-describedby="signup-policies" /> <span>I agree to the Terms of Use and have read the Privacy Policy.</span></label>
+      <div class="px-1">
+        <label class="ui-check-label"><input type="checkbox" formControlName="terms" class="ui-check" aria-describedby="signup-policies" /> <span>I agree to the Terms of Use and have read the Privacy Policy.</span></label>
         <p id="signup-policies" class="text-sm text-purple-800 ml-8">Read the <a routerLink="/terms" target="_blank" rel="noopener" class="underline font-bold">Terms of Use<span class="sr-only"> (opens in a new tab)</span></a> and <a routerLink="/privacy" target="_blank" rel="noopener" class="underline font-bold">Privacy Policy<span class="sr-only"> (opens in a new tab)</span></a>.</p>
         <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-700 text-xs font-bold mt-1 ml-9"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> You must agree to continue.</p>
       </div>

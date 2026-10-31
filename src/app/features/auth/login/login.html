@@ -23,9 +23,9 @@
         <label for="login-identity" class="block text-purple-700 font-bold mb-2 ml-1">Username</label>
         <input
           formControlName="identity"
-          id="login-identity" autocomplete="username" maxlength="254"
+          id="login-identity" autocomplete="username" maxlength="50"
           type="text"
-          placeholder="Username or email"
+          placeholder="Username"
           [class.border-red-400]="f.identity.invalid && f.identity.touched" [attr.aria-invalid]="!!(f.identity.invalid && f.identity.touched)" [attr.aria-describedby]="f.identity.invalid && f.identity.touched ? 'login-identity-error' : null"
           class="auth-input w-full px-5 py-4 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
 

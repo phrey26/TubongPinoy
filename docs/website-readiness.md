@@ -117,6 +117,49 @@ October 30 follow-up:
   exceptions were found. Account/API responses were mocked for these visual
   checks; this follow-up did not repeat the live backend form audit above.
 
+October 31 username-only registration follow-up:
+
+- Account signup, login, session responses, and Settings no longer use email.
+  Duplicate usernames, including case variations, return “Username is taken.”
+- Registration has a session-bound arithmetic check, a hidden spam field,
+  five-minute expiry, single-use verification, and a minimum completion time.
+  The built-in check reduces basic automated abuse; it is not a guarantee that
+  a registrant is human. There is no external CAPTCHA service.
+- FAQ, Privacy, and Terms reflect username-only accounts and the check.
+- All 235 Angular tests pass across 40 files. The production build passes.
+- Seven API smoke suites pass 150 checks against a separate temporary MySQL
+  database. Another 22 standalone checks cover registration verification,
+  including invalid, expired, reused, too-fast, and cross-session answers.
+- HTTP checks confirm the 41st challenge request and the 21st signup attempt are
+  rate-limited, with Retry-After headers.
+- Chrome verified real wrong-answer handling, refreshed questions, duplicate-name
+  feedback, signup, fresh-session username login, and Settings without an email
+  field. The signup form passed the axe WCAG A/AA rules checked and has no
+  horizontal overflow at 1440 px and 390 px. These checks do not establish full
+  accessibility conformance.
+- The legacy email-removal migration was tested separately. It preserves IDs,
+  usernames, password verification, balances, profile preferences, and scores.
+  Setup refuses to delete legacy email data without its explicit migration flag
+  and can be rerun after migration. The existing application database was not
+  changed during these tests. Existing deployments must apply the documented
+  migration before serving the username-only API version.
+
+Local MAMP follow-up:
+
+- Development remains on MAMP: Angular at `http://localhost:4200`, Apache on
+  port 8888, and MySQL on port 8889. `/api` requests use the existing development
+  proxy. No remote hosting configuration is required for this development setup.
+- Restored the ignored local database configuration and verified the existing
+  test account can sign in and open its protected profile.
+- Applied the email-removal migration to the actual local development database.
+  Fingerprints verified that every remaining account field, password hash,
+  balance, profile, inventory item, score, tutorial preference, and wallet record
+  stayed unchanged. Account registration no longer requires the legacy column.
+- All 31 authentication API checks pass through the running Angular-to-MAMP
+  connection. Fixtures are removed after testing.
+- MAMP returns 404 for private configuration, database code, schema, sessions,
+  and Git paths, and 403 for the API document-root directory listing.
+
 Still deferred: production URL-dependent SEO files, final policy contact/retention
 details, and deployment integration with a separately hosted account backend.
 Analytics stays disabled. Keyboard-only canvas gameplay remains a documented

@@ -32,6 +32,13 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
    `http://localhost:4200`. `proxy.conf.json` sends `/api/**` requests to MAMP.
    The browser uses one origin, so no wildcard CORS permissions are needed.
 
+   For current development, use **MAMP locally**: open the site at
+   `http://localhost:4200`, keep Apache on 8888 and MySQL on 8889, and keep
+   `proxy.conf.json` enabled. No remote host or cross-origin API setup is needed.
+   Keep `config.local.php` locally; Git intentionally does not restore it.
+   If login reports that the account service is unavailable, check this file
+   and MAMP's running services first.
+
 ## API
 
 | Method | Path | Behavior |
@@ -87,9 +94,9 @@ Setup updates the database default without changing existing account balances.
 - `demo_topup`: `starter` (100 Tansans), `special` (500), or `piyesta` (1,500).
   This is a development simulation, not a verified real-money payment. It is
   disabled by default. Set `allow_demo_topups => true` in local config or
-  `TUBONG_ALLOW_DEMO_TOPUPS=1` to enable the existing demo flow. This Mac's local
-  config enables it; deployment must leave it disabled until real payment
-  verification is implemented.
+  `TUBONG_ALLOW_DEMO_TOPUPS=1` to enable the existing demo flow explicitly. Local
+  development leaves it disabled unless needed for a test; deployment must leave
+  it disabled until real payment verification is implemented.
 
 Identity always comes from the server session. Client-supplied account IDs, prices,
 and balances are ignored. Transactions lock the account row, so purchases from
@@ -114,6 +121,8 @@ entitlement. The CLI command is outside the public web directory.
 ## Verification
 
 Run `npm test -- --watch=false` and `npm run build` from the project root.
+Run `php backend/tests/signup_challenge_test.php` for the isolated human-check
+validation tests (no database required).
 The API smoke test creates one uniquely named test account and deletes only that
 account in its cleanup step. It checks CSRF, validation, duplicate registration,
 password verification, session rotation, Remember Me, and logout:
@@ -211,7 +220,7 @@ chrome shooter. New profile and inventory pages are protected at
 
 `POST /api/profile.php` accepts `{ "displayName": "Juan Plays", "avatarId": "miko" }`.
 Display names allow 2–30 Unicode characters (letters, numbers, spaces and basic
-punctuation), are not unique, and do not change login usernames or email addresses.
+punctuation), are not unique, and do not change login usernames.
 The four allowed icons are `sunny`, `lila`, `miko`, and `maya`. User-provided image
 URLs/uploads are not accepted. Leaderboards expose `displayName` and `avatarId`
 alongside the existing username and score fields.
@@ -236,7 +245,7 @@ identity. It creates and removes only its uniquely named fixture accounts.
 ## Account settings and confirmations
 
 Run `backend/bin/setup.php` to add `account_security` before serving this version.
-The protected `/account/settings` page changes username, email and password in
+The protected `/account/settings` page changes username and password in
 separate forms. Each save and skin equip uses the shared “Are you sure?” dialog.
 Profile and Settings drafts also require confirmation before discarding or
 leaving; closing/reloading the browser uses its native unsaved-change prompt.
@@ -244,16 +253,16 @@ leaving; closing/reloading the browser uses its native unsaved-change prompt.
 `POST /api/settings.php` requires a session, CSRF token, `currentPassword`, and:
 
 - `action: "username"` with `username` (3–50 ASCII letters, digits or underscores).
-- `action: "email"` with `email` (a valid address, normalized to lowercase).
 - `action: "password"` with matching `newPassword` and `confirmPassword`
   (8–72 UTF-8 bytes, no null characters, consistent with signup).
 
-The current password is verified for every change. Duplicate usernames/emails
-return 409; incorrect current passwords return 422 without signing the user out.
+The current password is verified for every change. Duplicate usernames return
+409 with `Username is taken.`; incorrect current passwords return 422 without
+signing the user out.
 There is a per-account limit of 15 attempts per 15 minutes. Account IDs come from
 the session. Profile display names, equipped skins, purchases and balances stay
-intact when sign-in details change. Email changes take effect immediately; this
-does not add email verification or password recovery.
+intact when sign-in details change. Email settings are rejected; password
+recovery is not available.
 
 Successful changes rotate the current session ID and CSRF token, preserve the
 original expiry/Remember Me choice, and increment an account security version.

@@ -10,7 +10,7 @@ export class MemoryEnergy {
   consumeEnergy(reason: number | 'tumbang_retry' | 'jolens_round') {
     const amount = typeof reason === 'number' ? reason : 20;
     if (!this.unlimited) this.energy.next(Math.max(0, this.energy.value - amount));
-    return of({ user: { id: 1, username: 'Player', email: 'player@example.com', tansans: 1000, juice: this.energy.value } });
+    return of({ user: { id: 1, username: 'Player', tansans: 1000, juice: this.energy.value } });
   }
   addEnergy(amount: number) { this.energy.next(Math.min(100, this.energy.value + amount)); }
 }
