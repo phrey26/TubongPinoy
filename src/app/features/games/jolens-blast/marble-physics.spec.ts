@@ -6,6 +6,18 @@ const ball = (x: number, y: number, dx = 0, dy = 0): PhysicsMarble =>
   ({ x, y, radius: 20, dx, dy, isMoving: dx !== 0 || dy !== 0 });
 
 describe('Marble collision physics', () => {
+  it('identifies shooter impacts separately from ordinary target collisions', () => {
+    const shooterContacts: boolean[] = [];
+    stepMarbles(ball(225, 380, 0, -12), [ball(225, 340)], ring, board,
+      (_x, _y, _speed, shooter) => shooterContacts.push(shooter));
+    expect(shooterContacts).toContain(true);
+    const targetContacts: boolean[] = [];
+    stepMarbles(ball(225, 600), [ball(225, 380, 0, -12), ball(225, 340)], ring, board,
+      (_x, _y, _speed, shooter) => targetContacts.push(shooter));
+    expect(targetContacts).toContain(false);
+    expect(targetContacts).not.toContain(true);
+  });
+
   it('keeps an exited target rolling with friction and colliding outside the ring', () => {
     const shooter = ball(225, 600);
     const target = ball(394, 300, 8, 0);

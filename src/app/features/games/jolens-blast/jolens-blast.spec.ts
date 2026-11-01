@@ -249,6 +249,24 @@ describe('JolensBlast', () => {
     expect(component['currentShooter'].sprite).toBe('assets/jolens-blast-skin-assets/marble_skin_' + name + '.webp');
   });
 
+  it.each([
+    [['shooter_steel_ball'], 'shooter_steel_ball', true],
+    [[], 'shooter_steel_ball', false],
+    [['shooter_steel_ball'], 'shooter_gold', false],
+  ])('limits green legendary artwork to an owned, equipped Steel Ball', (ownedSkins, skin, enabled) => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', tansans: 0, juice: 100,
+      ownedSkins, equippedSkins: { 'jolens-blast': skin } });
+    component.spawnShooter();
+    const aura = vi.spyOn(component['steelFx'], 'drawAura');
+    const impact = vi.spyOn(component['steelFx'], 'drawImpact');
+    component.draw();
+    expect(aura).toHaveBeenCalledTimes(enabled ? 1 : 0);
+    expect(impact).toHaveBeenCalledTimes(enabled ? 1 : 0);
+    const clear = vi.spyOn(component['steelFx'], 'clear');
+    component.spawnShooter();
+    expect(clear).toHaveBeenCalled();
+  });
+
   it('does not stake marbles or start a round while the Juice payment is pending or fails', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;

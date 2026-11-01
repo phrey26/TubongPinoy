@@ -12,7 +12,7 @@ export function stepMarbles(
   shooter: PhysicsMarble, targets: PhysicsMarble[],
   ring: { x: number; y: number; radius: number },
   board: { width: number; height: number },
-  onImpact?: (x: number, y: number, speed: number) => void,
+  onImpact?: (x: number, y: number, speed: number, involvesShooter: boolean, a: PhysicsMarble, b: PhysicsMarble) => void,
   outsideMarbles: PhysicsMarble[] = [],
 ): Set<PhysicsMarble> {
   const knockedOut = new Set<PhysicsMarble>();
@@ -40,7 +40,7 @@ export function stepMarbles(
           b.x += nx * separation; b.y += ny * separation;
           const approaching = (a.dx - b.dx) * nx + (a.dy - b.dy) * ny;
           if (approaching <= 0) continue;
-          if (approaching > 1) onImpact?.((a.x + b.x) / 2, (a.y + b.y) / 2, approaching);
+          if (approaching > 1) onImpact?.((a.x + b.x) / 2, (a.y + b.y) / 2, approaching, a === shooter || b === shooter, a, b);
           const impulse = approaching * 0.95;
           a.dx -= impulse * nx; a.dy -= impulse * ny;
           b.dx += impulse * nx; b.dy += impulse * ny;

@@ -14,7 +14,8 @@ import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
 import { stepMarbles } from './marble-physics';
 import { scatterMarbles } from './marble-placement';
-import { JOLENS_ASSETS, JOLENS_ASSET_PATHS } from './jolens-assets';
+import { SteelBallEffects } from './steel-ball-effects';
+import { STEEL_BALL_FX_ATLAS, JOLENS_ASSETS, JOLENS_ASSET_PATHS } from './jolens-assets';
 import { MarbleEffects } from './marble-effects';
 import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedback';
 import { drawPixelText } from '../../../shared/canvas/pixel-text';
@@ -190,6 +191,12 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   private currentShooter!: Marble;
   readonly assets = JOLENS_ASSETS;
   private readonly sprites = new Map<string, HTMLImageElement>();
+  private readonly steelFx = new SteelBallEffects();
+  private get steelEquipped(): boolean {
+    const user = this.account.user();
+    return user?.equippedSkins?.['jolens-blast'] === 'shooter_steel_ball'
+      && !!user.ownedSkins?.includes('shooter_steel_ball');
+  }
   private readonly effects = new MarbleEffects();
   private readonly feedback = new GameFeedback();
 
@@ -234,9 +241,10 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     const motion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     const syncMotion = () => {
       this.effects.reducedMotion = motion?.matches ?? false;
+      this.steelFx.reducedMotion = this.effects.reducedMotion;
       this.feedback.reducedMotion = this.effects.reducedMotion;
       if (this.effects.reducedMotion) {
-        this.effects.clear();
+        this.effects.clear(); this.steelFx.clear();
         this.canvasRef.nativeElement.style.transform = '';
       }
     };
@@ -271,7 +279,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     cancelAnimationFrame(this.animationFrameId);
     this.audio.stop();
-    this.effects.clear();
+    this.effects.clear(); this.steelFx.clear();
     this.feedback.clear();
     if (this.energySub) this.energySub.unsubscribe();
   }
@@ -313,7 +321,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   private initRound() {
     this.audio.resetAttempt();
     this.audio.play('click');
-    this.effects.clear();
+    this.effects.clear(); this.steelFx.clear();
     this.feedback.clear();
     this.canvasRef.nativeElement.style.transform = '';
     this.outsideMarbles = [];
@@ -339,6 +347,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   spawnShooter() {
+    this.steelFx.clear();
     // A new shooter marks the next turn; the previous winnings are collected.
     this.outsideMarbles = [];
     this.currentShooter = {
@@ -428,6 +437,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.currentShooter.dx = dx * 0.15;
       this.currentShooter.dy = dy * 0.15;
       this.currentShooter.isMoving = true;
+      if (this.steelEquipped) this.steelFx.burst(this.currentShooter.x, this.currentShooter.y, 'launch');
       this.audio.play('throw', dragDistance / this.maxDragDistance);
       this.effects.play(this.currentShooter.x, this.currentShooter.y + 12, 'dust');
       this.feedback.launch(this.currentShooter.x, this.currentShooter.y,
@@ -441,6 +451,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     const elapsed = this.lastFrameTime === null || paused ? 0 : Math.min(50, Math.max(0, timestamp - this.lastFrameTime));
     this.lastFrameTime = timestamp;
     this.feedback.update(elapsed / 1000);
+    this.steelFx.update(elapsed / 1000);
+    if (!this.steelEquipped) this.steelFx.clear();
     this.frameAccumulator += elapsed;
     while (this.frameAccumulator >= 1000 / 60) {
       this.updatePhysics();
@@ -448,7 +460,9 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     }
     this.effects.update(elapsed / 1000);
     if (!paused && this.shotInProgress) {
-      this.feedback.trail(this.currentShooter.x, this.currentShooter.y,
+      if (this.steelEquipped && this.currentShooter.isMoving) {
+        this.steelFx.flight(this.currentShooter.x, this.currentShooter.y, this.currentShooter.dx, this.currentShooter.dy);
+      } else this.feedback.trail(this.currentShooter.x, this.currentShooter.y,
         Math.hypot(this.currentShooter.dx, this.currentShooter.dy), '#bae6fd');
     }
     this.canvasRef.nativeElement.style.transform = paused ? '' : this.feedback.canvasTransform;
@@ -468,7 +482,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     const knockedOut = stepMarbles(this.currentShooter, this.marblesOnBoard,
       { ...this.targetCenter, radius: this.playAreaRadius },
       { width: this.canvasWidth, height: this.canvasHeight },
-      (x, y, speed) => {
+      (x, y, speed, _involvesShooter, a, b) => {
+        if (this.steelEquipped) this.steelFx.contact(a, b, this.currentShooter);
         this.audio.play('clink', speed / 18);
         this.effects.play(x, y, 'sparks');
         this.feedback.impact(x, y, speed / 20, FEEDBACK_COLORS.glass);
@@ -571,10 +586,16 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     // Collected marbles still collide, but cannot be counted twice.
     this.outsideMarbles.forEach(m => this.drawMarble(m));
     this.pendingKnockouts.forEach(m => this.drawMarble(m));
+    if (this.steelEquipped) {
+      const atlas = this.sprites.get(STEEL_BALL_FX_ATLAS);
+      this.steelFx.drawTrail(this.ctx, atlas);
+      if (!this.steelFx.isCharged(this.currentShooter)) this.steelFx.drawAura(this.ctx, this.currentShooter.x, this.currentShooter.y, atlas);
+    }
     this.drawMarble(this.currentShooter);
 
     this.effects.draw((...args) => this.drawSprite(...args));
     this.feedback.draw(this.ctx);
+    if (this.steelEquipped) this.steelFx.drawImpact(this.ctx, this.sprites.get(STEEL_BALL_FX_ATLAS));
     this.drawTextPopups();
     if (this.isDragging) {
       const dx = this.dragStartX - this.currentMouseX;
@@ -686,7 +707,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.audio.resetAttempt();
     this.audio.play('click');
     this.feedback.clear();
-    this.effects.clear();
+    this.effects.clear(); this.steelFx.clear();
     this.canvasRef.nativeElement.style.transform = '';
     this.hasCompletedShot = false;
     this.marbleInventory = 10;
