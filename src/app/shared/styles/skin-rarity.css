@@ -1,0 +1,5 @@
+.shop-page .skin-card .product-art img { width: auto; height: 96px; max-width: 100%; image-rendering: pixelated; }
+.skin-rarity[data-rarity^="Common"] { color: #475569; }
+.skin-rarity[data-rarity^="Rare"] { color: #1d4ed8; }
+.skin-rarity[data-rarity^="Epic"] { color: #7e22ce; }
+.skin-rarity[data-rarity^="Legendary"] { color: #92400e; }

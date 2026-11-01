@@ -5,6 +5,26 @@ declare(strict_types=1);
 const PROFILE_AVATARS = ['sunny', 'lila', 'miko', 'maya'];
 const DEFAULT_GAME_SKINS = ['tumbang-preso' => 'slipper_pink', 'jolens-blast' => 'shooter_chrome'];
 
+function collectible_game_skins(): array
+{
+    return [
+        ['id' => 'skin_4', 'name' => 'Guyabanos', 'rarity' => 'Common', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-skins-assets/slipper_guyabanos.webp'],
+        ['id' => 'skin_3', 'name' => 'Sike!', 'rarity' => 'Rare', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-skins-assets/slipper_sike.webp'],
+        ['id' => 'skin_2', 'name' => 'Gatorz', 'rarity' => 'Epic', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-skins-assets/slipper_gatorz.webp'],
+        ['id' => 'skin_1', 'name' => 'Aldugo', 'rarity' => 'Legendary', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-skins-assets/slipper_aldugo.webp'],
+    ];
+}
+
+function owned_game_skins(array $user): array
+{
+    return array_values(array_filter(collectible_game_skins(),
+        fn(array $skin): bool => in_array($skin['id'], $user['ownedSkins'], true)));
+}
+
 function starter_skins(): array
 {
     $items = [];

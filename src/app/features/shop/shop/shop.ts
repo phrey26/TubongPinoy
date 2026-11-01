@@ -31,7 +31,7 @@ export class Shop implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmation = inject(Confirmation);
   readonly cosmeticSkins = signal<Skin[]>([]);
-  readonly skinsAvailable = false;
+  readonly skinsAvailable = true;
   readonly pending = signal(false);
   readonly pendingItem = signal<string | null>(null);
   readonly loadingSkins = signal(true);
@@ -117,7 +117,15 @@ export class Shop implements OnInit {
       next: result => {
         if (id === 'energy_unli') this.message.set('Unlimited Juice is active for one hour. Enjoy your games!');
         else if (id.startsWith('energy_')) this.message.set(`Your Juice is now ${result.user.juice} / 100. You’re ready to play!`);
-        else this.message.set(`${this.cosmeticSkins().find(skin => skin.id === id)?.name ?? 'Skin'} added to your collection.`);
+        else {
+          const name = this.cosmeticSkins().find(skin => skin.id === id)?.name ?? 'Skin';
+          this.message.set(`${name} successfully bought! Equip it in your inventory.`);
+          this.confirmation.ask({
+            title: 'Successfully bought!',
+            message: `${name} is now in your collection. Open Inventory to equip it for Tumbang Preso.`,
+            confirmLabel: 'Got it', acknowledgeOnly: true,
+          }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+        }
       },
       error: (error: unknown) => this.errorMessage.set(authErrorMessage(error)),
     });

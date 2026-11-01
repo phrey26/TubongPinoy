@@ -149,6 +149,38 @@ describe('TumbangPreso', () => {
     expect(draw).toHaveBeenLastCalledWith('assets/tumbang-preso-assets/slippers/slipper_pink.png', -12, -21, 24, 42);
   });
 
+  it.each([
+    ['skin_4', 'guyabanos'], ['skin_3', 'sike'], ['skin_2', 'gatorz'], ['skin_1', 'aldugo'],
+  ])('preloads and draws collection skin %s', (id, asset) => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Juan', tansans: 0, juice: 100,
+      ownedSkins: [id], equippedSkins: { 'tumbang-preso': id } });
+    const path = `assets/tumbang-preso-skins-assets/slipper_${asset}.webp`;
+    expect(component['sprites'].has(path)).toBe(true);
+    component.resetSlipper();
+    const draw = vi.spyOn(component as any, 'drawSprite').mockReturnValue(true);
+    component['drawSlipper']();
+    expect(draw).toHaveBeenCalledWith(path, -12, -21, 24, 42);
+  });
+
+  it('uses legendary launch effects only for Aldugo and clears them when switching skins', () => {
+    const state = TestBed.inject(AccountState);
+    const burst = vi.spyOn(component['aldugo'], 'burst');
+    const clear = vi.spyOn(component['aldugo'], 'clear');
+    state.set({ id: 1, username: 'Juan', tansans: 0, juice: 100,
+      equippedSkins: { 'tumbang-preso': 'skin_1' } });
+    component.resetSlipper();
+    component['isDragging'] = true;
+    component.onMouseUp();
+    expect(burst).toHaveBeenCalledWith(225, 680, 'launch');
+    burst.mockClear();
+    state.set({ id: 2, username: 'Maria', tansans: 0, juice: 100 });
+    component.resetSlipper();
+    expect(clear).toHaveBeenCalled();
+    component['isDragging'] = true;
+    component.onMouseUp();
+    expect(burst).not.toHaveBeenCalled();
+  });
+
   it('waits for a confirmed Juice deduction before granting a retry', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;

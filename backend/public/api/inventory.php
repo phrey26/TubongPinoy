@@ -7,12 +7,15 @@ if (!in_array($method, ['GET', 'POST'], true)) {
 }
 $body = $method === 'POST' ? json_input() : [];
 $user = require_user();
-$items = starter_skins();
+$items = [...starter_skins(), ...owned_game_skins($user)];
 if ($method === 'GET') {
     $query = database()->prepare('SELECT s.id, s.name, s.image_url AS imageUrl
         FROM skins s JOIN user_skins owned ON owned.skin_id = s.id WHERE owned.user_id = ? ORDER BY s.id');
     $query->execute([$user['id']]);
-    respond(['items' => $items, 'collectibles' => $query->fetchAll(), 'user' => $user]);
+    $playableIds = array_column(collectible_game_skins(), 'id');
+    $collectibles = array_values(array_filter($query->fetchAll(),
+        fn(array $item): bool => !in_array($item['id'], $playableIds, true)));
+    respond(['items' => $items, 'collectibles' => $collectibles, 'user' => $user]);
 }
 $game = input_string($body, 'game');
 $skin = input_string($body, 'skinId');

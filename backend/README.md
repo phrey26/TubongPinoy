@@ -107,9 +107,12 @@ from overwriting newer frontend balances. `user_skins` has one row per account a
 skin, with a unique composite key to prevent double purchases.
 
 Future skins can be added to the `skins` table (`id`, `name`, `type`, `price`,
-`image_url`, `active`); the shop reads that catalog automatically. The current
-skin catalog uses placeholder artwork. Ownership is implemented; those store collectibles
-do not have playable artwork yet. Free starter game skins can be equipped from Inventory.
+`image_url`, `active`); the shop reads that catalog automatically. The Tumbang Preso
+collection is Guyabanos (Common), Sike! (Rare), Gatorz (Epic), and Aldugo (Legendary).
+Apply `migrations/2026-11-01-tumbang-skins.sql` to replace the old catalog placeholders;
+IDs, existing prices, and ownership are preserved. Owned collection skins can be
+equipped in Inventory and render in gameplay. The shop sells each skin for its catalog price, with confirmation before payment
+and a success dialog afterward. Free starter game skins remain available to everyone.
 Game high scores are documented below. Email is not collected or used for login. Password recovery is not implemented.
 
 For local debugging, `backend/bin/create-debug-account.php` reads a JSON object

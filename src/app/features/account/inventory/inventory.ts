@@ -65,7 +65,7 @@ export class Inventory {
     this.message.set('');
     this.confirmation.ask({
       title: 'Are you sure you want to change skins?',
-      message: `Equip ${item.name} for ${item.game === 'tumbang-preso' ? 'Tumbang Preso' : 'Jolens Blast'}? This starter skin is free to use.`,
+      message: `Equip ${item.name} for ${item.game === 'tumbang-preso' ? 'Tumbang Preso' : 'Jolens Blast'}? Switching skins is free.`,
       confirmLabel: 'Equip skin', cancelLabel: 'Keep current skin',
     }).pipe(
       switchMap(confirmed => confirmed && this.account.user()?.id === id

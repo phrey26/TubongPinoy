@@ -21,7 +21,7 @@
     @if (error()) { <p role="alert" class="ui-feedback ui-feedback-error feedback">{{ error() }}</p> }
     @if (message()) { <p role="status" class="ui-feedback ui-feedback-success feedback">{{ message() }}</p> }
     <section aria-labelledby="collection-heading">
-      <div class="section-heading"><div><h2 id="collection-heading">Pick your {{ game() === 'tumbang-preso' ? 'slipper' : 'shooter' }}</h2><p class="muted">{{ visibleItems().length }} starter skins. All yours, free to switch.</p></div><span class="collection-count">{{ visibleItems().length }} skins</span></div>
+      <div class="section-heading"><div><h2 id="collection-heading">Pick your {{ game() === 'tumbang-preso' ? 'slipper' : 'shooter' }}</h2><p class="muted">{{ visibleItems().length }} skins in your collection. Switch anytime.</p></div><span class="collection-count">{{ visibleItems().length }} skins</span></div>
       <div class="skin-grid" [attr.aria-busy]="!!pending()">
         @for (item of visibleItems(); track item.id) {
           <article class="skin-card" [class.is-equipped]="equippedId() === item.id">
@@ -29,7 +29,7 @@
               @if (equippedId() === item.id) { <span class="equipped-mark" aria-hidden="true">✓</span> }
               <img [src]="gameSkinUrl(item.game, item.id)" [alt]="item.name" width="64" height="80" />
             </div>
-            <div class="skin-details"><h3>{{ item.name }}</h3><p>{{ equippedId() === item.id ? 'Ready to play' : 'Free starter skin' }}</p>
+            <div class="skin-details"><h3>{{ item.name }}</h3><p class="skin-rarity" [attr.data-rarity]="item.rarity">{{ item.rarity || (equippedId() === item.id ? 'Ready to play' : 'Free starter skin') }}</p>
               <button type="button" class="ui-button" [class.ui-button-green]="equippedId() === item.id" [disabled]="!!pending() || equippedId() === item.id"
                 (click)="equip(item)" [attr.aria-label]="item.name + ': ' + (equippedId() === item.id ? 'Equipped' : 'Use this skin')">
                 {{ pending() === item.id ? 'Equipping…' : equippedId() === item.id ? '✓ Equipped' : 'Use this skin' }}

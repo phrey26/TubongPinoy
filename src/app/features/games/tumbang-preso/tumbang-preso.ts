@@ -12,13 +12,14 @@ import { DestroyRef, inject, AfterViewInit, ChangeDetectorRef, Component, Elemen
 import { Router, RouterModule } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
+import { AldugoEffects } from './aldugo-effects';
 import { ImpactEffects } from './impact-effects';
 import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedback';
 import { drawPixelText } from './pixel-text';
 import { generateLevel } from './level-generation';
 import { launchShot, Obstacle, stepShot } from './shot-physics';
 import { TumbangAudio } from '../../../core/services/tumbang-audio';
-import { gameSkinUrl, SLIPPER_COLORS } from '../../../core/services/customization';
+import { TUMBANG_COLLECTION_SKINS, gameSkinUrl, SLIPPER_COLORS } from '../../../core/services/customization';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -49,6 +50,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private ctx!: CanvasRenderingContext2D;
   private readonly changeDetector = inject(ChangeDetectorRef);
   private reducedMotion = false;
+  private readonly aldugo = new AldugoEffects();
+  private legendarySkin = false;
   private readonly impacts = new ImpactEffects();
   private readonly feedback = new GameFeedback();
   private lastFrameTime: number | null = null;
@@ -127,6 +130,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.energySub?.unsubscribe();
     cancelAnimationFrame(this.animationFrameId);
     this.impacts.clear();
+    this.aldugo.clear();
     this.feedback.clear();
     this.obstacleFlashes.clear();
     this.bankPopups = [];
@@ -176,6 +180,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   obstacles: Obstacle[] = generateLevel(1).obstacles;
 
   ngAfterViewInit() {
+    this.legendarySkin = this.account.user()?.equippedSkins?.['tumbang-preso'] === 'skin_1';
     this.slipperSprite = gameSkinUrl('tumbang-preso', this.account.user()?.equippedSkins?.['tumbang-preso']);
     if (!this.tutorialLoading() && this.showIntroduction) this.introDialog.nativeElement.showModal?.();
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
@@ -184,8 +189,10 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     const syncMotion = () => {
       this.reducedMotion = motion?.matches ?? false;
       this.feedback.reducedMotion = this.reducedMotion;
+      this.aldugo.reducedMotion = this.reducedMotion;
       if (this.reducedMotion) {
         this.impacts.clear();
+        this.aldugo.clear();
         this.obstacleFlashes.clear();
         this.canvas.nativeElement.style.transform = '';
       }
@@ -197,6 +204,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       'assets/tumbang-preso-assets/background/street_bg_clean.png',
       'assets/tumbang-preso-assets/can/can_standing.png',
       'assets/tumbang-preso-assets/can/can_fallen.png',
+      ...TUMBANG_COLLECTION_SKINS.map(skin => skin.imageUrl),
       ...SLIPPER_COLORS.map(color => gameSkinUrl('tumbang-preso', `slipper_${color}`)),
       'assets/tumbang-preso-assets/ui/aim_arrow.png',
       'assets/tumbang-preso-assets/ui/aim_dot.png',
@@ -310,6 +318,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.audio.play('throw', Math.hypot(this.velocity.x, this.velocity.y) / 17.6);
     this.angularVelocity = launchShot(this.velocity.x, this.velocity.y).spin;
     if (!this.reducedMotion) this.impacts.play(this.slipperPos.x, this.slipperPos.y + 12, 'dust');
+    if (this.legendarySkin) this.aldugo.burst(this.slipperPos.x, this.slipperPos.y, 'launch');
     this.feedback.launch(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
     this.isLaunched = true;
   }
@@ -328,6 +337,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
     const bounces = Number(result.wallBounce) + result.rockBounces.length;
     if (bounces > 0) {
+      if (this.legendarySkin) this.aldugo.burst(shot.x, shot.y, 'bounce');
       this.feedback.impact(shot.x, shot.y, Math.hypot(shot.vx, shot.vy) / 18, FEEDBACK_COLORS.dust);
       this.shotBounces += bounces;
       for (let bounce = 0; bounce < bounces; bounce++) {
@@ -346,6 +356,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     }
 
     if (result.hit) {
+      if (this.legendarySkin) this.aldugo.burst(this.canPos.x, this.canPos.y, 'hit');
       this.audio.play('can');
       this.audio.play('win', .85, .14);
       this.isLaunched = false;
@@ -398,6 +409,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   resetSlipper() {
     this.audio.resetAttempt();
+    this.legendarySkin = this.account.user()?.equippedSkins?.['tumbang-preso'] === 'skin_1';
     this.slipperSprite = gameSkinUrl('tumbang-preso', this.account.user()?.equippedSkins?.['tumbang-preso']);
     this.isLaunched = false;
     this.showTryAgain = false;
@@ -411,6 +423,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.shotBounces = 0;
     this.bankPopups = [];
     this.impacts.clear();
+    this.aldugo.clear();
     this.feedback.clear();
     this.canvas.nativeElement.style.transform = '';
     this.obstacleFlashes.clear();
@@ -426,8 +439,10 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     const seconds = this.lastFrameTime === null || paused ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
     this.lastFrameTime = timestamp;
     this.feedback.update(seconds);
+    this.aldugo.update(seconds);
     if (this.isLaunched && !paused) {
-      this.feedback.trail(this.slipperPos.x, this.slipperPos.y,
+      if (this.legendarySkin) this.aldugo.flight(this.slipperPos.x, this.slipperPos.y);
+      else this.feedback.trail(this.slipperPos.x, this.slipperPos.y,
         Math.hypot(this.velocity.x, this.velocity.y), '#f9a8d4');
       this.updatePhysics();
     }
@@ -451,9 +466,14 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.drawObstacles();
     this.drawCan();
     this.feedback.drawTrails(this.ctx);
+    if (this.legendarySkin) {
+      this.aldugo.drawTrail(this.ctx);
+      this.aldugo.drawAura(this.ctx, this.slipperPos.x, this.slipperPos.y);
+    }
     this.drawSlipper();
     this.impacts.draw(this.ctx, this.sprites.get('assets/tumbang-preso-assets/effects/impact-sheet.png'));
     this.feedback.draw(this.ctx);
+    if (this.legendarySkin) this.aldugo.drawImpact(this.ctx);
     this.drawBankPopups();
     this.drawHitScore();
 

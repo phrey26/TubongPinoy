@@ -18,7 +18,16 @@ export const DEFAULT_GAME_SKINS: Record<GameId, string> = {
   'tumbang-preso': 'slipper_pink', 'jolens-blast': 'shooter_chrome',
 };
 
+export const TUMBANG_COLLECTION_SKINS = [
+  { id: 'skin_4', name: 'Guyabanos', rarity: 'Common', imageUrl: 'assets/tumbang-preso-skins-assets/slipper_guyabanos.webp' },
+  { id: 'skin_3', name: 'Sike!', rarity: 'Rare', imageUrl: 'assets/tumbang-preso-skins-assets/slipper_sike.webp' },
+  { id: 'skin_2', name: 'Gatorz', rarity: 'Epic', imageUrl: 'assets/tumbang-preso-skins-assets/slipper_gatorz.webp' },
+  { id: 'skin_1', name: 'Aldugo', rarity: 'Legendary', imageUrl: 'assets/tumbang-preso-skins-assets/slipper_aldugo.webp' },
+] as const;
+
 export function gameSkinUrl(game: GameId, id?: string): string {
+  const collectible = game === 'tumbang-preso' && TUMBANG_COLLECTION_SKINS.find(skin => skin.id === id);
+  if (collectible) return collectible.imageUrl;
   const valid = game === 'tumbang-preso'
     ? SLIPPER_COLORS.map(color => `slipper_${color}`)
     : SHOOTER_STYLES.map(style => `shooter_${style}`);
@@ -27,5 +36,5 @@ export function gameSkinUrl(game: GameId, id?: string): string {
   return `assets/${game}-assets/${directory}/${safeId}.png`;
 }
 
-export interface GameSkin { id: string; name: string; game: GameId; imageUrl: string; }
+export interface GameSkin { id: string; name: string; game: GameId; imageUrl: string; rarity?: string; }
 export interface Collectible { id: string; name: string; imageUrl: string; }

@@ -10,7 +10,9 @@ import { Confirmation } from '../../core/services/confirmation';
         <h2 id="confirmation-title">{{ request.title }}</h2>
         <p id="confirmation-message">{{ request.message }}</p>
         <div class="actions">
+          @if (!request.acknowledgeOnly) {
           <button type="button" autofocus (click)="confirmation.respond(false)" class="ui-button ui-button-soft">{{ request.cancelLabel || 'Cancel' }}</button>
+          }
           <button type="button" class="ui-button ui-button-pink confirm" (click)="confirmation.respond(true)">{{ request.confirmLabel }}</button>
         </div>
       }

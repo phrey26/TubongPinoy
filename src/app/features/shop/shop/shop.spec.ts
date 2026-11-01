@@ -20,7 +20,7 @@ describe('Shop', () => {
     fixture = TestBed.createComponent(Shop);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    TestBed.inject(HttpTestingController).expectOne('/api/catalog.php').flush({ skins: [{ id: 'skin_1', name: 'Dragon Armor', type: 'Legendary Skin', price: 300, imageUrl: 'assets/icons/customization.svg' }], demoTopupsEnabled: true });
+    TestBed.inject(HttpTestingController).expectOne('/api/catalog.php').flush({ skins: [{ id: 'skin_1', name: 'Aldugo', type: 'Legendary Skin', price: 300, imageUrl: 'assets/tumbang-preso-skins-assets/slipper_aldugo.webp' }], demoTopupsEnabled: true });
     await fixture.whenStable();
   });
 
@@ -30,18 +30,47 @@ describe('Shop', () => {
 
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
-  it('keeps upcoming skins disabled even with enough Tansans and never starts a purchase', () => {
-    TestBed.inject(AccountState).set({ id: 1, username: 'Player', tansans: 1000, juice: 40 });
+  it('confirms skin purchases and only shows success after the server saves ownership', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const state = TestBed.inject(AccountState);
+    const confirmation = TestBed.inject(Confirmation);
+    const user = { id: 1, username: 'Player', tansans: 1000, juice: 40, ownedSkins: [], walletVersion: 0 };
+    state.set(user);
     fixture.detectChanges();
     const button = fixture.nativeElement.querySelector('.skin-grid button') as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
-    expect(button.textContent).toContain('Coming soon');
+    expect(button.disabled).toBe(false);
     button.click();
+    expect(confirmation.active()?.message).toContain('Buy Aldugo for 300 Tansans');
+    http.expectNone('/api/session.php');
+    confirmation.respond(true);
+    http.expectOne('/api/session.php').flush({ user, csrfToken: 'token' });
+    const request = http.expectOne('/api/wallet.php');
+    expect(request.request.body.item).toBe('skin_1');
+    expect(confirmation.active()).toBeNull();
+    expect(component.owns('skin_1')).toBe(false);
+    request.flush({ user: { ...user, tansans: 700, ownedSkins: ['skin_1'], walletVersion: 1 } });
+    expect(component.owns('skin_1')).toBe(true);
+    expect(component.userCoins).toBe(700);
+    expect(confirmation.active()?.title).toBe('Successfully bought!');
+    expect(confirmation.active()?.acknowledgeOnly).toBe(true);
+    confirmation.respond(true);
+    fixture.detectChanges();
+    expect(button.disabled).toBe(true);
     component.buyCosmetic('skin_1');
+    http.expectNone('/api/session.php');
+  });
+
+  it('does not grant skins or show a success dialog when payment fails', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const user = { id: 1, username: 'Player', tansans: 1000, juice: 40, ownedSkins: [] };
+    TestBed.inject(AccountState).set(user);
+    component.buyCosmetic('skin_1');
+    TestBed.inject(Confirmation).respond(true);
+    http.expectOne('/api/session.php').flush({ user, csrfToken: 'token' });
+    http.expectOne('/api/wallet.php').flush({ message: 'Not enough Tansans.' }, { status: 409, statusText: 'Conflict' });
+    expect(component.owns('skin_1')).toBe(false);
+    expect(component.errorMessage()).toBe('Not enough Tansans.');
     expect(TestBed.inject(Confirmation).active()).toBeNull();
-    expect(component.userCoins).toBe(1000);
-    TestBed.inject(HttpTestingController).expectNone('/api/session.php');
-    TestBed.inject(HttpTestingController).expectNone('/api/wallet.php');
   });
 
   it('saves a refill once and updates the balance only after the server confirms it', () => {
@@ -125,10 +154,10 @@ describe('Shop', () => {
     expect(retry.textContent).toContain('Try again');
     retry.click();
     http.expectOne('/api/catalog.php').flush({ skins: [
-      { id: 'skin_1', name: 'Dragon Armor', type: 'Legendary Skin', price: 300, imageUrl: 'assets/icons/customization.svg' },
+      { id: 'skin_1', name: 'Aldugo', type: 'Legendary Skin', price: 300, imageUrl: 'assets/tumbang-preso-skins-assets/slipper_aldugo.webp' },
     ], demoTopupsEnabled: false });
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.skin-grid').textContent).toContain('Dragon Armor');
+    expect(fixture.nativeElement.querySelector('.skin-grid').textContent).toContain('Aldugo');
     expect(fixture.nativeElement.querySelector('.shop-empty')).toBeNull();
   });
 });

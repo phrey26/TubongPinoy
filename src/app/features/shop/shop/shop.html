@@ -81,11 +81,10 @@
     <section class="shop-section mt-10" aria-labelledby="skins-heading">
       <div class="section-heading">
         <div>
-          <h2 id="skins-heading">Skin Collection</h2>
-          <p class="text-sm">Skins are coming soon and can’t be purchased yet. Choose free slipper and shooter colors in your <a routerLink="/account/inventory" class="underline font-bold">inventory</a>.</p>
+          <h2 id="skins-heading">Tumbang Preso Skins</h2>
+          <p class="text-sm">Buy a slipper skin with Tansans, then equip it in your <a routerLink="/account/inventory" class="underline font-bold">inventory</a>.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <span class="shop-badge">Coming soon</span>
           <span class="shop-badge">{{ ownedCount }} owned</span>
         </div>
       </div>
@@ -107,7 +106,7 @@
                 <img [src]="skin.imageUrl" [alt]="skin.name" />
                 @if (owns(skin.id)) { <span class="shop-badge shop-badge-green owned-badge absolute top-2 right-2">Owned</span> }
               </div>
-              <span class="product-benefit">{{ skin.type }}</span>
+              <span class="product-benefit skin-rarity" [attr.data-rarity]="skin.type">{{ skin.type }}</span>
               <h3>{{ skin.name }}</h3>
               <div class="product-footer mt-auto pt-3">
                 <p class="product-price"><img class="w-6 h-6" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ skin.price | number }} <span>Tansans</span></p>

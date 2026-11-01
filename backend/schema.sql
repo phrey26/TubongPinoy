@@ -75,11 +75,12 @@ CREATE TABLE IF NOT EXISTS skins (
     active BOOLEAN NOT NULL DEFAULT TRUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT IGNORE INTO skins (id, name, type, price, image_url) VALUES
-('skin_1', 'Dragon Armor', 'Legendary Skin', 300, 'assets/icons/customization.svg'),
-('skin_2', 'Shadow Ninja', 'Epic Skin', 200, 'assets/icons/customization.svg'),
-('skin_3', 'Cyber Suit', 'Rare Skin', 150, 'assets/icons/customization.svg'),
-('skin_4', 'Classic Outfit', 'Common Skin', 50, 'assets/icons/customization.svg');
+INSERT INTO skins (id, name, type, price, image_url) VALUES
+('skin_4', 'Guyabanos', 'Common Skin', 50, 'assets/tumbang-preso-skins-assets/slipper_guyabanos.webp'),
+('skin_3', 'Sike!', 'Rare Skin', 150, 'assets/tumbang-preso-skins-assets/slipper_sike.webp'),
+('skin_2', 'Gatorz', 'Epic Skin', 200, 'assets/tumbang-preso-skins-assets/slipper_gatorz.webp'),
+('skin_1', 'Aldugo', 'Legendary Skin', 300, 'assets/tumbang-preso-skins-assets/slipper_aldugo.webp')
+ON DUPLICATE KEY UPDATE name = VALUES(name), type = VALUES(type), image_url = VALUES(image_url);
 
 CREATE TABLE IF NOT EXISTS user_skins (
     user_id INT UNSIGNED NOT NULL,

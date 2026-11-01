@@ -6,6 +6,7 @@ export interface ConfirmationRequest {
   message: string;
   confirmLabel: string;
   cancelLabel?: string;
+  acknowledgeOnly?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

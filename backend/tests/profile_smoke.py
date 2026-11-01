@@ -9,6 +9,7 @@ import secrets
 import subprocess
 import urllib.error
 import urllib.request
+import uuid
 
 BASE = os.environ.get('TUBONG_TEST_API_URL', 'http://127.0.0.1:8888/tubongpinoy-api/api').rstrip('/')
 PHP = os.environ.get('TUBONG_PHP_BIN', '/Applications/MAMP/bin/php/php8.3.30/bin/php')
@@ -138,6 +139,44 @@ try:
           final['equippedSkins']['jolens-blast'] == 'shooter_gold',
           'Concurrent profile and equipment updates preserve both changes')
     check(b.user()['equippedSkins'] == initial['equippedSkins'], 'Equipment stays isolated between accounts')
+    # Fund only this temporary fixture account, then buy through the real wallet API.
+    code = r'''
+    require $argv[1] . '/database.php';
+    if (!preg_match('/\Atp_profile_[a-f0-9]{12}\z/', $argv[2])) exit(2);
+    $db = database();
+    $q = $db->prepare('SELECT id FROM users WHERE username = ?');
+    $q->execute([$argv[2]]);
+    $id = $q->fetchColumn();
+    $db->prepare('UPDATE users SET tansans = 1000 WHERE id = ?')->execute([$id]);
+    $db->prepare('UPDATE account_state SET version = version + 1 WHERE user_id = ?')->execute([$id]);
+    '''
+    subprocess.run([PHP, '-r', code, str(ROOT), names[0]], check=True, capture_output=True)
+    catalog = a.request('catalog.php')[1]['skins']
+    for skin in catalog:
+        status, purchased = a.request('wallet.php', {
+            'action': 'purchase', 'item': skin['id'], 'requestId': str(uuid.uuid4())})
+        assert status == 200 and skin['id'] in purchased['user']['ownedSkins']
+    check(a.user()['tansans'] == 1000 - sum(skin['price'] for skin in catalog),
+          'Buying all four skins deducts their server-defined prices')
+    assert a.request('wallet.php', {
+        'action': 'purchase', 'item': 'skin_1', 'requestId': str(uuid.uuid4())})[0] == 409
+    check(True, 'Already owned skins cannot be bought twice')
+    inventory = a.request('inventory.php')[1]
+    collection = [item for item in inventory['items'] if item.get('rarity')]
+    check({item['name']: item['rarity'] for item in collection} == {
+        'Guyabanos': 'Common', 'Sike!': 'Rare', 'Gatorz': 'Epic', 'Aldugo': 'Legendary'},
+        'Owned collection skins include the correct names and rarities')
+    check(len(inventory['items']) == 13 and not inventory['collectibles'],
+          'Playable collection skins appear with equipment, not duplicate collectibles')
+    for item in collection:
+        check((ROOT.parent / 'public' / item['imageUrl']).is_file(), item['name'] + ' has a local asset')
+        status, body = a.request('inventory.php', {'game': 'tumbang-preso', 'skinId': item['id']})
+        assert status == 200 and body['user']['equippedSkins']['tumbang-preso'] == item['id']
+        assert b.request('inventory.php', {'game': 'tumbang-preso', 'skinId': item['id']})[0] == 422
+        assert a.request('inventory.php', {'game': 'jolens-blast', 'skinId': item['id']})[0] == 422
+    check(True, 'All four skins equip only for their owner and only in Tumbang Preso')
+    check(a.login(names[0])[1]['user']['equippedSkins']['tumbang-preso'] == collection[-1]['id'],
+          'Collection skin selection persists across login')
     # A high fixture score makes this account visible even on a populated local leaderboard.
     a.request('scores.php', {'game': 'tumbang-preso', 'points': 1000000000})
     scores = a.request('scores.php?game=tumbang-preso')[1]['highScores']
