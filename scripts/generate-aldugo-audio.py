@@ -15,12 +15,13 @@ OUT = ROOT / 'public/assets/tumbang-preso-skins-assets/audio'
 RATE = 44100
 rng = random.Random(1101)
 
-def crystal(track, start, frequency, gain, decay=.22):
+def crystal(track, start, frequency, gain, decay=.22, stretch=1, brightness=1):
     """Struck-glass modes: fixed, inharmonic pitches with faster high-mode decay."""
     offset = round(start * RATE)
     length = min(round(decay * 5 * RATE), len(track) - offset)
     for ratio, weight in [(1, 1), (2.756, .43), (5.404, .19), (8.933, .07)]:
-        hz = frequency * ratio
+        hz = frequency * (ratio if ratio == 1 else ratio * stretch)
+        weight *= 1 if ratio == 1 else brightness
         if hz > 14000:
             continue
         lifetime = decay / (ratio ** .42)
@@ -56,30 +57,42 @@ def reverb(track, wet=.17):
             for i, sample in enumerate(dry)]
 
 
-def make(name, duration):
+def make(name, duration, variant):
+    # Five newly synthesized takes: distinct crystal sizes, resonance and timing.
+    semitones, stretch, brightness, timing, sustain = [
+        (0, 1, 1, 1, 1),
+        (-.3, .998, .97, 1.01, 1.02),
+        (-.15, 1.002, 1.03, .99, .98),
+        (.15, .999, 1.02, 1.005, .99),
+        (.3, 1.003, .98, .985, .97),
+    ][variant]
+    rng.seed(1101 + variant * 101 + sum(map(ord, name)))
     track = [0.] * round(duration * RATE)
+    def strike(track, start, frequency, gain, decay):
+        crystal(track, start * timing, frequency * 2 ** (semitones / 12),
+                gain, decay * sustain, stretch, brightness)
     if name == 'aldugo-aim':
         for start, frequency, gain in [(0, 1046.5, .25), (.085, 1568, .16), (.16, 2093, .11)]:
-            crystal(track, start, frequency, gain, .16)
+            strike(track, start, frequency, gain, .16)
     elif name == 'aldugo-launch':
         # A crisp crystal chord followed by individual prismatic fragments.
         for frequency, gain in [(783.99, .22), (1174.66, .16), (1568, .1)]:
-            crystal(track, 0, frequency, gain, .18)
+            strike(track, 0, frequency, gain, .18)
         for start, frequency in [(.055, 2637), (.115, 2093), (.18, 3136)]:
-            crystal(track, start, frequency, .065, .11)
+            strike(track, start, frequency, .065, .11)
     elif name == 'aldugo-bounce':
-        crystal(track, 0, 1396.9, .28, .105)
-        crystal(track, .012, 2349.3, .09, .075)
+        strike(track, 0, 1396.9, .28, .105)
+        strike(track, .012, 2349.3, .09, .075)
     else:
         # A heavy crystal strike blooms into bright shards over the explosion.
-        crystal(track, 0, 392, .30, .23)
-        crystal(track, .003, 1046.5, .20, .21)
-        crystal(track, .008, 1568, .12, .18)
+        strike(track, 0, 392, .30, .23)
+        strike(track, .003, 1046.5, .20, .21)
+        strike(track, .008, 1568, .12, .18)
         for start, frequency, gain in [
             (.065, 3136, .09), (.12, 2093, .08), (.19, 2637, .07),
             (.28, 1568, .055), (.38, 3136, .035), (.49, 2093, .025),
         ]:
-            crystal(track, start, frequency, gain, .13)
+            strike(track, start, frequency, gain, .13)
     track = reverb(track, .2 if name == 'aldugo-impact' else .16)
     mean = sum(track) / len(track)
     track = [(v-mean)*min(1, i/64, (len(track)-1-i)/512) for i,v in enumerate(track)]
@@ -87,15 +100,15 @@ def make(name, duration):
     scale = .62 / max(abs(v) for v in track)
     samples = [round(v*scale*32767) for v in track]
     assert samples[0] == samples[-1] == 0 and max(map(abs,samples)) < 32767
-    path = OUT / (name + '.wav')
+    path = OUT / (name + (f'-{variant + 1}' if variant else '') + '.wav')
     with wave.open(str(path), 'wb') as file:
         file.setparams((1, 2, RATE, 0, 'NONE', 'not compressed'))
         file.writeframes(struct.pack('<'+'h'*len(samples), *samples))
     return path
 
 OUT.mkdir(parents=True, exist_ok=True)
-paths = [make(name, duration) for name,duration in [
-    ('aldugo-aim', .8), ('aldugo-launch', .85), ('aldugo-bounce', .55), ('aldugo-impact', 1.25)]]
+paths = [make(name, duration, variant) for name,duration in [
+    ('aldugo-aim', .8), ('aldugo-launch', .85), ('aldugo-bounce', .55), ('aldugo-impact', 1.25)] for variant in range(1 if name in ('aldugo-aim', 'aldugo-impact') else 5)]
 (ROOT / 'docs/aldugo-audio-sha256.json').write_text(json.dumps({
     p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}, indent=2)+'\n')
 for p in paths:

@@ -9,8 +9,8 @@ export interface AudioSettings { master: number; effects: number; interface: num
 export const DEFAULT_AUDIO: Readonly<AudioSettings> = { master: 70, effects: 85, interface: 65, muted: false };
 export const TUMBANG_SOUNDS = {
   aldugoAim: { files: ['aldugo-aim.wav'], channel: 'effects' },
-  aldugoLaunch: { files: ['aldugo-launch.wav'], channel: 'effects' },
-  aldugoBounce: { files: ['aldugo-bounce.wav'], channel: 'effects' },
+  aldugoLaunch: { files: ['aldugo-launch.wav', 'aldugo-launch-2.wav', 'aldugo-launch-3.wav', 'aldugo-launch-4.wav', 'aldugo-launch-5.wav'], channel: 'effects' },
+  aldugoBounce: { files: ['aldugo-bounce.wav', 'aldugo-bounce-2.wav', 'aldugo-bounce-3.wav', 'aldugo-bounce-4.wav', 'aldugo-bounce-5.wav'], channel: 'effects' },
   aldugoImpact: { files: ['aldugo-impact.wav'], channel: 'effects' },
   aim: { files: ['aim.wav'], channel: 'effects' },
   throw: { files: ['throw.wav'], channel: 'effects' },
@@ -263,7 +263,8 @@ export class TumbangAudio {
     if (!jingle) {
       const high = !this.highPitch.get(key);
       this.highPitch.set(key, high);
-      source.playbackRate.value = 1 + (high ? 1 : -1) * (.018 + Math.random() * .032);
+      const offset = .018 + Math.random() * .032;
+      source.playbackRate.value = 1 + (high ? 1 : -1) * offset;
     }
     gain.gain.value = strength * (jingle ? 1 : .94 + Math.random() * .06);
     source.connect(gain); gain.connect(this.channels[channel]); this.voices.set(source, gain);

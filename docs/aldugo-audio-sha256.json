@@ -1,6 +1,14 @@
 {
-  "aldugo-aim.wav": "add9fb7286ce89e884414e67920f65bbc6251af7a963a6eb6cb13fde7608139a",
-  "aldugo-launch.wav": "2bfa7c38b63eec8c543ef8bfa9c4278f9e4811757f79b2dd0a1c40e360d6056d",
-  "aldugo-bounce.wav": "90a45b52115b5dce71d7880c0607dcee874b37562e70408fe1d5665d11a38c04",
-  "aldugo-impact.wav": "80ad1e2d680e6e7e3c83163354b5d72165c533e53fefd9570c8530bbe83aa229"
+  "aldugo-aim.wav": "39a8ba7720a41b6497a7f775f97d62206e9c845b20b48934134adfa81171d038",
+  "aldugo-launch.wav": "7e061536e42426073c18144188076f0b2440063798c8f6f61bca373c0d9abe96",
+  "aldugo-launch-2.wav": "61aa61c5545c0a4ee50104d54b7df2f172dc26c866bbaad5906dbf60a4097e81",
+  "aldugo-launch-3.wav": "a86ba1310904ddbd254d20e9cef60da4ec6baf047e12d87cd8d06a082c176fb1",
+  "aldugo-launch-4.wav": "649f5b3ba5a6610424fb8fca4abcebfab98215859a2f3bb32b72e25edc8ec2c2",
+  "aldugo-launch-5.wav": "e8b07d1fdd886f721c348e3ce478baabdd39c211dc20c1e0b8a71ddafb6b2214",
+  "aldugo-bounce.wav": "867064bc507837f214a4cc448b93e8afca7cbd33d5f1523bbfd3186f9052ab2c",
+  "aldugo-bounce-2.wav": "04556c8bc1cbc0a685068a14b743a66d5ddf026d2b26b89fbe6b5868cb3a5bd0",
+  "aldugo-bounce-3.wav": "af1e085828d205b5e4c05e2efbeac28e821d968e72c8534b8b6c42e09effe5d3",
+  "aldugo-bounce-4.wav": "9918c601756869e1b1e22e39f113321b7a3a10949fae36a05ee120738d82c787",
+  "aldugo-bounce-5.wav": "aa9c9be9ec7badba4b256b7d8bf7458451e290ca06a1722e33bcc5674d3c6cf2",
+  "aldugo-impact.wav": "229da843826358cb46244e0148553f4a2380bed97cd3f7d7fa14e1dec88fa9e9"
 }

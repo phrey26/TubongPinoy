@@ -22,7 +22,7 @@ Use case: stylized-concept. Asset type: production 2D game VFX sprite atlas, tra
 
 ## Exclusive audio
 
-Four original procedurally synthesized WAV assets in
+Four original procedurally synthesized cues with 12 WAV takes in total in
 `public/assets/tumbang-preso-skins-assets/audio/`:
 - `aldugo-aim.wav`: 0.8 s three distinct struck-crystal notes with a short room tail.
 - `aldugo-launch.wav`: 0.85 s sharp crystal chord and individual glass-like fragments.
@@ -45,3 +45,10 @@ Changing accounts/equipment, muting, pausing, hiding the tab, and resetting an
 attempt stop active cues. All cues use the Game effects mixer and existing limiter.
 Bounce throttling and source limits still apply. The normal win jingle is quieter
 and delayed until 0.5 s after an Aldugo hit to leave room for the impact.
+
+Aldugo aim and hit each use one fixed take with no pitch variation.
+Launch and bounce each have five generated takes (base and suffixes `-2` through
+`-5`). Tuning offsets are -0.3, -0.15, 0, +0.15, and +0.3 semitones (at most
+about 1.75%), with similarly subtle resonance and timing differences.
+Playback selects launch/bounce takes without immediate repeats at their original
+rate. All cues retain baked reverb and stable gain.

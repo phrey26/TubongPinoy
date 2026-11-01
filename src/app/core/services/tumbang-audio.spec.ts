@@ -51,7 +51,7 @@ describe('Tumbang audio', () => {
     state.set(user);
     const audio = await start();
     const context = FakeContext.instances[0];
-    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).includes('skins-assets/audio'))).toHaveLength(4);
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).includes('skins-assets/audio'))).toHaveLength(12);
     for (const sound of ['aldugoAim', 'aldugoLaunch', 'aldugoBounce', 'aldugoImpact'] as const) audio.play(sound);
     expect(context.sources).toHaveLength(5);
     expect(context.sources.at(-1)!.playbackRate.value).toBe(1);
@@ -65,6 +65,34 @@ describe('Tumbang audio', () => {
     state.set({ ...user, ownedSkins: [] });
     audio.play('aldugoImpact');
     expect(context.sources).toHaveLength(5);
+  });
+
+  it('varies generated launch and bounce takes while keeping aim and impact fixed', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(.5);
+    TestBed.inject(AccountState).set({ id: 1, username: 'Owner', tansans: 0, juice: 100,
+      ownedSkins: ['skin_1'], equippedSkins: { 'tumbang-preso': 'skin_1' } });
+    const audio = await start();
+    const context = FakeContext.instances[0];
+    for (const sound of ['aldugoAim', 'aldugoLaunch', 'aldugoBounce', 'aldugoImpact'] as const) {
+      const heard = new Set();
+      let previous: unknown;
+      for (let i = 0; i < 10; i++) {
+        context.currentTime += .1;
+        audio.play(sound);
+        const source = context.sources.at(-1)!;
+        expect(source.playbackRate.value).toBe(1);
+        if (sound === 'aldugoLaunch' || sound === 'aldugoBounce') {
+          expect(source.buffer).not.toBe(previous);
+        } else if (previous !== undefined) {
+          expect(source.buffer).toBe(previous);
+        }
+        heard.add(source.buffer);
+        previous = source.buffer;
+      }
+      expect(heard.size).toBe(sound === 'aldugoLaunch' || sound === 'aldugoBounce' ? 5 : 1);
+    }
+    audio.play('win');
+    expect(context.sources.at(-1)!.playbackRate.value).toBe(1);
   });
 
   it('does not load legendary sounds for nonowners, even with an Aldugo equipment id', async () => {
