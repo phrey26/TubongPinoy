@@ -12,7 +12,7 @@ import { DestroyRef, inject, AfterViewInit, ChangeDetectorRef, Component, Elemen
 import { Router, RouterModule } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
-import { AldugoEffects } from './aldugo-effects';
+import { ALDUGO_FX_ATLAS, AldugoEffects } from './aldugo-effects';
 import { ImpactEffects } from './impact-effects';
 import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedback';
 import { drawPixelText } from './pixel-text';
@@ -209,6 +209,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       'assets/tumbang-preso-assets/ui/aim_arrow.png',
       'assets/tumbang-preso-assets/ui/aim_dot.png',
       'assets/tumbang-preso-assets/effects/impact-sheet.png',
+      ALDUGO_FX_ATLAS,
       ...this.stoneAssets,
     ]) {
       const image = new Image();
@@ -441,7 +442,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.feedback.update(seconds);
     this.aldugo.update(seconds);
     if (this.isLaunched && !paused) {
-      if (this.legendarySkin) this.aldugo.flight(this.slipperPos.x, this.slipperPos.y);
+      if (this.legendarySkin) this.aldugo.flight(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
       else this.feedback.trail(this.slipperPos.x, this.slipperPos.y,
         Math.hypot(this.velocity.x, this.velocity.y), '#f9a8d4');
       this.updatePhysics();
@@ -456,7 +457,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     }
     if (this.hitAge > 0 && !this.showNiceShot) {
       this.hitAge += seconds;
-      if (this.hitAge >= 0.65) {
+      if (this.hitAge >= (this.legendarySkin ? 0.88 : 0.65)) {
         this.showNiceShot = true;
         this.changeDetector.markForCheck();
       }
@@ -467,13 +468,13 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.drawCan();
     this.feedback.drawTrails(this.ctx);
     if (this.legendarySkin) {
-      this.aldugo.drawTrail(this.ctx);
-      this.aldugo.drawAura(this.ctx, this.slipperPos.x, this.slipperPos.y);
+      this.aldugo.drawTrail(this.ctx, this.sprites.get(ALDUGO_FX_ATLAS));
+      this.aldugo.drawAura(this.ctx, this.slipperPos.x, this.slipperPos.y, this.sprites.get(ALDUGO_FX_ATLAS), this.isLaunched);
     }
     this.drawSlipper();
     this.impacts.draw(this.ctx, this.sprites.get('assets/tumbang-preso-assets/effects/impact-sheet.png'));
     this.feedback.draw(this.ctx);
-    if (this.legendarySkin) this.aldugo.drawImpact(this.ctx);
+    if (this.legendarySkin) this.aldugo.drawImpact(this.ctx, this.sprites.get(ALDUGO_FX_ATLAS));
     this.drawBankPopups();
     this.drawHitScore();
 

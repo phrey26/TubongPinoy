@@ -1,97 +1,104 @@
-import { PixelEffects } from './pixel-effects';
+export const ALDUGO_FX_ATLAS = 'assets/tumbang-preso-skins-assets/aldugo-fx-atlas.png';
+type BurstKind = 'launch' | 'bounce' | 'hit';
 
-const COLORS = ['#fde047', '#fb7185', '#c084fc', '#38bdf8', '#5eead4'];
-
-/** Aldugo's cosmetic-only prism trail and starbursts. Coordinates stay in game space. */
+/** Generated RGBA sprite artwork, played in canvas space without changing shot physics. */
 export class AldugoEffects {
-  private readonly sparks = new PixelEffects();
-  private trail: { x: number; y: number; age: number; color: string }[] = [];
-  private rings: { x: number; y: number; age: number; radius: number }[] = [];
+  private bursts: { x: number; y: number; age: number; kind: BurstKind }[] = [];
+  private trail: { x: number; y: number; age: number; angle: number; frame: number }[] = [];
   private time = 0;
   private lastTrail = -Infinity;
   private lastBurst = -Infinity;
+  private angle = 0;
   reducedMotion = false;
 
   update(seconds: number): void {
     if (this.reducedMotion) { this.clear(); return; }
     const dt = Math.max(0, Math.min(seconds, 0.05));
     this.time += dt;
-    this.sparks.update(dt);
+    for (const burst of this.bursts) burst.age += dt;
     for (const point of this.trail) point.age += dt;
-    for (const ring of this.rings) ring.age += dt;
-    this.trail = this.trail.filter(p => p.age < 0.28);
-    this.rings = this.rings.filter(r => r.age < 0.6);
+    this.bursts = this.bursts.filter(b => b.age < this.duration(b.kind));
+    this.trail = this.trail.filter(p => p.age < 0.2);
   }
 
-  flight(x: number, y: number): void {
-    if (this.reducedMotion || this.time - this.lastTrail < 1 / 60) return;
+  flight(x: number, y: number, vx = 0, vy = -1): void {
+    if (this.reducedMotion) return;
+    this.angle = Math.atan2(vy, vx) + Math.PI / 2;
+    if (this.time - this.lastTrail < 1 / 30) return;
     this.lastTrail = this.time;
-    this.trail.push({ x, y, age: 0, color: COLORS[Math.floor(this.time * 18) % COLORS.length] });
-    this.trail = this.trail.slice(-20);
-    this.sparks.burst(x, y, COLORS, 2, 24);
+    this.trail.push({ x, y, age: 0, angle: this.angle, frame: 12 + Math.floor(this.time * 14) % 4 });
+    this.trail = this.trail.slice(-8);
   }
 
-  burst(x: number, y: number, kind: 'launch' | 'bounce' | 'hit'): void {
+  burst(x: number, y: number, kind: BurstKind): void {
     if (this.reducedMotion || (kind === 'bounce' && this.time - this.lastBurst < 0.08)) return;
     this.lastBurst = this.time;
-    const hit = kind === 'hit';
-    this.sparks.burst(x, y, COLORS, hit ? 64 : 18, hit ? 240 : 95);
-    this.rings.push({ x, y, age: 0, radius: hit ? 110 : 42 });
-    this.rings = this.rings.slice(-8);
+    this.bursts.push({ x, y, age: 0, kind });
+    this.bursts = this.bursts.slice(-8);
   }
 
-  drawTrail(ctx: CanvasRenderingContext2D): void {
-    if (this.reducedMotion) return;
+  drawTrail(ctx: CanvasRenderingContext2D, atlas?: HTMLImageElement): void {
+    if (this.reducedMotion || !this.ready(atlas)) return;
     ctx.save();
     for (const point of this.trail) {
-      const life = 1 - point.age / 0.28;
-      ctx.globalAlpha = life * 0.55;
-      ctx.fillStyle = point.color;
-      const size = Math.round(4 + life * 12);
-      ctx.fillRect(Math.round(point.x - size / 2), Math.round(point.y - size / 2), size, size);
-      ctx.fillStyle = '#fff7ed';
-      ctx.fillRect(Math.round(point.x - 2), Math.round(point.y - 2), 4, 4);
+      ctx.globalAlpha = (1 - point.age / 0.2) * 0.28;
+      this.frame(ctx, atlas, point.frame, point.x, point.y, 70, point.angle, 0.3);
     }
     ctx.restore();
   }
 
-  drawAura(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  drawAura(ctx: CanvasRenderingContext2D, x: number, y: number, atlas?: HTMLImageElement, flying = false): void {
+    if (!this.ready(atlas)) return;
     ctx.save();
-    // Reduced motion keeps a small, static legendary signature.
-    for (let i = 0; i < 5; i++) {
-      const angle = i * Math.PI * 2 / 5 + (this.reducedMotion ? 0 : this.time * 1.4);
-      this.star(ctx, x + Math.cos(angle) * 27, y + Math.sin(angle) * 30, 3, COLORS[i]);
+    if (this.reducedMotion) {
+      ctx.globalAlpha = 0.65;
+      this.frame(ctx, atlas, 0, x, y, 54);
+    } else if (flying) {
+      // The comet head follows the slipper; its painted tail points away from travel.
+      this.frame(ctx, atlas, 12 + Math.floor(this.time * 14) % 4, x, y, 94, this.angle, 0.3);
+    } else {
+      ctx.globalAlpha = 0.65;
+      this.frame(ctx, atlas, 1, x, y, 76, this.time * 0.65);
     }
     ctx.restore();
   }
 
-  drawImpact(ctx: CanvasRenderingContext2D): void {
-    if (this.reducedMotion) return;
-    this.sparks.draw(ctx);
+  drawImpact(ctx: CanvasRenderingContext2D, atlas?: HTMLImageElement): void {
+    if (this.reducedMotion || !this.ready(atlas)) return;
     ctx.save();
-    for (const ring of this.rings) {
-      const progress = ring.age / 0.6;
-      ctx.globalAlpha = (1 - progress) * 0.85;
-      for (let band = 0; band < 3; band++) {
-        const radius = 8 + ring.radius * Math.max(0, progress - band * 0.12);
-        for (let i = 0; i < 12; i++) {
-          const angle = i * Math.PI / 6 + band * 0.15;
-          this.star(ctx, ring.x + Math.cos(angle) * radius, ring.y + Math.sin(angle) * radius,
-            Math.max(1, 4 * (1 - progress)), COLORS[(i + band) % COLORS.length]);
-        }
-      }
+    for (const burst of this.bursts) {
+      const progress = burst.age / this.duration(burst.kind);
+      const hit = burst.kind === 'hit';
+      const frame = (hit ? 4 : 0) + Math.min(hit ? 7 : 3, Math.floor(progress * (hit ? 8 : 4)));
+      // Fade the last painted embers instead of snapping the animation off.
+      ctx.globalAlpha = Math.min(1, (1 - progress) * 4);
+      this.frame(ctx, atlas, frame, burst.x, burst.y, hit ? 240 : burst.kind === 'launch' ? 120 : 92);
     }
     ctx.restore();
   }
 
-  private star(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
-    ctx.fillStyle = color;
-    ctx.fillRect(Math.round(x - size), Math.round(y - 1), Math.round(size * 2), 2);
-    ctx.fillRect(Math.round(x - 1), Math.round(y - size), 2, Math.round(size * 2));
+  private duration(kind: BurstKind): number { return kind === 'hit' ? 0.8 : 0.36; }
+
+  private ready(atlas?: HTMLImageElement): atlas is HTMLImageElement {
+    return !!atlas?.complete && atlas.naturalWidth >= 4 && atlas.naturalHeight >= 4;
+  }
+
+  private frame(ctx: CanvasRenderingContext2D, atlas: HTMLImageElement, index: number,
+    x: number, y: number, size: number, angle = 0, anchorY = 0.5): void {
+    const column = index % 4, row = Math.floor(index / 4);
+    const sx = Math.round(column * atlas.naturalWidth / 4);
+    const sy = Math.round(row * atlas.naturalHeight / 4);
+    const sw = Math.round((column + 1) * atlas.naturalWidth / 4) - sx;
+    const sh = Math.round((row + 1) * atlas.naturalHeight / 4) - sy;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.drawImage(atlas, sx, sy, sw, sh, -size / 2, -size * anchorY, size, size);
+    ctx.restore();
   }
 
   clear(): void {
-    this.sparks.clear(); this.trail = []; this.rings = [];
+    this.bursts = []; this.trail = []; this.angle = 0; this.time = 0;
     this.lastTrail = -Infinity; this.lastBurst = -Infinity;
   }
 }
