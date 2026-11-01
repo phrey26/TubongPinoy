@@ -1,13 +1,13 @@
 # Website readiness
 
-Updated October 31, 2026. These changes target the current local Angular/PHP app.
+Updated November 1, 2026. These changes target the current local Angular/PHP app.
 They do not deploy the project or make the existing build ready to upload to itch.io.
 
 ## Requested checklist
 
 | Item | Current implementation |
 | --- | --- |
-| Privacy Policy | Public `/privacy` page describes actual account data, leaderboard visibility, essential cookies, optional maps, and the preview-only contact form. Draft until operator/contact, hosting, and retention details are finalized. |
+| Privacy Policy | Public `/privacy` page describes actual account data, leaderboard visibility, essential cookies, browser storage, and the preview-only contact form. Draft until operator/contact, hosting, and retention details are finalized. |
 | Terms | Public `/terms` page covers accounts, fair play, virtual items, and development limitations. Signup links both policies and requires agreement. |
 | Clear CTA | Existing home and lobby calls to action retained. Game links have distinct accessible names; FAQ and 404 offer game/home links. |
 | FAQ | Public `/faq`, with keyboard-operable native disclosure controls and rules matching the current code. |
@@ -18,9 +18,9 @@ They do not deploy the project or make the existing build ready to upload to itc
 | Analytics | Disabled by owner preference; no analytics provider or tracking scripts added. Hosting platforms may have their own measurement and privacy policies. |
 | Meta titles/descriptions | Each route has a title and description, updated on navigation. Protected routes, signup/login, and missing pages use `noindex`. Initial HTML includes the homepage description. |
 | Canonical URL | Deferred until a final public listing/origin exists. No guessed domain, localhost URL, or account URL is emitted. |
-| Cookie choice | Essential session cookies disclosed. Google Maps is absent until the user selects Load Google Map; Hide map removes the embed. No global tracking-consent banner is needed for analytics because analytics is not enabled. Reassess consent requirements if tracking is introduced. |
+| Cookie choice | Essential session cookies disclosed. The Find Us map feature has been removed. No global tracking-consent banner is needed for analytics because analytics is not enabled. Reassess consent requirements if tracking is introduced. |
 | Basic accessibility | Skip link, labels, visible focus, native FAQ controls, page-change focus, accessible game links, error contrast, and descriptive canvas names. Automated checks do not establish full accessibility conformance. |
-| Forms | Existing signup/login/profile/inventory/settings/shop tests retained; added UTF-8 password, policy-agreement, whitespace-validation, and map-choice coverage. Contact is a preview; top-up/payment controls are intentionally disabled. |
+| Forms | Existing signup/login/profile/inventory/settings/shop tests retained; added UTF-8 password, policy-agreement, and whitespace-validation coverage. Contact is a preview; top-up/payment controls are intentionally disabled. |
 | Links | New internal routes are public and linked from the footer; fake support email removed. Policy links in signup open a new tab so the signup draft is retained. |
 | Performance | Secondary routes and games load on demand. Large images use WebP; avatars are sized for their rendered use. Superseded PNG originals, generation prompt files, unused icons, the old favicon, and the unused Jolens preview background have been removed. |
 
@@ -61,7 +61,6 @@ old database exports. The app has no self-service account deletion or password r
 receive support or privacy requests.
 
 Privacy reference: [National Privacy Commission — data subject rights](https://privacy.gov.ph/data-subject-rights/).
-Optional map reference: [Google Privacy Policy](https://policies.google.com/privacy).
 
 The two canvas games still require pointing input; Tumbang Preso uses a mouse and
 Jolens Blast supports mouse/touch. Neither currently offers keyboard-only gameplay

@@ -39,29 +39,13 @@
         </form>
       </section>
 
-      <aside class="contact-details" aria-label="About the team and location">
+      <aside class="contact-details" aria-label="About the team">
         <section class="contact-card border-purple-300" aria-labelledby="developer-heading">
           <h2 id="developer-heading" class="font-extrabold text-purple-700 mb-5">The Developer</h2>
           <div class="developer-profile">
             <div class="developer-avatar"><img src="assets/icons/developer.svg" alt="" aria-hidden="true" /></div>
             <div><h3>HH productions</h3><p>Developer</p></div>
           </div>
-        </section>
-        <section class="contact-card border-blue-300" aria-labelledby="location-heading">
-          <h2 id="location-heading" class="font-extrabold text-blue-700 mb-5"><img src="assets/icons/location.svg" alt="" aria-hidden="true" class="app-icon" /> Find Us</h2>
-          <h3 class="font-bold text-gray-800">Holy Angel University</h3>
-          <p class="text-gray-600 mb-5">School of Computing · Angeles City, Philippines</p>
-          @if (mapEnabled()) {
-            <iframe [src]="mapUrl | safeUrl" title="Map showing Holy Angel University in Angeles City" width="100%" height="220" referrerpolicy="no-referrer"></iframe>
-            <button type="button" class="ui-button ui-button-soft mt-4" (click)="mapEnabled.set(false)">Hide map</button>
-          } @else {
-            <div class="map-placeholder">
-              <p>Loading this map connects to Google, which may use cookies and receive your IP address and browser information.</p>
-              <a routerLink="/privacy" fragment="cookies" class="underline font-bold text-purple-800">Read about cookies and maps</a>
-              <button type="button" class="ui-button ui-button-blue" (click)="mapEnabled.set(true)">Load Google Map</button>
-            </div>
-          }
-          <p class="contact-info">A support email will be added before launch. The form currently previews messages only.</p>
         </section>
       </aside>
     </div>

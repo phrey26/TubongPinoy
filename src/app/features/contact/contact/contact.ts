@@ -1,14 +1,12 @@
 import { Component, ChangeDetectionStrategy, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Confirmation } from '../../../core/services/confirmation';
-import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { SafeUrlPipe } from '../../../shared/pipes/safe-url-pipe';
-import { RouterLink } from '@angular/router';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-contact',
-  imports: [FormsModule, ReactiveFormsModule, SafeUrlPipe, RouterLink],
+  imports: [ReactiveFormsModule],
   templateUrl: './contact.html',
   styleUrl: './contact.css',
 })
@@ -20,12 +18,6 @@ export class Contact {
 
   isSubmitted = false;
   readonly feedback = signal('');
-  readonly mapEnabled = signal(false);
-
-  // 🗺️ Google Maps embed URL
-  mapUrl: string =
-    'https://www.google.com/maps?q=Holy+Angel+University,+Angeles+City,+Philippines&output=embed';
-
   // 📋 Dropdown options
   subjects: string[] = [
     'Game Feedback',

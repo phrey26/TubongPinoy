@@ -5,7 +5,7 @@
       <p class="eyebrow">{{ page() === 'not-found' ? '404 · PAGE NOT FOUND' : 'TUBONG PINOY · HH productions' }}</p>
       <h1>{{ heading() }}</h1>
       @if (page() === 'privacy' || page() === 'terms') {
-        <p class="updated">Draft updated October 31, 2026</p>
+        <p class="updated">Draft updated November 1, 2026</p>
         <p class="ui-feedback">This is a development draft. Operator contact details and final hosting information will be added before public launch.</p>
       }
     </header>
@@ -32,11 +32,10 @@
           <p>Signed-in players can view game leaderboards containing account IDs, usernames, display names, avatars, and scores. Your password hash and wallet records are not included in leaderboard responses. Choose a display name that you are comfortable sharing with other players.</p>
         </section>
         <section id="cookies">
-          <h2>Browser storage and optional maps</h2>
+          <h2>Cookies and browser storage</h2>
           <p>The essential <code>tubong_session</code> cookie supports sign-in and request protection. A normal login expires after up to eight hours; Remember Me keeps the login for up to 30 days. Logging out ends the current session. Blocking this cookie prevents account features from working.</p>
           <p>Saved sound settings use local storage for the current account on this browser. They are not sent to the account service. Clearing site data resets them.</p>
-          <p>The Contact page loads Google Maps only when you select “Load Google Map.” Loading it connects your browser to Google, which may receive your IP address and browser information and use cookies under its <a href="https://policies.google.com/privacy">Privacy Policy</a>. You can remove the map from the page using “Hide map.” This stops displaying the embed; it does not erase information already received by Google or cookies it has set.</p>
-          <p>The map choice is kept only while that page is open. You can manage stored cookies in your browser settings. No optional analytics cookies are set by this app.</p>
+          <p>You can manage stored cookies in your browser settings. No optional analytics cookies are set by this app.</p>
         </section>
         <section>
           <h2>Contact form and payments</h2>
@@ -82,7 +81,7 @@
         <section>
           <h2>Artwork and other services</h2>
           <p>Game artwork, code, and other content remain subject to their respective owners’ rights. Access to the game does not grant permission to redistribute third-party material. Credits appear with credited content.</p>
-          <p>External services have their own terms and policies. Optional Google Maps content is covered by <a href="https://policies.google.com/terms">Google’s Terms</a> and <a href="https://policies.google.com/privacy">Privacy Policy</a>. A future itch.io listing will also be subject to that platform’s terms.</p>
+          <p>External services have their own terms and policies. A future itch.io listing will also be subject to that platform’s terms.</p>
         </section>
         <section>
           <h2>Help and changes</h2>
@@ -103,7 +102,7 @@
           <details><summary>Can I buy Tansans or cash out marbles?</summary><p>Real-money top-ups are coming soon and payment buttons are disabled. Jolens marbles become game points at session end, not cash or Tansans. No cash-out feature is available.</p></details>
           <details><summary>Can I equip items from the store?</summary><p>Store skins are coming soon and cannot be purchased yet. Any previously owned collectibles remain on your account. You can equip any free starter slipper or shooter from <a routerLink="/account/inventory">Inventory</a> without spending Tansans.</p></details>
           <details><summary>How do I change my account or recover a password?</summary><p>Use the account menu to edit your profile or open <a routerLink="/account/settings">Settings</a>. Changing your username or password requires your current password and signs out other sessions. Password recovery is not available yet.</p></details>
-          <details><summary>Does the app track me or send my contact message?</summary><p>Third-party analytics are disabled. Account features use an essential session cookie, and the optional Google map only loads when you choose it. The Contact form is a preview and sends no message. Read the <a routerLink="/privacy">Privacy Policy</a> for details.</p></details>
+          <details><summary>Does the app track me or send my contact message?</summary><p>Third-party analytics are disabled. Account features use an essential session cookie. The Contact form is a preview and sends no message. Read the <a routerLink="/privacy">Privacy Policy</a> for details.</p></details>
           <details><summary>Which controls can I use?</summary><p>Both games use a pull-back aiming action. Jolens Blast supports mouse and touch controls. Tumbang Preso currently requires a mouse or similar pointing device. The game canvases do not yet offer keyboard-only gameplay; page navigation, help, and forms support the keyboard.</p></details>
         </div>
         <div class="info-actions"><a routerLink="/games" class="ui-button ui-button-green">Choose a game →</a><a routerLink="/contact" class="ui-button ui-button-soft">Visit Contact</a></div>
