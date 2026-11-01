@@ -3,3 +3,5 @@
 .skin-rarity[data-rarity^="Rare"] { color: #1d4ed8; }
 .skin-rarity[data-rarity^="Epic"] { color: #7e22ce; }
 .skin-rarity[data-rarity^="Legendary"] { color: #92400e; }
+
+.shop-page .shooter-card .product-art img { width: 88px; height: 88px; }

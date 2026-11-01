@@ -1,3 +1,5 @@
+import { JOLENS_COLLECTION_SKINS } from '../../../core/services/customization';
+
 const ROOT = 'assets/jolens-blast-assets/';
 export const JOLENS_ASSETS = {
   background: `${ROOT}background/dirt_bg_clean.png`,
@@ -16,4 +18,5 @@ export const JOLENS_ASSETS = {
 
 export const JOLENS_ASSET_PATHS = [JOLENS_ASSETS.background,
   JOLENS_ASSETS.shadow, ...JOLENS_ASSETS.marbles, ...JOLENS_ASSETS.shooters.map(s => s.path),
+  ...JOLENS_COLLECTION_SKINS.map(skin => skin.imageUrl),
   JOLENS_ASSETS.arrow, JOLENS_ASSETS.dot, ...JOLENS_ASSETS.dust, ...JOLENS_ASSETS.sparks];

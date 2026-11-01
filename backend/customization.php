@@ -16,6 +16,14 @@ function collectible_game_skins(): array
             'imageUrl' => 'assets/tumbang-preso-skins-assets/slipper_gatorz.webp'],
         ['id' => 'skin_1', 'name' => 'Aldugo', 'rarity' => 'Legendary', 'game' => 'tumbang-preso',
             'imageUrl' => 'assets/tumbang-preso-skins-assets/slipper_aldugo.webp'],
+        ['id' => 'shooter_8ball', 'name' => '8ball', 'rarity' => 'Common', 'game' => 'jolens-blast',
+            'imageUrl' => 'assets/jolens-blast-skin-assets/marble_skin_8ball.webp'],
+        ['id' => 'shooter_golf', 'name' => 'Golf', 'rarity' => 'Rare', 'game' => 'jolens-blast',
+            'imageUrl' => 'assets/jolens-blast-skin-assets/marble_skin_golf.webp'],
+        ['id' => 'shooter_jupiter', 'name' => 'Jupiter', 'rarity' => 'Epic', 'game' => 'jolens-blast',
+            'imageUrl' => 'assets/jolens-blast-skin-assets/marble_skin_jupiter.webp'],
+        ['id' => 'shooter_steel_ball', 'name' => 'Steel Ball', 'rarity' => 'Legendary', 'game' => 'jolens-blast',
+            'imageUrl' => 'assets/jolens-blast-skin-assets/marble_skin_steel_ball.webp'],
     ];
 }
 

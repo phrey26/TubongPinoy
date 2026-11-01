@@ -12,7 +12,11 @@ function demo_topups_enabled(): bool
 function shop_catalog(): array
 {
     $skins = database()->query('SELECT id, name, type, price, image_url AS imageUrl FROM skins WHERE active = 1 ORDER BY price DESC, id')->fetchAll();
-    foreach ($skins as &$skin) $skin['price'] = (int) $skin['price'];
+    $games = array_column(collectible_game_skins(), 'game', 'id');
+    foreach ($skins as &$skin) {
+        $skin['price'] = (int) $skin['price'];
+        $skin['game'] = $games[$skin['id']] ?? 'tumbang-preso';
+    }
     return ['skins' => $skins, 'demoTopupsEnabled' => demo_topups_enabled()];
 }
 

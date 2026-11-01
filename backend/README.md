@@ -318,3 +318,12 @@ Smoke tests answer the basic check as test fixtures; no production bypass exists
 This limited check should be reconsidered if abuse persists. See the
 [OWASP bot-management guidance](https://cheatsheetseries.owasp.org/cheatsheets/Bot_Management_and_Anti-Automation_Cheat_Sheet.html)
 for the limits of individual defenses.
+
+## Jolens Blast shooter collection
+
+Apply `migrations/2026-11-01-jolens-shooter-skins.sql` to add 8ball (Common,
+50 Tansans), Golf (Rare, 150), Jupiter (Epic, 200), and Steel Ball (Legendary,
+300). Fresh setup includes them. Reapplying preserves ownership and prices.
+The catalog returns a game identifier so each collection has its own shop section.
+Owned shooters appear in Jolens Blast inventory and can be equipped for that game
+only. Purchases use the existing confirmation, success dialog, and wallet checks.

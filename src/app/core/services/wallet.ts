@@ -6,6 +6,7 @@ import { AccountState } from './account-state';
 import { Auth, AuthUser } from './auth';
 
 export interface Skin {
+  game?: 'tumbang-preso' | 'jolens-blast';
   id: string;
   name: string;
   type: string;

@@ -73,6 +73,33 @@ describe('Shop', () => {
     expect(TestBed.inject(Confirmation).active()).toBeNull();
   });
 
+  it('shows shooters in their own matching shop section and confirms their purchase', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const confirmation = TestBed.inject(Confirmation);
+    const user = { id: 1, username: 'Player', tansans: 1000, juice: 100, ownedSkins: [], walletVersion: 0 };
+    TestBed.inject(AccountState).set(user);
+    component.loadCatalog();
+    http.expectOne('/api/catalog.php').flush({ skins: [
+      { id: 'skin_1', name: 'Aldugo', type: 'Legendary Skin', price: 300, imageUrl: '', game: 'tumbang-preso' },
+      { id: 'shooter_steel_ball', name: 'Steel Ball', type: 'Legendary Skin', price: 300,
+        imageUrl: 'assets/jolens-blast-skin-assets/marble_skin_steel_ball.webp', game: 'jolens-blast' },
+    ], demoTopupsEnabled: false });
+    fixture.detectChanges();
+    const section = fixture.nativeElement.querySelector('[aria-labelledby=jolens-blast-skins-heading]');
+    expect(section.textContent).toContain('Steel Ball');
+    expect(section.textContent).not.toContain('Aldugo');
+    expect(section.querySelector('.product-card.skin-card')).toBeTruthy();
+    section.querySelector('button').click();
+    expect(confirmation.active()?.message).toContain('Steel Ball for 300 Tansans');
+    confirmation.respond(true);
+    http.expectOne('/api/session.php').flush({ user, csrfToken: 'token' });
+    http.expectOne('/api/wallet.php').flush({ user: { ...user, tansans: 700,
+      ownedSkins: ['shooter_steel_ball'], walletVersion: 1 } });
+    expect(confirmation.active()?.message).toContain('equip it for Jolens Blast');
+    expect(component.ownedFor('jolens-blast')).toBe(1);
+    expect(component.ownedFor('tumbang-preso')).toBe(0);
+  });
+
   it('saves a refill once and updates the balance only after the server confirms it', () => {
     const state = TestBed.inject(AccountState);
     const http = TestBed.inject(HttpTestingController);
@@ -195,6 +222,6 @@ describe('Shop', () => {
     ], demoTopupsEnabled: false });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.skin-grid').textContent).toContain('Aldugo');
-    expect(fixture.nativeElement.querySelector('.shop-empty')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-labelledby=tumbang-preso-skins-heading] .shop-empty')).toBeNull();
   });
 });

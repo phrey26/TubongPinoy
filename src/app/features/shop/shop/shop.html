@@ -78,14 +78,15 @@
       </div>
     </section>
 
-    <section class="shop-section mt-10" aria-labelledby="skins-heading">
+    @for (section of skinSections; track section.game) {
+    <section class="shop-section mt-10" [attr.aria-labelledby]="section.game + '-skins-heading'">
       <div class="section-heading">
         <div>
-          <h2 id="skins-heading">Tumbang Preso Skins</h2>
-          <p class="text-sm">Buy a slipper skin with Tansans, then equip it in your <a routerLink="/account/inventory" class="underline font-bold">inventory</a>.</p>
+          <h2 [id]="section.game + '-skins-heading'">{{ section.title }}</h2>
+          <p class="text-sm">Buy a {{ section.item }} skin with Tansans, then equip it in your <a routerLink="/account/inventory" class="underline font-bold">inventory</a>.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <span class="shop-badge">{{ ownedCount }} owned</span>
+          <span class="shop-badge">{{ ownedFor(section.game) }} owned</span>
         </div>
       </div>
 
@@ -96,12 +97,12 @@
           <p>We couldn’t load the collection. Please try again.</p>
           <button type="button" class="ui-button shop-button w-full text-sm" (click)="loadCatalog()">Try again</button>
         </div>
-      } @else if (cosmeticSkins().length === 0) {
+      } @else if (skinsFor(section.game).length === 0) {
         <div class="shop-empty">New skins are on their way. Check back soon!</div>
       } @else {
         <div class="product-grid skin-grid grid gap-5">
-          @for (skin of cosmeticSkins(); track skin.id) {
-            <article class="product-card skin-card" [class.product-owned]="owns(skin.id)">
+          @for (skin of skinsFor(section.game); track skin.id) {
+            <article class="product-card skin-card" [class.shooter-card]="section.game === 'jolens-blast'" [class.product-owned]="owns(skin.id)">
               <div class="product-art product-art-purple">
                 <img [src]="skin.imageUrl" [alt]="skin.name" />
                 @if (owns(skin.id)) { <span class="shop-badge shop-badge-green owned-badge absolute top-2 right-2">Owned</span> }
@@ -121,5 +122,6 @@
         </div>
       }
     </section>
+    }
   </div>
 </main>

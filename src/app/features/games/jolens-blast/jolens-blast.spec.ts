@@ -242,6 +242,13 @@ describe('JolensBlast', () => {
     expect(component['currentShooter'].sprite).toBe('assets/jolens-blast-assets/shooters/shooter_chrome.png');
   });
 
+  it.each(['8ball', 'golf', 'jupiter', 'steel_ball'])('uses purchased shooter %s in gameplay', name => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', tansans: 0, juice: 100,
+      ownedSkins: ['shooter_' + name], equippedSkins: { 'jolens-blast': 'shooter_' + name } });
+    component.spawnShooter();
+    expect(component['currentShooter'].sprite).toBe('assets/jolens-blast-skin-assets/marble_skin_' + name + '.webp');
+  });
+
   it('does not stake marbles or start a round while the Juice payment is pending or fails', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;

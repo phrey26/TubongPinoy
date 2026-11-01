@@ -32,6 +32,14 @@ export class Shop implements OnInit {
   private readonly confirmation = inject(Confirmation);
   readonly cosmeticSkins = signal<Skin[]>([]);
   readonly skinsAvailable = true;
+  readonly skinSections = [
+    { game: 'tumbang-preso', title: 'Tumbang Preso Skins', item: 'slipper' },
+    { game: 'jolens-blast', title: 'Jolens Blast Shooter Skins', item: 'shooter' },
+  ] as const;
+  skinsFor(game: string): Skin[] {
+    return this.cosmeticSkins().filter(skin => (skin.game ?? 'tumbang-preso') === game);
+  }
+  ownedFor(game: string): number { return this.skinsFor(game).filter(skin => this.owns(skin.id)).length; }
   readonly pending = signal(false);
   readonly pendingItem = signal<string | null>(null);
   readonly loadingSkins = signal(true);
@@ -127,11 +135,13 @@ export class Shop implements OnInit {
             confirmLabel: 'Got it', acknowledgeOnly: true,
           }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
         } else {
-          const name = this.cosmeticSkins().find(skin => skin.id === id)?.name ?? 'Skin';
+          const skin = this.cosmeticSkins().find(skin => skin.id === id);
+          const name = skin?.name ?? 'Skin';
+          const gameName = skin?.game === 'jolens-blast' ? 'Jolens Blast' : 'Tumbang Preso';
           this.message.set(`${name} successfully bought! Equip it in your inventory.`);
           this.confirmation.ask({
             title: 'Successfully bought!',
-            message: `${name} is now in your collection. Open Inventory to equip it for Tumbang Preso.`,
+            message: `${name} is now in your collection. Open Inventory to equip it for ${gameName}.`,
             confirmLabel: 'Got it', acknowledgeOnly: true,
           }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
         }

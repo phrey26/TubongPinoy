@@ -25,8 +25,15 @@ export const TUMBANG_COLLECTION_SKINS = [
   { id: 'skin_1', name: 'Aldugo', rarity: 'Legendary', imageUrl: 'assets/tumbang-preso-skins-assets/slipper_aldugo.webp' },
 ] as const;
 
+export const JOLENS_COLLECTION_SKINS = [
+  { id: 'shooter_8ball', name: '8ball', rarity: 'Common', imageUrl: 'assets/jolens-blast-skin-assets/marble_skin_8ball.webp' },
+  { id: 'shooter_golf', name: 'Golf', rarity: 'Rare', imageUrl: 'assets/jolens-blast-skin-assets/marble_skin_golf.webp' },
+  { id: 'shooter_jupiter', name: 'Jupiter', rarity: 'Epic', imageUrl: 'assets/jolens-blast-skin-assets/marble_skin_jupiter.webp' },
+  { id: 'shooter_steel_ball', name: 'Steel Ball', rarity: 'Legendary', imageUrl: 'assets/jolens-blast-skin-assets/marble_skin_steel_ball.webp' },
+] as const;
+
 export function gameSkinUrl(game: GameId, id?: string): string {
-  const collectible = game === 'tumbang-preso' && TUMBANG_COLLECTION_SKINS.find(skin => skin.id === id);
+  const collectible = (game === 'tumbang-preso' ? TUMBANG_COLLECTION_SKINS : JOLENS_COLLECTION_SKINS).find(skin => skin.id === id);
   if (collectible) return collectible.imageUrl;
   const valid = game === 'tumbang-preso'
     ? SLIPPER_COLORS.map(color => `slipper_${color}`)
