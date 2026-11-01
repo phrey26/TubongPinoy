@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validators, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs';
 import { Auth, SignupChallenge, authErrorMessage, safeReturnUrl } from '../../../core/services/auth';
 import { passwordValidator } from '../../../core/validators/password';
 
@@ -22,6 +22,9 @@ export class Signup implements OnInit {
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
   readonly usernameTaken = signal(false);
+  readonly checkingUsername = signal(false);
+  readonly usernameAvailable = signal(false);
+  readonly usernameCheckError = signal('');
   readonly challenge = signal<SignupChallenge | null>(null);
   readonly challengeLoading = signal(false);
   readonly challengeError = signal('');
@@ -55,7 +58,31 @@ export class Signup implements OnInit {
   ngOnInit(): void {
     this.refreshChallenge();
     this.f.username.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.usernameAvailable.set(false);
+      this.usernameCheckError.set('');
       if (this.usernameTaken()) { this.usernameTaken.set(false); this.errorMessage.set(''); }
+    });
+  }
+
+  checkUsername(): void {
+    if (this.checkingUsername() || this.isSubmitting()) return;
+    this.f.username.markAsTouched();
+    if (this.f.username.invalid) return;
+    const username = this.f.username.value!;
+    this.usernameAvailable.set(false);
+    this.usernameTaken.set(false);
+    this.usernameCheckError.set('');
+    this.checkingUsername.set(true);
+    this.auth.checkUsername(username).pipe(
+      takeUntil(this.f.username.valueChanges),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.checkingUsername.set(false)),
+    ).subscribe({
+      next: result => {
+        this.usernameAvailable.set(result.available);
+        this.usernameTaken.set(!result.available);
+      },
+      error: error => this.usernameCheckError.set(authErrorMessage(error)),
     });
   }
 
@@ -72,7 +99,7 @@ export class Signup implements OnInit {
   }
 
   onSubmit() {
-    if (this.isSubmitting()) return;
+    if (this.isSubmitting() || this.checkingUsername() || this.usernameTaken()) return;
     this.errorMessage.set('');
     if (this.signupForm.valid && this.challenge() && !this.challengeLoading()) {
       const { username, password, terms, challengeAnswer, website } = this.signupForm.getRawValue();
@@ -83,6 +110,7 @@ export class Signup implements OnInit {
         .subscribe({
           next: () => void this.router.navigateByUrl(this.returnUrl),
           error: (error: unknown) => {
+            this.usernameAvailable.set(false);
             this.usernameTaken.set(error instanceof HttpErrorResponse && error.status === 409);
             this.errorMessage.set(this.usernameTaken() ? 'Username is taken.' : authErrorMessage(error));
             this.refreshChallenge();

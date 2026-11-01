@@ -96,6 +96,22 @@ describe('Passive Juice recovery', () => {
     expect(recovery.status()).toBe('Next Juice in 2:09');
   });
 
+  it('counts down a one-hour pass using server time and returns to normal at expiry', () => {
+    vi.setSystemTime(now + 7200000);
+    state.set({ ...user, juice: 100, nextJuiceAt: 0,
+      unlimitedJuiceUntil: now + 3600000 });
+    TestBed.tick();
+    expect(recovery.status()).toBe('Unlimited Juice: 60:00 remaining');
+    expect(recovery.unlimitedExpiresAt()).toBe(now + 3600000);
+    vi.advanceTimersByTime(1000);
+    expect(recovery.status()).toBe('Unlimited Juice: 59:59 remaining');
+    vi.advanceTimersByTime(3599000);
+    expect(recovery.unlimitedSecondsRemaining()).toBe(0);
+    expect(recovery.unlimitedExpiresAt()).toBeNull();
+    expect(recovery.status()).toBe('Juice is full');
+    http.expectNone('/api/me.php');
+  });
+
   it('stops refill requests when full or logged out and labels unlimited Juice', () => {
     state.set({ ...user, juice: 100, nextJuiceAt: 0 });
     TestBed.tick();

@@ -21,6 +21,12 @@ export class JuiceRecovery {
     const next = this.account.user()?.nextJuiceAt ?? 0;
     return next > 0 ? Math.max(0, Math.ceil((next - this.now() - this.clockOffset()) / 1000)) : 0;
   });
+  readonly unlimitedSecondsRemaining = computed(() => {
+    const until = this.account.user()?.unlimitedJuiceUntil ?? 0;
+    return Math.max(0, Math.ceil((until - this.now() - this.clockOffset()) / 1000));
+  });
+  readonly unlimitedExpiresAt = computed(() =>
+    this.unlimitedSecondsRemaining() > 0 ? this.account.user()?.unlimitedJuiceUntil : null);
   readonly fullRefillAt = computed(() => {
     const user = this.account.user();
     if (!user || user.juice >= 100 || !user.nextJuiceAt) return null;
@@ -31,7 +37,12 @@ export class JuiceRecovery {
   readonly status = computed(() => {
     const user = this.account.user();
     if (!user) return '';
-    if (user.permanentJuice || (user.unlimitedJuiceUntil ?? 0) > this.now() + this.clockOffset()) return 'Unlimited Juice active';
+    if (user.permanentJuice) return 'Unlimited Juice active';
+    const unlimitedSeconds = this.unlimitedSecondsRemaining();
+    if (unlimitedSeconds > 0) {
+      const minutes = Math.floor(unlimitedSeconds / 60);
+      return `Unlimited Juice: ${minutes}:${String(unlimitedSeconds % 60).padStart(2, '0')} remaining`;
+    }
     if (user.juice >= 100) return 'Juice is full';
     if (this.syncError()) return 'Reconnecting to refill Juice…';
     if (!user.nextJuiceAt || this.syncing() || this.secondsRemaining() === 0) return 'Updating Juice…';

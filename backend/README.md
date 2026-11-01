@@ -44,6 +44,7 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
 | Method | Path | Behavior |
 | --- | --- | --- |
 | GET | `/api/session.php` | Current user (or null) and a CSRF token |
+| GET | `/api/username-availability.php?username=Name` | Check username availability (60 checks per IP per 15 minutes); does not reserve the name |
 | GET | `/api/signup-challenge.php` | Issue a session-bound, expiring registration question |
 | POST | `/api/signup.php` | Create an account and sign in |
 | POST | `/api/login.php` | Sign in with username and password |
@@ -113,10 +114,13 @@ Game high scores are documented below. Email is not collected or used for login.
 
 For local debugging, `backend/bin/create-debug-account.php` reads a JSON object
 with `username` and `password` from standard input. It creates or resets that
-named account to 999,999 Tansans, 100 Juice, and `account_state.permanent_juice`.
-The password is hashed. This entitlement has no expiry and is never assignable
-through signup, top-ups or shop requests. Normal accounts default to no permanent
-entitlement. The CLI command is outside the public web directory.
+named account to 999,999 Tansans, 100 Juice, and a one-hour unlimited Juice pass.
+The password is hashed. The pass expires one hour after the command runs; login
+and page refresh do not extend it. The CLI command is outside the public web directory.
+For the existing `admintest0001` account, apply
+`migrations/2026-11-01-debug-juice-one-hour.sql` once to replace its permanent
+entitlement without resetting its password or balances. Reapplying that migration
+does not extend the pass.
 
 ## Verification
 

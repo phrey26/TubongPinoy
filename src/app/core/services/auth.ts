@@ -50,6 +50,12 @@ export class Auth {
     return this.sessionRequest;
   }
 
+  checkUsername(username: string): Observable<{ username: string; available: boolean }> {
+    return this.http.get<{ username: string; available: boolean }>('/api/username-availability.php', {
+      params: { username },
+    }).pipe(timeout(8000));
+  }
+
   signupChallenge(): Observable<SignupChallenge> {
     return this.http.get<SignupChallenge>('/api/signup-challenge.php').pipe(timeout(8000));
   }

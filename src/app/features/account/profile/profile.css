@@ -1,0 +1,32 @@
+.profile-layout { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.35fr); gap: 24px; align-items: start; }
+.player-card { position: relative; min-width: 0; padding: 20px; border: 3px solid #c084fc; border-radius: 26px; background: linear-gradient(#ede9fe 0 40%, #fff 40%); box-shadow: 0 6px 0 #d8b4fe; text-align: center; }
+.player-card-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; color: #6b21a8; font-size: 9px; font-weight: 850; letter-spacing: 1px; }
+.preview-tag { padding: 5px 7px; border-radius: 6px; background: #fff9; font-weight: 650; letter-spacing: 0; }
+.portrait-wrap { position: relative; width: fit-content; margin: 26px auto 18px; }
+.profile-portrait { width: 144px; height: 144px; border: 6px solid #fff; border-radius: 50%; box-shadow: 0 4px 0 #e9d5ff; }
+.portrait-star { position: absolute; top: 0; right: -12px; color: #a16207; font-size: 34px; transform: rotate(12deg); }
+.player-card-name h2 { color: #581c87; font-size: 23px; font-weight: 900; line-height: 1.25; overflow-wrap: anywhere; }
+.player-card-name p { margin-top: 7px; font-size: 12px; color: #64748b; overflow-wrap: anywhere; }
+.player-card-footer { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 24px; padding: 16px 0; border-top: 2px dashed #e9d5ff; color: #6b21a8; text-align: left; font-size: 10px; }
+.player-card-footer strong { font-size: 11px; }
+.preview-caption { margin-top: 10px; font-size: 11px; line-height: 1.7; color: #64748b; }
+.profile-editor { padding: 24px; }
+.step-number { display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 9px; background: #f3e8ff; color: #7e22ce; font-size: 11px; }
+.profile-editor legend { font-size: 17px; }
+.section-help { margin: 12px 0 16px; }
+.avatar-fieldset { margin-top: 28px; }
+.avatar-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.avatar-option { position: relative; cursor: pointer; }
+.avatar-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.avatar-tile { position: relative; display: grid; gap: 8px; justify-items: center; padding: 8px 4px; border: 2px solid #ede9fe; border-radius: 14px; color: #6b21a8; font-size: 11px; background: #fff; }
+.avatar-tile img { width: 100%; height: auto; border-radius: 10px; }
+.avatar-option input:checked + .avatar-tile { border-color: #9333ea; background: #faf5ff; box-shadow: 0 3px 0 #d8b4fe; }
+.avatar-option input:focus-visible + .avatar-tile { outline: 3px solid #7e22ce; outline-offset: 3px; }
+.avatar-check { position: absolute; right: -5px; top: -7px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #7e22ce; color: #fff; }
+.profile-save-bar { margin-top: 28px; padding-top: 20px; border-top: 1px solid #ede9fe; }
+.save-status { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #64748b; margin-bottom: 14px; }
+.save-status span { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
+.save-status .has-changes { background: #d97706; }
+.profile-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.profile-actions button { font-size: 12px; }
+@media (min-width: 900px) and (max-width: 1099px), (max-width: 599px) { .profile-layout { grid-template-columns: 1fr; } .player-card { order: 2; max-width: 340px; width: 100%; margin-inline: auto; } }

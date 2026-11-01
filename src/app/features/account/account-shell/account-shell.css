@@ -1,0 +1,51 @@
+:host { display: block; }
+.account-page { background: radial-gradient(ellipse at top left, #ede9fe, transparent 55%), linear-gradient(140deg, #faf5ff, #fff7ed 65%, #eff6ff); }
+.back-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: 20px; color: #7e22ce; font-size: 13px; font-weight: 750; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+.account-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); align-items: start; gap: 36px; }
+.account-rail { position: sticky; top: calc(var(--site-header-height) + 24px); min-width: 0; }
+.player-summary { display: flex; align-items: center; gap: 12px; padding: 18px 14px 24px; }
+.player-avatar { position: relative; flex: none; padding: 4px; border: 2px solid #d8b4fe; border-radius: 24px; background: #fff; transform: rotate(-4deg); box-shadow: 0 4px 0 #e9d5ff; }
+.player-avatar img { width: 60px; height: 60px; border-radius: 18px; }
+.player-identity { display: grid; gap: 5px; min-width: 0; }
+.player-identity > strong { color: #3b0764; font-size: 17px; line-height: 1.3; overflow-wrap: anywhere; }
+.player-handle { color: #6b7280; font-size: 12px; overflow-wrap: anywhere; }
+.eyebrow { color: #7e22ce; font-size: 10px; letter-spacing: 1.3px; font-weight: 800; }
+.account-nav { display: grid; gap: 10px; padding: 10px; border: 2px solid #e9d5ff; border-radius: 24px; background: #ffffffb3; }
+.account-nav a { display: flex; align-items: center; gap: 10px; min-height: 72px; padding: 12px; border: 2px solid transparent; border-radius: 16px; color: #6b21a8; text-decoration: none; }
+.nav-icon { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 12px; background: #f3e8ff; }
+.account-nav strong { display: block; font-size: 14px; font-weight: 800; }
+.account-nav small { display: block; margin-top: 3px; font-size: 10px; color: #6b7280; }
+.account-nav a:hover { background: #faf5ff; }
+.account-nav a[aria-current] { border-color: #c084fc; background: #f3e8ff; box-shadow: 0 3px 0 #d8b4fe; }
+.account-nav a[aria-current] .nav-icon { background: #fff; }
+.nav-arrow { margin-left: auto; font-size: 22px; }
+.pocket { margin-top: 22px; padding: 20px; border: 2px dashed #d8b4fe; border-radius: 22px; background: #fff9; }
+.pocket > div { display: flex; align-items: center; gap: 9px; margin-top: 14px; font-size: 13px; }
+.pocket strong { margin-left: auto; color: #581c87; font-variant-numeric: tabular-nums; }
+.pocket small { color: #6b7280; font-weight: 500; }
+.pocket a { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-top: 10px; border-top: 1px solid #e9d5ff; color: #7e22ce; font-size: 11px; font-weight: 750; }
+.rail-note { margin: 20px 10px; color: #6b7280; font-size: 12px; line-height: 1.7; text-align: center; }
+.account-content { min-width: 0; }
+.account-heading { margin: 6px 0 28px; }
+.account-heading h1 { margin: 8px 0 10px; color: #581c87; font-weight: 900; letter-spacing: -1.2px; }
+.account-heading p { color: #64748b; font-size: 14px; max-width: 520px; }
+@media (max-width: 899px) {
+  .account-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .account-rail { position: static; }
+  .player-summary { padding: 0 6px 20px; }
+  .player-avatar img { width: 44px; height: 44px; border-radius: 14px; }
+  .player-avatar { border-radius: 19px; }
+  .player-identity { gap: 2px; }
+  .player-identity .eyebrow, .pocket, .rail-note, .nav-arrow, .account-nav small { display: none; }
+  .account-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 8px; border-radius: 20px; }
+  .account-nav a { justify-content: center; min-height: 60px; padding: 8px; gap: 8px; }
+  .account-heading { margin: 0 0 24px; }
+}
+@media (max-width: 479px) {
+  .back-link { margin-bottom: 12px; }
+  .account-nav a { flex-direction: column; gap: 5px; }
+  .nav-icon { width: 28px; height: 28px; background: transparent; }
+  .nav-icon img { width: 22px; height: 22px; }
+  .account-nav strong { font-size: 12px; }
+}

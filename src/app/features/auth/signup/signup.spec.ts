@@ -30,6 +30,65 @@ describe('Signup', () => {
 
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
+  it('checks availability without submitting or resetting the form and clears the result on edit', () => {
+    const http = TestBed.inject(HttpTestingController);
+    component.signupForm.patchValue({ username: 'Player', password: 'password123', challengeAnswer: '5' });
+    fixture.detectChanges();
+    const button = [...fixture.nativeElement.querySelectorAll('button')].find(
+      (element: any) => element.textContent.includes('Check username')) as HTMLButtonElement;
+    button.click();
+    const request = http.expectOne('/api/username-availability.php?username=Player');
+    expect(request.request.method).toBe('GET');
+    request.flush({ username: 'Player', available: true });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#signup-username-status').textContent).toContain('Username is available');
+    expect(component.f.password.value).toBe('password123');
+    expect(component.f.challengeAnswer.value).toBe('5');
+    expect(component.challenge()?.id).toBe('challenge');
+    component.f.username.setValue('Different');
+    expect(component.usernameAvailable()).toBe(false);
+  });
+
+  it('blocks a taken username and preserves the remaining registration fields', () => {
+    const http = TestBed.inject(HttpTestingController);
+    component.signupForm.setValue({ username: 'Player', password: 'password123', confirmPassword: 'password123',
+      terms: true, challengeAnswer: '5', website: '' });
+    component.checkUsername();
+    http.expectOne('/api/username-availability.php?username=Player').flush({ username: 'Player', available: false });
+    component.onSubmit();
+    http.expectNone('/api/session.php');
+    expect(component.usernameTaken()).toBe(true);
+    expect(component.f.challengeAnswer.value).toBe('5');
+    expect(component.f.password.value).toBe('password123');
+    component.f.username.setValue('Another');
+    expect(component.usernameTaken()).toBe(false);
+  });
+
+  it('cancels an outdated check when the username changes and allows retry after a failure', () => {
+    const http = TestBed.inject(HttpTestingController);
+    component.f.username.setValue('Player');
+    component.checkUsername();
+    const previous = http.expectOne('/api/username-availability.php?username=Player');
+    component.f.username.setValue('Another');
+    expect(previous.cancelled).toBe(true);
+    expect(component.checkingUsername()).toBe(false);
+    component.checkUsername();
+    http.expectOne('/api/username-availability.php?username=Another').flush({}, { status: 503, statusText: 'Unavailable' });
+    expect(component.usernameCheckError()).toContain('could not reach');
+    expect(component.usernameAvailable()).toBe(false);
+    component.checkUsername();
+    http.expectOne('/api/username-availability.php?username=Another').flush({ username: 'Another', available: true });
+    expect(component.usernameCheckError()).toBe('');
+    expect(component.usernameAvailable()).toBe(true);
+  });
+
+  it('does not check invalid usernames', () => {
+    component.f.username.setValue('x');
+    component.checkUsername();
+    expect(component.f.username.touched).toBe(true);
+    TestBed.inject(HttpTestingController).expectNone(request => request.url.includes('username-availability'));
+  });
+
   it('creates an account and continues to the originally requested game', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const http = TestBed.inject(HttpTestingController);

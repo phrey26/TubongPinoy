@@ -1,0 +1,34 @@
+.game-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.game-picker button { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 10px; border: 2px solid #e9d5ff; border-radius: 18px; background: #fff; text-align: left; cursor: pointer; }
+.game-picker button[aria-pressed="true"] { border-color: #a855f7; box-shadow: 0 3px 0 #d8b4fe; background: #faf5ff; }
+.game-picker button > img { width: 64px; height: 48px; object-fit: cover; border-radius: 10px; }
+.game-picker strong { display: block; color: #581c87; font-size: 13px; }
+.game-picker small { display: block; margin-top: 4px; color: #64748b; font-size: 10px; }
+.game-check { margin-left: auto; color: #7e22ce; font-weight: 900; }
+.equipped-banner { display: flex; align-items: center; gap: 28px; padding: 24px; margin-bottom: 30px; border: 2px solid #fbcfe8; border-radius: 24px; background: linear-gradient(120deg, #fff1f2, #fff 70%); box-shadow: 0 4px 0 #fce7f3; }
+.marble-banner { border-color: #bfdbfe; background: linear-gradient(120deg, #eff6ff, #fff 70%); box-shadow: 0 4px 0 #dbeafe; }
+.equipped-art { position: relative; display: grid; place-items: center; width: 160px; height: 160px; flex: none; border: 2px dashed #f9a8d4; border-radius: 50%; background: #fce7f3; }
+.marble-banner .equipped-art { background: #dbeafe; border-color: #93c5fd; }
+.equipped-art span { position: absolute; top: 8px; right: 4px; color: #a16207; font-size: 26px; }
+.equipped-art img, .skin-art img { object-fit: contain; image-rendering: pixelated; }
+.equipped-details { min-width: 0; }
+.equipped-details h2 { margin-top: 10px; color: #581c87; font-size: 28px; line-height: 1.2; font-weight: 900; }
+.equipped-details p { margin: 8px 0 16px; }
+.equipped-details a { font-size: 12px; }
+.collection-count { padding: 6px 10px; border-radius: 8px; background: #ede9fe; color: #6b21a8; font-size: 11px; font-weight: 750; }
+.skin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.skin-card { min-width: 0; overflow: hidden; border: 2px solid #e9d5ff; border-radius: 20px; background: #fff; box-shadow: 0 3px 0 #ede9fe; }
+.skin-card.is-equipped { border-color: #4ade80; box-shadow: 0 3px 0 #bbf7d0; }
+.skin-art { position: relative; display: grid; place-items: center; height: 124px; background: radial-gradient(ellipse at center, #fff 0 30%, #fdf2f8 70%); }
+.marble-art { background: radial-gradient(ellipse at center, #fff 0 30%, #eff6ff 70%); }
+.equipped-mark { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #166534; color: #fff; font-size: 12px; }
+.skin-details { padding: 14px; }
+.skin-details h3 { color: #581c87; font-size: 14px; font-weight: 800; }
+.skin-details p { color: #64748b; font-size: 11px; margin-top: 4px; }
+.skin-card button { width: 100%; margin-top: 14px; padding-inline: 6px; font-size: 11px; }
+.collectibles { margin-top: 32px; }
+.collectible-list { display: grid; gap: 12px; }
+.collectible { display: flex; align-items: center; gap: 12px; padding: 16px; font-size: 13px; }
+.collectible .starter-badge { margin-left: auto; }
+.collection-empty { display: grid; justify-items: center; gap: 12px; padding-block: 48px; color: #581c87; text-align: center; }
+@media (max-width: 599px) { .game-picker button { gap: 6px; } .game-picker button > img, .game-check { display: none; } .game-picker button { min-height: 66px; } .skin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .equipped-banner { gap: 16px; padding: 18px; } .equipped-art { width: 92px; height: 112px; border-radius: 24px; } .equipped-art img { width: 56px; height: 80px; } .equipped-art span { font-size: 20px; } .equipped-details h2 { font-size: 22px; } .equipped-details a { font-size: 11px; padding: 8px; } }

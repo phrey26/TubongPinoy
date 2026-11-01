@@ -1,6 +1,6 @@
 import { Component, DestroyRef, HostListener, effect, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { AccountShell } from '../account-shell/account-shell';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, finalize, switchMap } from 'rxjs';
 import { AccountState } from '../../../core/services/account-state';
@@ -18,9 +18,9 @@ const displayNameValidator: ValidatorFn = control => {
 
 @Component({
   selector: 'app-profile',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, AccountShell],
   templateUrl: './profile.html',
-  styleUrl: '../account.css',
+  styleUrls: ['../account.css', './profile.css'],
 })
 export class Profile {
   readonly account = inject(AccountState);

@@ -19,11 +19,23 @@
 
       <div>
         <label for="signup-username" class="block text-purple-700 font-bold mb-2 ml-1">Username</label>
+        <div class="username-check-row">
         <input id="signup-username" autocomplete="username" maxlength="50" formControlName="username" type="text" placeholder="GamerName"
-          [class.border-red-400]="(f.username.invalid && f.username.touched) || usernameTaken()" [attr.aria-invalid]="!!((f.username.invalid && f.username.touched) || usernameTaken())" [attr.aria-describedby]="usernameTaken() ? 'signup-username-taken' : f.username.invalid && f.username.touched ? 'signup-username-error' : null"
+          [class.border-red-400]="(f.username.invalid && f.username.touched) || usernameTaken()" [attr.aria-invalid]="!!((f.username.invalid && f.username.touched) || usernameTaken())" [attr.aria-describedby]="usernameTaken() ? 'signup-username-taken' : f.username.invalid && f.username.touched ? 'signup-username-error' : 'signup-username-status'"
           class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-blue-200 focus:border-blue-400 focus:outline-none transition bg-blue-50 text-gray-700 font-medium placeholder-blue-300" />
+          <button type="button" class="ui-button ui-button-soft" (click)="checkUsername()"
+            [disabled]="f.username.invalid || checkingUsername() || isSubmitting()">
+            {{ checkingUsername() ? 'Checking…' : 'Check username' }}
+          </button>
+        </div>
+        <p id="signup-username-status" class="username-check-status" role="status" aria-live="polite">
+          @if (checkingUsername()) { Checking availability… }
+          @else if (usernameAvailable()) { <span class="text-green-800">Username is available! It’s yours once you create your account.</span> }
+          @else if (usernameCheckError()) { <span class="text-red-700">{{ usernameCheckError() }}</span> }
+          @else if (!usernameTaken()) { Check your name before completing registration. }
+        </p>
         <p *ngIf="f.username.invalid && f.username.touched" id="signup-username-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 3–50 letters, numbers or underscores.</p>
-        @if (usernameTaken()) { <p id="signup-username-taken" class="text-red-700 text-xs font-bold mt-1 ml-2">Username is taken. Try another name.</p> }
+        @if (usernameTaken()) { <p id="signup-username-taken" role="status" class="text-red-700 text-xs font-bold mt-1 ml-2">Username is taken. Try another name.</p> }
       </div>
 
       <div class="grid md:grid-cols-2 gap-6">
@@ -83,7 +95,7 @@
         <p *ngIf="f.terms.invalid && f.terms.touched" class="text-red-700 text-xs font-bold mt-1 ml-9"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> You must agree to continue.</p>
       </div>
 
-      <button type="submit" [disabled]="signupForm.invalid || isSubmitting() || challengeLoading() || !challenge()"
+      <button type="submit" [disabled]="signupForm.invalid || isSubmitting() || checkingUsername() || usernameTaken() || challengeLoading() || !challenge()"
         class="ui-button ui-button-pink w-full py-4 text-base tracking-wide">
         <img src="assets/icons/account.svg" alt="" aria-hidden="true" class="app-icon" /> {{ isSubmitting() ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT' }}
       </button>

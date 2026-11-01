@@ -1,5 +1,6 @@
 import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AccountShell } from '../account-shell/account-shell';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, finalize, switchMap } from 'rxjs';
 import { AccountState } from '../../../core/services/account-state';
@@ -10,8 +11,8 @@ import { GameId } from '../../../core/services/game';
 import { Confirmation } from '../../../core/services/confirmation';
 
 @Component({
-  selector: 'app-inventory', imports: [RouterLink],
-  templateUrl: './inventory.html', styleUrl: '../account.css',
+  selector: 'app-inventory', imports: [RouterLink, AccountShell],
+  templateUrl: './inventory.html', styleUrls: ['../account.css', './inventory.css'],
 })
 export class Inventory {
   readonly account = inject(AccountState);

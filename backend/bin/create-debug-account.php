@@ -25,10 +25,10 @@ try {
         $db->prepare('UPDATE users SET password_hash = ?, tansans = 999999, juice = 100 WHERE id = ?')
             ->execute([$hash, $userId]);
     }
-    $db->prepare('INSERT INTO account_state (user_id, permanent_juice, version) VALUES (?, TRUE, 1)
-        ON DUPLICATE KEY UPDATE permanent_juice = TRUE, version = version + 1')->execute([$userId]);
+    $db->prepare('INSERT INTO account_state (user_id, permanent_juice, unlimited_until, version) VALUES (?, FALSE, ?, 1)
+        ON DUPLICATE KEY UPDATE permanent_juice = FALSE, unlimited_until = VALUES(unlimited_until), version = version + 1')->execute([$userId, time() + 3600]);
     $db->commit();
-    echo "Debug account ready: $username; 999999 Tansans; permanent unlimited Juice.\n";
+    echo "Debug account ready: $username; 999999 Tansans; unlimited Juice for one hour.\n";
 } catch (Throwable $error) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();
     fwrite(STDERR, 'Debug account setup failed: ' . $error->getMessage() . "\n");

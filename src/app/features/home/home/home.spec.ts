@@ -44,6 +44,23 @@ describe('Home', () => {
     expect(fixture.nativeElement.querySelector('[role="tooltip"]')).toBeNull();
   });
 
+  it('shows the unlimited pass countdown and expiry when hovering over the clock', () => {
+    const now = Date.now();
+    const expiresAt = now + 3600000;
+    TestBed.inject(AccountState).set({ id: 1, username: 'admintest0001',
+      tansans: 999999, juice: 100, permanentJuice: false,
+      serverTime: now, unlimitedJuiceUntil: expiresAt });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="tooltip"]')).toBeNull();
+    fixture.nativeElement.querySelector('.home-clock-group').dispatchEvent(new MouseEvent('mouseenter'));
+    fixture.detectChanges();
+    const popup = fixture.nativeElement.querySelector('[role="tooltip"]') as HTMLElement;
+    expect(popup.textContent).toContain('Unlimited Juice: 60:00 remaining');
+    expect(popup.textContent).toContain('Unlimited Juice ends');
+    expect(popup.textContent).toContain(new DatePipe('en-US').transform(expiresAt, 'h:mm:ss a'));
+    expect(popup.textContent).not.toContain('Already full');
+  });
+
   it('opens details on focus or tap and closes them on Escape or an outside click', () => {
     TestBed.inject(AccountState).set({ id: 1, username: 'Juan', tansans: 0, juice: 100 });
     fixture.detectChanges();

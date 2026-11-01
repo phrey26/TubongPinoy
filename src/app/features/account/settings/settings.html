@@ -1,33 +1,27 @@
-<main class="ui-page account-page">
-  <div class="ui-container">
-    <a routerLink="/games" class="account-back">← Back to Games</a>
-    <header class="account-heading">
-      <span class="eyebrow">YOUR ACCOUNT, YOUR DETAILS</span>
-      <h1>Account settings</h1>
-      <p>Adjust your game audio and keep your sign-in details up to date.</p>
-    </header>
-    <nav class="account-tabs" aria-label="Account pages">
-      <a routerLink="/account/profile" class="ui-button ui-button-soft">Edit profile</a>
-      <a routerLink="/account/inventory" class="ui-button ui-button-soft">Inventory</a>
-      <a routerLink="/account/settings" class="ui-button" aria-current="page">Settings</a>
-    </nav>
+<app-account-shell active="settings" heading="A little fine-tuning." description="Set the mood for your games and keep your account details in order.">
+  <nav class="settings-jumps" aria-label="Settings sections">
+    <a routerLink="/account/settings" fragment="sound-settings"><span aria-hidden="true">♫</span> Sound &amp; volume <span aria-hidden="true">↓</span></a>
+    <a routerLink="/account/settings" fragment="sign-in-settings"><img src="assets/icons/account.svg" alt="" width="20" height="20" /> Sign-in &amp; security <span aria-hidden="true">↓</span></a>
+  </nav>
     <app-audio-settings />
-    <section class="account-card settings-summary" aria-label="Current sign-in details">
-      <div><span class="eyebrow">USERNAME</span><strong>{{ account.user()?.username }}</strong></div>
-      <p class="muted">Each change needs your current password and confirmation. Other sessions will be signed out after saving.</p>
+  <section id="sign-in-settings" aria-labelledby="sign-in-heading">
+    <div class="section-heading"><div><span class="eyebrow">KEEP YOUR ACCOUNT YOURS</span><h2 id="sign-in-heading">Sign-in &amp; security</h2></div></div>
+    <section class="settings-summary" aria-label="Current sign-in details">
+      <div class="sign-in-identity"><img src="assets/icons/account.svg" alt="" width="32" height="32" /><div><span class="eyebrow">SIGNED IN AS</span><strong>{{ account.user()?.username }}</strong></div></div>
+      <p class="muted">Confirm changes with your current password. You’ll stay signed in here; your other sessions will be signed out.</p>
     </section>
     @if (error()) { <p role="alert" class="ui-feedback ui-feedback-error feedback">{{ error() }}</p> }
     @if (message()) { <p role="status" class="ui-feedback ui-feedback-success feedback">{{ message() }}</p> }
     <div class="settings-toolbar">
       <label class="ui-check-label"><input type="checkbox" class="ui-check" [checked]="showPasswords()" (change)="showPasswords.set(!showPasswords())" /> Show passwords</label>
-      <button type="button" class="ui-button ui-button-soft" [disabled]="!!pending() || !hasDraft" (click)="discard()">Discard unsaved changes</button>
+      <button type="button" class="ui-button ui-button-soft" [disabled]="!!pending() || !hasDraft" (click)="discard()">Discard sign-in changes</button>
     </div>
     <div class="settings-grid">
       @for (section of sections; track section.action) {
         @let form = forms[section.action];
         <form [formGroup]="form" (ngSubmit)="save(section.action)" class="account-card settings-form" novalidate>
           <fieldset [disabled]="!!pending()">
-            <legend>{{ section.title }}</legend>
+            <legend class="section-title">{{ section.title }}</legend>
             <p class="muted setting-help" [id]="section.action + '-help'">{{ section.help }}</p>
             <label [for]="section.action + '-value'">{{ section.label }}</label>
             <input [id]="section.action + '-value'" formControlName="value" class="name-input"
@@ -64,5 +58,5 @@
         </form>
       }
     </div>
-  </div>
-</main>
+  </section>
+</app-account-shell>

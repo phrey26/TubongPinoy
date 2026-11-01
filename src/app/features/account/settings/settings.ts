@@ -1,6 +1,7 @@
 import { Component, DestroyRef, HostListener, effect, inject, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AccountShell } from '../account-shell/account-shell';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, finalize, switchMap } from 'rxjs';
 import { AccountState } from '../../../core/services/account-state';
@@ -22,7 +23,7 @@ function makeForm(validator: ValidatorFn, password = false) {
 }
 
 @Component({
-  selector: 'app-settings', imports: [ReactiveFormsModule, RouterLink, AudioSettingsPanel],
+  selector: 'app-settings', imports: [ReactiveFormsModule, RouterLink, AudioSettingsPanel, AccountShell],
   templateUrl: './settings.html', styleUrls: ['../account.css', './settings.css'],
 })
 export class Settings {
