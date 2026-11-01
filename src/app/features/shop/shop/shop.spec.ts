@@ -94,6 +94,43 @@ describe('Shop', () => {
     http.expectNone('/api/session.php');
   });
 
+  it.each([
+    ['energy_small', 50, 60, '60 / 100'],
+    ['energy_med', 100, 90, '90 / 100'],
+    ['energy_unli', 500, 40, 'one hour'],
+  ])('shows Purchase Success for %s only after the server confirms payment', (id, price, juice, detail) => {
+    const http = TestBed.inject(HttpTestingController);
+    const confirmation = TestBed.inject(Confirmation);
+    const user = { id: 1, username: 'Player', tansans: 1000, juice: 40, walletVersion: 0 };
+    TestBed.inject(AccountState).set(user);
+    component.buyItem(id);
+    confirmation.respond(true);
+    http.expectOne('/api/session.php').flush({ user, csrfToken: 'token' });
+    const request = http.expectOne('/api/wallet.php');
+    expect(confirmation.active()).toBeNull();
+    request.flush({ user: { ...user, tansans: 1000 - price, juice, walletVersion: 1 } });
+    expect(confirmation.active()?.title).toBe('Purchase Success');
+    expect(confirmation.active()?.message).toContain(detail);
+    expect(confirmation.active()?.acknowledgeOnly).toBe(true);
+    confirmation.respond(true);
+    expect(confirmation.active()).toBeNull();
+    expect(component.pending()).toBe(false);
+  });
+
+  it('does not show Juice purchase success after a failed payment', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const confirmation = TestBed.inject(Confirmation);
+    const user = { id: 1, username: 'Player', tansans: 1000, juice: 40 };
+    TestBed.inject(AccountState).set(user);
+    component.buyItem('energy_small');
+    confirmation.respond(true);
+    http.expectOne('/api/session.php').flush({ user, csrfToken: 'token' });
+    http.expectOne('/api/wallet.php').flush({ message: 'Not enough Tansans.' }, { status: 409, statusText: 'Conflict' });
+    expect(confirmation.active()).toBeNull();
+    expect(component.message()).toBe('');
+    expect(component.errorMessage()).toBe('Not enough Tansans.');
+  });
+
   it('cancels a purchase without making requests or spending Tansans', () => {
     const state = TestBed.inject(AccountState);
     state.set({ id: 1, username: 'A', tansans: 700, juice: 80 });

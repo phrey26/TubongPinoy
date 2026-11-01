@@ -115,9 +115,18 @@ export class Shop implements OnInit {
       takeUntilDestroyed(this.destroyRef), finalize(() => { this.pending.set(false); this.pendingItem.set(null); }),
     ).subscribe({
       next: result => {
-        if (id === 'energy_unli') this.message.set('Unlimited Juice is active for one hour. Enjoy your games!');
-        else if (id.startsWith('energy_')) this.message.set(`Your Juice is now ${result.user.juice} / 100. You’re ready to play!`);
-        else {
+        if (this.account.user()?.id !== accountId || result.user.id !== accountId) return;
+        if (id.startsWith('energy_')) {
+          const message = id === 'energy_unli'
+            ? 'Unlimited Juice is active for one hour. Enjoy your games!'
+            : `Your Juice is now ${result.user.juice} / 100. You’re ready to play!`;
+          this.message.set(message);
+          this.confirmation.ask({
+            title: 'Purchase Success',
+            message: `${item.name} purchased successfully! ${message}`,
+            confirmLabel: 'Got it', acknowledgeOnly: true,
+          }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+        } else {
           const name = this.cosmeticSkins().find(skin => skin.id === id)?.name ?? 'Skin';
           this.message.set(`${name} successfully bought! Equip it in your inventory.`);
           this.confirmation.ask({
