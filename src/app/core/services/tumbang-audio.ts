@@ -8,6 +8,10 @@ export type VolumeChannel = 'master' | AudioChannel;
 export interface AudioSettings { master: number; effects: number; interface: number; muted: boolean; }
 export const DEFAULT_AUDIO: Readonly<AudioSettings> = { master: 70, effects: 85, interface: 65, muted: false };
 export const TUMBANG_SOUNDS = {
+  aldugoAim: { files: ['aldugo-aim.wav'], channel: 'effects' },
+  aldugoLaunch: { files: ['aldugo-launch.wav'], channel: 'effects' },
+  aldugoBounce: { files: ['aldugo-bounce.wav'], channel: 'effects' },
+  aldugoImpact: { files: ['aldugo-impact.wav'], channel: 'effects' },
   aim: { files: ['aim.wav'], channel: 'effects' },
   throw: { files: ['throw.wav'], channel: 'effects' },
   wall: { files: ['wall.wav', 'wall-2.wav', 'wall-3.wav'], channel: 'effects' },
@@ -45,6 +49,8 @@ export function normalizeAudioSettings(value: unknown): AudioSettings {
 
 @Injectable({ providedIn: 'root' })
 export class TumbangAudio {
+  private readonly account = inject(AccountState);
+  private aldugoEligible = false;
   private readonly destroyRef = inject(DestroyRef);
   private readonly state = signal<AudioSettings>({ ...DEFAULT_AUDIO });
   readonly settings = this.state.asReadonly();
@@ -71,7 +77,10 @@ export class TumbangAudio {
   private get mixSettings(): AudioSettings { return this.previewSettings ?? this.settings(); }
 
   constructor() {
-    inject(AccountState).changes$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
+    this.account.changes$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
+      const eligible = this.canUseAldugo;
+      if (this.aldugoEligible && !eligible) { this.generation++; this.silence(); }
+      this.aldugoEligible = eligible;
       const id = user?.id ?? null;
       if (id === this.accountId) return;
       this.stop(); this.accountId = id; this.readSettings();
@@ -83,6 +92,11 @@ export class TumbangAudio {
       if (event.key === this.storageKey || event.key === null) this.readSettings();
     });
     this.destroyRef.onDestroy(() => { this.stop(); void this.context?.close().catch(() => {}); });
+  }
+
+  private get canUseAldugo(): boolean {
+    const user = this.account.user();
+    return user?.equippedSkins?.['tumbang-preso'] === 'skin_1' && !!user.ownedSkins?.includes('skin_1');
   }
 
   private get storageKey(): string { return `tubong.audio.v1.${this.accountId ?? 'guest'}`; }
@@ -158,7 +172,8 @@ export class TumbangAudio {
   }
   play(sound: GameSound, strength = 1, delay = 0): void {
     if (!this.canPlay || this.context?.state !== 'running') return;
-    if (sound === 'wall' || sound === 'rock' || sound === 'clink') {
+    if (sound.startsWith('aldugo') && (this.bank !== 'tumbang' || !this.canUseAldugo)) return;
+    if (sound === 'wall' || sound === 'rock' || sound === 'clink' || sound === 'aldugoBounce') {
       if (this.context.currentTime - this.lastBounce < .055) return;
       this.lastBounce = this.context.currentTime;
     }
@@ -196,7 +211,8 @@ export class TumbangAudio {
       }
       if (this.context.state !== 'running') await this.context.resume();
       if (this.context.state !== 'running') throw new Error('Audio suspended');
-      const sounds = SOUND_BANKS[bank];
+      const sounds = Object.fromEntries(Object.entries(SOUND_BANKS[bank])
+        .filter(([name]) => !name.startsWith('aldugo') || this.canUseAldugo));
       if (Object.keys(sounds).every(name => this.buffers.has(`${bank}:${name}`))) return true;
       let loadingBank = this.loadingBanks.get(bank);
       if (!loadingBank) {
@@ -205,7 +221,8 @@ export class TumbangAudio {
         loadingBank = Promise.all(Object.entries(sounds).map(async ([name, sound]) => {
           const buffers = await Promise.all(sound.files.map(async file => {
             const directory = bank === 'jolens' && name !== 'click' && name !== 'empty' ? 'jolens-blast-assets' : 'tumbang-preso-assets';
-            const response = await fetch(`assets/${directory}/audio/${file}`, { signal: AbortSignal.timeout(10000) });
+            const path = name.startsWith('aldugo') ? `assets/tumbang-preso-skins-assets/audio/${file}` : `assets/${directory}/audio/${file}`;
+            const response = await fetch(path, { signal: AbortSignal.timeout(10000) });
             if (!response.ok) throw new Error('Sound download failed');
             return context.decodeAudioData(await response.arrayBuffer());
           }));
@@ -224,6 +241,7 @@ export class TumbangAudio {
     }
   }
   private spawn(sound: GameSound, strength: number, delay = 0, bank: AudioBank = this.bank): void {
+    if (sound.startsWith('aldugo') && (bank !== 'tumbang' || !this.canUseAldugo)) return;
     const context = this.context;
     const key = `${bank}:${sound}`;
     const buffers = this.buffers.get(key);
@@ -241,7 +259,7 @@ export class TumbangAudio {
       : (last + 1 + Math.floor(Math.random() * (buffers.length - 1))) % buffers.length;
     this.lastVariant.set(key, variant);
     source.buffer = buffers[variant];
-    const jingle = sound === 'win' || sound === 'miss' || sound === 'empty' || sound === 'collect';
+    const jingle = sound.startsWith('aldugo') || sound === 'win' || sound === 'miss' || sound === 'empty' || sound === 'collect';
     if (!jingle) {
       const high = !this.highPitch.get(key);
       this.highPitch.set(key, high);

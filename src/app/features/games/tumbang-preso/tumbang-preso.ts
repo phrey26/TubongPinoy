@@ -52,6 +52,11 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private reducedMotion = false;
   private readonly aldugo = new AldugoEffects();
   private legendarySkin = false;
+  private get aldugoSound(): boolean {
+    const user = this.account.user();
+    return user?.equippedSkins?.['tumbang-preso'] === 'skin_1' && !!user.ownedSkins?.includes('skin_1');
+  }
+
   private readonly impacts = new ImpactEffects();
   private readonly feedback = new GameFeedback();
   private lastFrameTime: number | null = null;
@@ -239,7 +244,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     if (Math.hypot(x - this.slipperPos.x, y - this.slipperPos.y) < 40) {
       this.isDragging = true;
       void this.audio.activate();
-      this.audio.play('aim');
+      this.audio.play(this.aldugoSound ? 'aldugoAim' : 'aim');
     }
   }
 
@@ -316,7 +321,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.isDragging = false;
     this.velocity.x = (this.dragStart.x - this.dragCurrent.x) * 0.22;
     this.velocity.y = (this.dragStart.y - this.dragCurrent.y) * 0.22;
-    this.audio.play('throw', Math.hypot(this.velocity.x, this.velocity.y) / 17.6);
+    this.audio.play(this.aldugoSound ? 'aldugoLaunch' : 'throw', Math.hypot(this.velocity.x, this.velocity.y) / 17.6);
     this.angularVelocity = launchShot(this.velocity.x, this.velocity.y).spin;
     if (!this.reducedMotion) this.impacts.play(this.slipperPos.x, this.slipperPos.y + 12, 'dust');
     if (this.legendarySkin) this.aldugo.burst(this.slipperPos.x, this.slipperPos.y, 'launch');
@@ -347,19 +352,19 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.changeDetector.markForCheck();
     }
     if (result.wallBounce) {
-      this.audio.play('wall', Math.hypot(shot.vx, shot.vy) / 14);
+      this.audio.play(this.aldugoSound ? 'aldugoBounce' : 'wall', Math.hypot(shot.vx, shot.vy) / 14);
       if (!this.reducedMotion) this.impacts.play(shot.x, shot.y, 'dust');
     }
     for (const obstacle of result.rockBounces) {
-      this.audio.play('rock', Math.hypot(shot.vx, shot.vy) / 14);
+      this.audio.play(this.aldugoSound ? 'aldugoBounce' : 'rock', Math.hypot(shot.vx, shot.vy) / 14);
       if (!this.reducedMotion) this.impacts.play(shot.x, shot.y, 'dust');
       if (!this.reducedMotion) this.obstacleFlashes.set(obstacle, 0.16);
     }
 
     if (result.hit) {
       if (this.legendarySkin) this.aldugo.burst(this.canPos.x, this.canPos.y, 'hit');
-      this.audio.play('can');
-      this.audio.play('win', .85, .14);
+      this.audio.play(this.aldugoSound ? 'aldugoImpact' : 'can');
+      this.audio.play('win', this.aldugoSound ? .55 : .85, this.aldugoSound ? .5 : .14);
       this.isLaunched = false;
       this.angularVelocity = 0;
       this.hitAge = 0.001;

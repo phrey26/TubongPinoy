@@ -181,6 +181,19 @@ describe('TumbangPreso', () => {
     expect(burst).not.toHaveBeenCalled();
   });
 
+  it.each([
+    [['skin_1'], 'skin_1', 'aldugoLaunch'],
+    [[], 'skin_1', 'throw'],
+    [['skin_1'], 'slipper_pink', 'throw'],
+  ])('selects launch audio from ownership and equipment', (ownedSkins, skin, expected) => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', tansans: 0, juice: 100,
+      ownedSkins, equippedSkins: { 'tumbang-preso': skin } });
+    component.resetSlipper();
+    component['isDragging'] = true;
+    component.onMouseUp();
+    expect(TestBed.inject(TumbangAudio).play).toHaveBeenCalledWith(expected, expect.any(Number));
+  });
+
   it('waits for a confirmed Juice deduction before granting a retry', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;

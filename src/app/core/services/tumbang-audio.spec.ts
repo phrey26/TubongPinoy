@@ -44,6 +44,38 @@ describe('Tumbang audio', () => {
     expect(FakeContext.instances[0].sources.at(-1)?.start).toHaveBeenCalledWith(10.14);
     expect(FakeContext.instances[0].sources.every(source => !source.loop)).toBe(true);
   });
+  it('loads and plays Aldugo cues only for an owner with Aldugo equipped', async () => {
+    const state = TestBed.inject(AccountState);
+    const user = { id: 1, username: 'Owner', tansans: 0, juice: 100,
+      ownedSkins: ['skin_1'], equippedSkins: { 'tumbang-preso': 'skin_1' } };
+    state.set(user);
+    const audio = await start();
+    const context = FakeContext.instances[0];
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).includes('skins-assets/audio'))).toHaveLength(4);
+    for (const sound of ['aldugoAim', 'aldugoLaunch', 'aldugoBounce', 'aldugoImpact'] as const) audio.play(sound);
+    expect(context.sources).toHaveLength(5);
+    expect(context.sources.at(-1)!.playbackRate.value).toBe(1);
+    audio.setVolume('effects', 0); audio.play('aldugoImpact');
+    expect(context.sources).toHaveLength(5);
+    audio.setVolume('effects', 85);
+    state.set({ ...user, equippedSkins: { 'tumbang-preso': 'slipper_pink' } });
+    expect(audio['voices'].size).toBe(0);
+    audio.play('aldugoImpact');
+    expect(context.sources).toHaveLength(5);
+    state.set({ ...user, ownedSkins: [] });
+    audio.play('aldugoImpact');
+    expect(context.sources).toHaveLength(5);
+  });
+
+  it('does not load legendary sounds for nonowners, even with an Aldugo equipment id', async () => {
+    TestBed.inject(AccountState).set({ id: 2, username: 'Other', tansans: 0, juice: 100,
+      ownedSkins: [], equippedSkins: { 'tumbang-preso': 'skin_1' } });
+    const audio = await start();
+    expect(fetch).toHaveBeenCalledTimes(15);
+    audio.play('aldugoLaunch'); audio.play('aldugoImpact');
+    expect(FakeContext.instances[0].sources).toHaveLength(1);
+  });
+
   it('routes independent effects/interface gains through the master and respects mute', async () => {
     const audio = await start(); const context = FakeContext.instances[0];
     audio.setVolume('master', 40); audio.setVolume('effects', 20);
