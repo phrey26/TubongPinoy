@@ -102,13 +102,25 @@
       } @else {
         <div class="product-grid skin-grid grid gap-5">
           @for (skin of skinsFor(section.game); track skin.id) {
-            <article class="product-card skin-card" [class.shooter-card]="section.game === 'jolens-blast'" [class.product-owned]="owns(skin.id)">
+            <article class="product-card skin-card" [attr.data-rarity]="skin.type" [class.shooter-card]="section.game === 'jolens-blast'" [class.product-owned]="owns(skin.id)">
               <div class="product-art product-art-purple">
                 <img [src]="skin.imageUrl" [alt]="skin.name" />
                 @if (owns(skin.id)) { <span class="shop-badge shop-badge-green owned-badge absolute top-2 right-2">Owned</span> }
               </div>
               <span class="product-benefit skin-rarity" [attr.data-rarity]="skin.type">{{ skin.type }}</span>
               <h3>{{ skin.name }}</h3>
+              <p class="skin-description">{{ skinTheme(skin).description }}</p>
+              @if (skin.type === 'Legendary Skin' || skin.type === 'Epic Skin') {
+                <div class="skin-perks" [class.skin-perks-legendary]="skin.type === 'Legendary Skin'">
+                  <p class="skin-perks-heading">{{ skinTheme(skin).heading }}</p>
+                  <ul class="skin-features">
+                    <li><strong>Special FX</strong><span>{{ skinTheme(skin).fx }}</span></li>
+                    @if (skin.type === 'Legendary Skin') {
+                      <li><strong>Special sound FX</strong><span>{{ skinTheme(skin).sound }}</span></li>
+                    }
+                  </ul>
+                </div>
+              }
               <div class="product-footer mt-auto pt-3">
                 <p class="product-price"><img class="w-6 h-6" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ skin.price | number }} <span>Tansans</span></p>
                 <button type="button" class="ui-button shop-button w-full text-sm" [class.shop-button-owned]="owns(skin.id)"

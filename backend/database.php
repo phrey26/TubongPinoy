@@ -14,6 +14,9 @@ function database(): PDO
     if (in_array(null, $config, true)) {
         throw new RuntimeException('Database configuration is missing. See backend/README.md.');
     }
+    if ($config['database'] !== 'tubongpinoy_db') {
+        throw new RuntimeException('Only tubongpinoy_db is allowed for this application.');
+    }
     $connection = new PDO(
         sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
             $config['host'], (int) $config['port'], $config['database']),

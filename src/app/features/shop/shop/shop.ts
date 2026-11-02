@@ -32,6 +32,20 @@ export class Shop implements OnInit {
   private readonly confirmation = inject(Confirmation);
   readonly cosmeticSkins = signal<Skin[]>([]);
   readonly skinsAvailable = true;
+  // Copy follows permanent IDs, so returning collections keep their own identity.
+  readonly skinThemes: Record<string, { description: string; heading: string; fx?: string; sound?: string }> = {
+    skin_4: { description: 'A fresh Guyabanos look for your neighborhood rounds.', heading: 'Fresh local flavor' },
+    skin_3: { description: 'Bring a playful twist to your next slipper shot.', heading: 'A little mischief' },
+    skin_2: { description: 'Golden style with a bright amber finish on every throw.', heading: 'Leave a golden trail', fx: 'Amber trails & gold impact flecks' },
+    skin_1: { description: 'Turn your throws into a colorful crystal spectacle.', heading: 'Unleash the crystal glow', fx: 'Prismatic trails & crystal bursts', sound: 'Crystal strikes with a shimmering echo' },
+    shooter_8ball: { description: 'Classic pool-table style, ready for the marble ring.', heading: 'Line up your next shot' },
+    shooter_golf: { description: 'Bring a touch of the fairway to your marble game.', heading: 'From fairway to ring' },
+    shooter_jupiter: { description: 'A miniature gas giant with a warm planetary glow.', heading: 'Put your shots in orbit', fx: 'Orbiting moons, storm dust & impact rings' },
+    shooter_steel_ball: { description: 'Charge the ring with green lightning and thunder.', heading: 'Start a lightning chain', fx: 'Electric trails & collision-chain lightning', sound: 'Electric cracks & thunder impacts' },
+  };
+  skinTheme(skin: Skin) {
+    return this.skinThemes[skin.id] ?? { description: 'A new look for your next round.', heading: 'Make it your own', fx: 'Signature trails & impacts', sound: 'Signature skin sounds' };
+  }
   readonly skinSections = [
     { game: 'tumbang-preso', title: 'Tumbang Preso Skins', item: 'slipper' },
     { game: 'jolens-blast', title: 'Jolens Blast Shooter Skins', item: 'shooter' },

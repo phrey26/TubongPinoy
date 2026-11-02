@@ -9,7 +9,7 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
 2. Copy `config.example.php` to `config.local.php` and set your MySQL credentials.
    The local file is ignored by Git and stays outside the web document root.
    Environment variables `TUBONG_DB_HOST`, `TUBONG_DB_PORT`, `TUBONG_DB_DATABASE`,
-   `TUBONG_DB_USERNAME`, and `TUBONG_DB_PASSWORD` override the local settings.
+   `TUBONG_DB_USERNAME`, and `TUBONG_DB_PASSWORD` override the local settings. The database name must remain `tubongpinoy_db`; the connection rejects any other database name.
 3. Run `schema.sql` in phpMyAdmin's SQL tab with `tubongpinoy_db` selected, or run:
 
    ```sh
@@ -322,7 +322,7 @@ for the limits of individual defenses.
 ## Jolens Blast shooter collection
 
 Apply `migrations/2026-11-01-jolens-shooter-skins.sql` to add 8ball (Common,
-50 Tansans), Golf (Rare, 150), Jupiter (Epic, 200), and Steel Ball (Legendary,
+50 Tansans), Golf (Rare, 100), Jupiter (Epic, 200), and Steel Ball (Legendary,
 300). Fresh setup includes them. Reapplying preserves ownership and prices.
 The catalog returns a game identifier so each collection has its own shop section.
 Owned shooters appear in Jolens Blast inventory and can be equipped for that game

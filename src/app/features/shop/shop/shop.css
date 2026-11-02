@@ -51,3 +51,21 @@
   .shop-heading-icon { width: 56px; height: 56px; }
 }
 @media (max-width: 419px) { .shop-page { padding: 24px 16px 48px; } .skin-grid { grid-template-columns: 1fr; } .wallet-item { padding: 20px; } }
+
+.skin-perks { margin: 2px 0 12px; padding: 14px 12px; border: 1px solid #d8b4fe; border-radius: 12px; background: #faf5ff; color: #581c87; }
+.skin-perks-legendary { border-color: #f5ca65; background: linear-gradient(135deg, #fffbeb, #fff3cc); color: #78350f; }
+.skin-perks-heading { margin: 0 0 10px; font-size: 13px; font-weight: 800; line-height: 1.4; }
+.skin-features { margin: 0; padding-left: 18px; list-style: disc; }
+.skin-features li + li { margin-top: 10px; }
+.skin-features li::marker { color: currentColor; font-size: 17px; }
+.skin-features strong { display: block; font-size: 15px; font-weight: 800; line-height: 1.4; }
+.skin-features span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.5; }
+
+.skin-card { --rarity-edge: #cbd5e1; --rarity-tint: #f1f5f9; --rarity-ink: #334155; border-color: var(--rarity-edge); background: linear-gradient(180deg, var(--rarity-tint), #fff 55%); box-shadow: 0 4px 0 var(--rarity-edge); }
+.skin-card[data-rarity="Rare Skin"] { --rarity-edge: #93c5fd; --rarity-tint: #eff6ff; --rarity-ink: #1e40af; }
+.skin-card[data-rarity="Epic Skin"] { --rarity-edge: #c084fc; --rarity-tint: #faf5ff; --rarity-ink: #6b21a8; }
+.skin-card[data-rarity="Legendary Skin"] { --rarity-edge: #f0bd4e; --rarity-tint: #fffbeb; --rarity-ink: #854d0e; }
+.skin-card .product-art { background: var(--rarity-tint); border: 1px solid var(--rarity-edge); }
+.skin-card .skin-rarity { align-self: flex-start; padding: 4px 9px; border: 1px solid var(--rarity-edge); border-radius: 20px; color: var(--rarity-ink); background: var(--rarity-tint); font-weight: 800; }
+.skin-card .skin-perks { border-color: var(--rarity-edge); color: var(--rarity-ink); }
+.skin-description { margin: 0 0 14px; color: #475569; font-size: 13px; line-height: 1.6; }
