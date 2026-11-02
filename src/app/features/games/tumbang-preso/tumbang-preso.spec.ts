@@ -194,6 +194,24 @@ describe('TumbangPreso', () => {
     expect(TestBed.inject(TumbangAudio).play).toHaveBeenCalledWith(expected, expect.any(Number));
   });
 
+  it.each([
+    [['skin_2'], 'skin_2', true],
+    [[], 'skin_2', false],
+    [['skin_2'], 'skin_3', false],
+  ])('gates Gatorz effects by ownership and equipment without special audio', (ownedSkins, skin, enabled) => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', tansans: 0, juice: 100,
+      ownedSkins, equippedSkins: { 'tumbang-preso': skin } });
+    const burst = vi.spyOn(component['gatorz'], 'burst');
+    component.resetSlipper();
+    component['isDragging'] = true;
+    component.onMouseUp();
+    expect(burst.mock.calls.length).toBe(enabled ? 1 : 0);
+    expect(TestBed.inject(TumbangAudio).play).toHaveBeenCalledWith('throw', expect.any(Number));
+    const clear = vi.spyOn(component['gatorz'], 'clear');
+    component.resetSlipper();
+    expect(clear).toHaveBeenCalled();
+  });
+
   it('waits for a confirmed Juice deduction before granting a retry', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;

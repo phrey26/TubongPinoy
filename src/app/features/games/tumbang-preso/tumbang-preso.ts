@@ -12,6 +12,7 @@ import { DestroyRef, inject, AfterViewInit, ChangeDetectorRef, Component, Elemen
 import { Router, RouterModule } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
+import { GatorzEffects } from './gatorz-effects';
 import { ALDUGO_FX_ATLAS, AldugoEffects } from './aldugo-effects';
 import { ImpactEffects } from './impact-effects';
 import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedback';
@@ -51,6 +52,11 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private readonly changeDetector = inject(ChangeDetectorRef);
   private reducedMotion = false;
   private readonly aldugo = new AldugoEffects();
+  private readonly gatorz = new GatorzEffects();
+  private get gatorzEquipped(): boolean {
+    const user = this.account.user();
+    return user?.equippedSkins?.['tumbang-preso'] === 'skin_2' && !!user.ownedSkins?.includes('skin_2');
+  }
   private legendarySkin = false;
   private get aldugoSound(): boolean {
     const user = this.account.user();
@@ -136,6 +142,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     cancelAnimationFrame(this.animationFrameId);
     this.impacts.clear();
     this.aldugo.clear();
+    this.gatorz.clear();
     this.feedback.clear();
     this.obstacleFlashes.clear();
     this.bankPopups = [];
@@ -195,9 +202,11 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.reducedMotion = motion?.matches ?? false;
       this.feedback.reducedMotion = this.reducedMotion;
       this.aldugo.reducedMotion = this.reducedMotion;
+      this.gatorz.reducedMotion = this.reducedMotion;
       if (this.reducedMotion) {
         this.impacts.clear();
         this.aldugo.clear();
+        this.gatorz.clear();
         this.obstacleFlashes.clear();
         this.canvas.nativeElement.style.transform = '';
       }
@@ -325,6 +334,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.angularVelocity = launchShot(this.velocity.x, this.velocity.y).spin;
     if (!this.reducedMotion) this.impacts.play(this.slipperPos.x, this.slipperPos.y + 12, 'dust');
     if (this.legendarySkin) this.aldugo.burst(this.slipperPos.x, this.slipperPos.y, 'launch');
+    if (this.gatorzEquipped) this.gatorz.burst(this.slipperPos.x, this.slipperPos.y, 'launch');
     this.feedback.launch(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
     this.isLaunched = true;
   }
@@ -344,6 +354,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     const bounces = Number(result.wallBounce) + result.rockBounces.length;
     if (bounces > 0) {
       if (this.legendarySkin) this.aldugo.burst(shot.x, shot.y, 'bounce');
+      if (this.gatorzEquipped) this.gatorz.burst(shot.x, shot.y, 'bounce');
       this.feedback.impact(shot.x, shot.y, Math.hypot(shot.vx, shot.vy) / 18, FEEDBACK_COLORS.dust);
       this.shotBounces += bounces;
       for (let bounce = 0; bounce < bounces; bounce++) {
@@ -363,6 +374,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
     if (result.hit) {
       if (this.legendarySkin) this.aldugo.burst(this.canPos.x, this.canPos.y, 'hit');
+      if (this.gatorzEquipped) this.gatorz.burst(this.canPos.x, this.canPos.y, 'hit');
       this.audio.play(this.aldugoSound ? 'aldugoImpact' : 'can');
       this.audio.play('win', this.aldugoSound ? .55 : .85, this.aldugoSound ? .5 : .14);
       this.isLaunched = false;
@@ -430,6 +442,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.bankPopups = [];
     this.impacts.clear();
     this.aldugo.clear();
+    this.gatorz.clear();
     this.feedback.clear();
     this.canvas.nativeElement.style.transform = '';
     this.obstacleFlashes.clear();
@@ -446,8 +459,11 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.lastFrameTime = timestamp;
     this.feedback.update(seconds);
     this.aldugo.update(seconds);
+    if (this.gatorzEquipped) this.gatorz.update(seconds);
+    else this.gatorz.clear();
     if (this.isLaunched && !paused) {
       if (this.legendarySkin) this.aldugo.flight(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
+      else if (this.gatorzEquipped) this.gatorz.flight(this.slipperPos.x, this.slipperPos.y);
       else this.feedback.trail(this.slipperPos.x, this.slipperPos.y,
         Math.hypot(this.velocity.x, this.velocity.y), '#f9a8d4');
       this.updatePhysics();
@@ -476,6 +492,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.aldugo.drawTrail(this.ctx, this.sprites.get(ALDUGO_FX_ATLAS));
       this.aldugo.drawAura(this.ctx, this.slipperPos.x, this.slipperPos.y, this.sprites.get(ALDUGO_FX_ATLAS), this.isLaunched);
     }
+    if (this.gatorzEquipped) this.gatorz.draw(this.ctx);
     this.drawSlipper();
     this.impacts.draw(this.ctx, this.sprites.get('assets/tumbang-preso-assets/effects/impact-sheet.png'));
     this.feedback.draw(this.ctx);

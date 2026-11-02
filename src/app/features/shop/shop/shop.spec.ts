@@ -81,7 +81,7 @@ describe('Shop', () => {
     component.loadCatalog();
     http.expectOne('/api/catalog.php').flush({ skins: [
       { id: 'skin_1', name: 'Aldugo', type: 'Legendary Skin', price: 300, imageUrl: '', game: 'tumbang-preso' },
-      { id: 'shooter_steel_ball', name: 'Steel Ball', type: 'Legendary Skin', price: 300,
+      { id: 'shooter_steel_ball', name: 'Steel Ball', type: 'Legendary Skin', price: 500,
         imageUrl: 'assets/jolens-blast-skin-assets/marble_skin_steel_ball.webp', game: 'jolens-blast' },
     ], demoTopupsEnabled: false });
     fixture.detectChanges();
@@ -90,7 +90,7 @@ describe('Shop', () => {
     expect(section.textContent).not.toContain('Aldugo');
     expect(section.querySelector('.product-card.skin-card')).toBeTruthy();
     section.querySelector('button').click();
-    expect(confirmation.active()?.message).toContain('Steel Ball for 300 Tansans');
+    expect(confirmation.active()?.message).toContain('Steel Ball for 500 Tansans');
     confirmation.respond(true);
     http.expectOne('/api/session.php').flush({ user, csrfToken: 'token' });
     http.expectOne('/api/wallet.php').flush({ user: { ...user, tansans: 700,
