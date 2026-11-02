@@ -1,3 +1,4 @@
+import { equippedSkinEffect } from './customization';
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
@@ -103,13 +104,12 @@ export class TumbangAudio {
 
   private get canUseAldugo(): boolean {
     const user = this.account.user();
-    return user?.equippedSkins?.['tumbang-preso'] === 'skin_1' && !!user.ownedSkins?.includes('skin_1');
+    return equippedSkinEffect(user, 'tumbang-preso') === 'aldugo';
   }
 
   private get canUseSteel(): boolean {
     const user = this.account.user();
-    return user?.equippedSkins?.['jolens-blast'] === 'shooter_steel_ball'
-      && !!user.ownedSkins?.includes('shooter_steel_ball');
+    return equippedSkinEffect(user, 'jolens-blast') === 'steel';
   }
 
   private get storageKey(): string { return `tubong.audio.v1.${this.accountId ?? 'guest'}`; }

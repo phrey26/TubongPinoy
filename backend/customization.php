@@ -5,6 +5,7 @@ declare(strict_types=1);
 const PROFILE_AVATARS = ['sunny', 'lila', 'miko', 'maya'];
 const DEFAULT_GAME_SKINS = ['tumbang-preso' => 'slipper_pink', 'jolens-blast' => 'shooter_chrome'];
 
+// Permanent archive, including retired shop items. Append IDs; never repurpose or remove them.
 function collectible_game_skins(): array
 {
     return [

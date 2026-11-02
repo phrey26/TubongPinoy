@@ -1,3 +1,4 @@
+import { equippedSkinEffect } from '../../../core/services/customization';
 import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
 import { Confirmation } from '../../../core/services/confirmation';
 import { AccountState } from '../../../core/services/account-state';
@@ -55,12 +56,12 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private readonly gatorz = new GatorzEffects();
   private get gatorzEquipped(): boolean {
     const user = this.account.user();
-    return user?.equippedSkins?.['tumbang-preso'] === 'skin_2' && !!user.ownedSkins?.includes('skin_2');
+    return equippedSkinEffect(user, 'tumbang-preso') === 'gatorz';
   }
-  private legendarySkin = false;
+  private get legendarySkin(): boolean { return equippedSkinEffect(this.account.user(), 'tumbang-preso') === 'aldugo'; }
   private get aldugoSound(): boolean {
     const user = this.account.user();
-    return user?.equippedSkins?.['tumbang-preso'] === 'skin_1' && !!user.ownedSkins?.includes('skin_1');
+    return equippedSkinEffect(user, 'tumbang-preso') === 'aldugo';
   }
 
   private readonly impacts = new ImpactEffects();
@@ -192,7 +193,6 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   obstacles: Obstacle[] = generateLevel(1).obstacles;
 
   ngAfterViewInit() {
-    this.legendarySkin = this.account.user()?.equippedSkins?.['tumbang-preso'] === 'skin_1';
     this.slipperSprite = gameSkinUrl('tumbang-preso', this.account.user()?.equippedSkins?.['tumbang-preso']);
     if (!this.tutorialLoading() && this.showIntroduction) this.introDialog.nativeElement.showModal?.();
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
@@ -427,7 +427,6 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   resetSlipper() {
     this.audio.resetAttempt();
-    this.legendarySkin = this.account.user()?.equippedSkins?.['tumbang-preso'] === 'skin_1';
     this.slipperSprite = gameSkinUrl('tumbang-preso', this.account.user()?.equippedSkins?.['tumbang-preso']);
     this.isLaunched = false;
     this.showTryAgain = false;
@@ -458,7 +457,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     const seconds = this.lastFrameTime === null || paused ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
     this.lastFrameTime = timestamp;
     this.feedback.update(seconds);
-    this.aldugo.update(seconds);
+    if (this.legendarySkin) this.aldugo.update(seconds);
+    else this.aldugo.clear();
     if (this.gatorzEquipped) this.gatorz.update(seconds);
     else this.gatorz.clear();
     if (this.isLaunched && !paused) {

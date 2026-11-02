@@ -137,7 +137,7 @@ describe('TumbangPreso', () => {
 
   it('draws the saved slipper color and restores the default for another account', () => {
     const state = TestBed.inject(AccountState);
-    state.set({ id: 1, username: 'Juan', tansans: 0, juice: 100,
+    state.set({ id: 1, username: 'Juan', tansans: 0, juice: 100, ownedSkins: ['skin_1'],
       equippedSkins: { 'tumbang-preso': 'slipper_blue' } });
     component.resetSlipper();
     const draw = vi.spyOn(component as any, 'drawSprite').mockReturnValue(true);
@@ -166,7 +166,7 @@ describe('TumbangPreso', () => {
     const state = TestBed.inject(AccountState);
     const burst = vi.spyOn(component['aldugo'], 'burst');
     const clear = vi.spyOn(component['aldugo'], 'clear');
-    state.set({ id: 1, username: 'Juan', tansans: 0, juice: 100,
+    state.set({ id: 1, username: 'Juan', tansans: 0, juice: 100, ownedSkins: ['skin_1'],
       equippedSkins: { 'tumbang-preso': 'skin_1' } });
     component.resetSlipper();
     component['isDragging'] = true;

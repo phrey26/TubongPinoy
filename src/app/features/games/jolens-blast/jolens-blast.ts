@@ -1,3 +1,4 @@
+import { equippedSkinEffect } from '../../../core/services/customization';
 import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
 import { Confirmation } from '../../../core/services/confirmation';
 import { AccountState } from '../../../core/services/account-state';
@@ -195,14 +196,12 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   private readonly jupiterFx = new JupiterEffects();
   private get jupiterEquipped(): boolean {
     const user = this.account.user();
-    return user?.equippedSkins?.['jolens-blast'] === 'shooter_jupiter'
-      && !!user.ownedSkins?.includes('shooter_jupiter');
+    return equippedSkinEffect(user, 'jolens-blast') === 'jupiter';
   }
   private readonly steelFx = new SteelBallEffects();
   private get steelEquipped(): boolean {
     const user = this.account.user();
-    return user?.equippedSkins?.['jolens-blast'] === 'shooter_steel_ball'
-      && !!user.ownedSkins?.includes('shooter_steel_ball');
+    return equippedSkinEffect(user, 'jolens-blast') === 'steel';
   }
   private readonly effects = new MarbleEffects();
   private readonly feedback = new GameFeedback();

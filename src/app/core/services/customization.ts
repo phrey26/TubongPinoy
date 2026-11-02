@@ -18,6 +18,7 @@ export const DEFAULT_GAME_SKINS: Record<GameId, string> = {
   'tumbang-preso': 'slipper_pink', 'jolens-blast': 'shooter_chrome',
 };
 
+// Permanent archive: append new IDs; never remove or reuse IDs during shop rotation.
 export const TUMBANG_COLLECTION_SKINS = [
   { id: 'skin_4', name: 'Guyabanos', rarity: 'Common', imageUrl: 'assets/tumbang-preso-skins-assets/slipper_guyabanos.webp' },
   { id: 'skin_3', name: 'Sike!', rarity: 'Rare', imageUrl: 'assets/tumbang-preso-skins-assets/slipper_sike.webp' },
@@ -45,3 +46,17 @@ export function gameSkinUrl(game: GameId, id?: string): string {
 
 export interface GameSkin { id: string; name: string; game: GameId; imageUrl: string; rarity?: string; }
 export interface Collectible { id: string; name: string; imageUrl: string; }
+
+/** Permanent effect identity is independent of shop listings, names and rarity. */
+export const SKIN_EFFECTS = {
+  skin_4: 'none', skin_3: 'none', skin_2: 'gatorz', skin_1: 'aldugo',
+  shooter_8ball: 'none', shooter_golf: 'none', shooter_jupiter: 'jupiter', shooter_steel_ball: 'steel',
+} as const;
+
+export function equippedSkinEffect(user: { ownedSkins?: string[]; equippedSkins?: Partial<Record<GameId, string>> } | null | undefined,
+  game: GameId): typeof SKIN_EFFECTS[keyof typeof SKIN_EFFECTS] {
+  const id = user?.equippedSkins?.[game];
+  const archive = game === 'tumbang-preso' ? TUMBANG_COLLECTION_SKINS : JOLENS_COLLECTION_SKINS;
+  if (!id || !user?.ownedSkins?.includes(id) || !archive.some(skin => skin.id === id)) return 'none';
+  return SKIN_EFFECTS[id as keyof typeof SKIN_EFFECTS] ?? 'none';
+}
