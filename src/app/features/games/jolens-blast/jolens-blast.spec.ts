@@ -500,6 +500,33 @@ describe('JolensBlast', () => {
     expect(sound).not.toHaveBeenCalledWith('collect');
   });
 
+  it('plays electrical arcs through the collision chain but keeps unrelated contacts ordinary', () => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Steel', tansans: 0, juice: 100,
+      ownedSkins: ['shooter_steel_ball'], equippedSkins: { 'jolens-blast': 'shooter_steel_ball' } });
+    const sound = vi.spyOn(component.audio, 'play');
+    const target = { x: 225, y: 300, radius: 20, color: '#ef4444', dx: 0, dy: 0, isMoving: false };
+    component['marblesOnBoard'] = [target];
+    component['currentShooter'] = { ...target, y: 340, dy: -10, isMoving: true };
+    component.updatePhysics();
+    expect(sound).toHaveBeenCalledWith('steelArc', expect.any(Number));
+    expect(component['steelFx'].isCharged(target)).toBe(true);
+    component['currentShooter'] = { ...target, x: 100, y: 650, dy: 0, isMoving: false };
+    Object.assign(target, { x: 225, y: 340, dy: -10, isMoving: true });
+    const next = { ...target, y: 300, dy: 0, isMoving: false };
+    component['marblesOnBoard'] = [target, next];
+    sound.mockClear();
+    component.updatePhysics();
+    expect(sound).toHaveBeenCalledWith('steelArc', expect.any(Number));
+    expect(component['steelFx'].isCharged(next)).toBe(true);
+    component['steelFx'].clear();
+    Object.assign(target, { y: 340, dy: -10, isMoving: true });
+    Object.assign(next, { y: 300, dy: 0, isMoving: false });
+    sound.mockClear();
+    component.updatePhysics();
+    expect(sound).toHaveBeenCalledWith('clink', expect.any(Number));
+    expect(sound).not.toHaveBeenCalledWith('steelArc', expect.any(Number));
+  });
+
   it('lets a paid round continue at zero juice without charging for shots', () => {
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
     energy.consumeEnergy(80);

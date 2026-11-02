@@ -24,6 +24,10 @@ export const TUMBANG_SOUNDS = {
 } as const;
 export type TumbangSound = keyof typeof TUMBANG_SOUNDS;
 export const JOLENS_SOUNDS = {
+  steelAim: { files: ['steel-aim.wav'], channel: 'effects' },
+  steelLaunch: { files: ['steel-launch.wav', 'steel-launch-2.wav', 'steel-launch-3.wav', 'steel-launch-4.wav', 'steel-launch-5.wav'], channel: 'effects' },
+  steelArc: { files: ['steel-arc.wav', 'steel-arc-2.wav', 'steel-arc-3.wav', 'steel-arc-4.wav', 'steel-arc-5.wav'], channel: 'effects' },
+  steelThunder: { files: ['steel-thunder.wav', 'steel-thunder-2.wav', 'steel-thunder-3.wav', 'steel-thunder-4.wav', 'steel-thunder-5.wav'], channel: 'effects' },
   aim: { files: ['aim.wav'], channel: 'effects' },
   throw: { files: ['throw.wav'], channel: 'effects' },
   clink: { files: ['clink.wav', 'clink-2.wav', 'clink-3.wav'], channel: 'effects' },
@@ -51,6 +55,7 @@ export function normalizeAudioSettings(value: unknown): AudioSettings {
 export class TumbangAudio {
   private readonly account = inject(AccountState);
   private aldugoEligible = false;
+  private steelEligible = false;
   private readonly destroyRef = inject(DestroyRef);
   private readonly state = signal<AudioSettings>({ ...DEFAULT_AUDIO });
   readonly settings = this.state.asReadonly();
@@ -79,8 +84,10 @@ export class TumbangAudio {
   constructor() {
     this.account.changes$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       const eligible = this.canUseAldugo;
-      if (this.aldugoEligible && !eligible) { this.generation++; this.silence(); }
+      const steelEligible = this.canUseSteel;
+      if ((this.aldugoEligible && !eligible) || (this.steelEligible && !steelEligible)) { this.generation++; this.silence(); }
       this.aldugoEligible = eligible;
+      this.steelEligible = steelEligible;
       const id = user?.id ?? null;
       if (id === this.accountId) return;
       this.stop(); this.accountId = id; this.readSettings();
@@ -97,6 +104,12 @@ export class TumbangAudio {
   private get canUseAldugo(): boolean {
     const user = this.account.user();
     return user?.equippedSkins?.['tumbang-preso'] === 'skin_1' && !!user.ownedSkins?.includes('skin_1');
+  }
+
+  private get canUseSteel(): boolean {
+    const user = this.account.user();
+    return user?.equippedSkins?.['jolens-blast'] === 'shooter_steel_ball'
+      && !!user.ownedSkins?.includes('shooter_steel_ball');
   }
 
   private get storageKey(): string { return `tubong.audio.v1.${this.accountId ?? 'guest'}`; }
@@ -173,11 +186,12 @@ export class TumbangAudio {
   play(sound: GameSound, strength = 1, delay = 0): void {
     if (!this.canPlay || this.context?.state !== 'running') return;
     if (sound.startsWith('aldugo') && (this.bank !== 'tumbang' || !this.canUseAldugo)) return;
-    if (sound === 'wall' || sound === 'rock' || sound === 'clink' || sound === 'aldugoBounce') {
+    if (sound.startsWith('steel') && (this.bank !== 'jolens' || !this.canUseSteel)) return;
+    if (sound === 'wall' || sound === 'rock' || sound === 'clink' || sound === 'aldugoBounce' || sound === 'steelArc') {
       if (this.context.currentTime - this.lastBounce < .055) return;
       this.lastBounce = this.context.currentTime;
     }
-    if (sound === 'knockout') {
+    if (sound === 'knockout' || sound === 'steelThunder') {
       if (this.context.currentTime - this.lastKnockout < .09) return;
       this.lastKnockout = this.context.currentTime;
     }
@@ -212,7 +226,8 @@ export class TumbangAudio {
       if (this.context.state !== 'running') await this.context.resume();
       if (this.context.state !== 'running') throw new Error('Audio suspended');
       const sounds = Object.fromEntries(Object.entries(SOUND_BANKS[bank])
-        .filter(([name]) => !name.startsWith('aldugo') || this.canUseAldugo));
+        .filter(([name]) => (!name.startsWith('aldugo') || this.canUseAldugo)
+          && (!name.startsWith('steel') || this.canUseSteel)));
       if (Object.keys(sounds).every(name => this.buffers.has(`${bank}:${name}`))) return true;
       let loadingBank = this.loadingBanks.get(bank);
       if (!loadingBank) {
@@ -221,7 +236,8 @@ export class TumbangAudio {
         loadingBank = Promise.all(Object.entries(sounds).map(async ([name, sound]) => {
           const buffers = await Promise.all(sound.files.map(async file => {
             const directory = bank === 'jolens' && name !== 'click' && name !== 'empty' ? 'jolens-blast-assets' : 'tumbang-preso-assets';
-            const path = name.startsWith('aldugo') ? `assets/tumbang-preso-skins-assets/audio/${file}` : `assets/${directory}/audio/${file}`;
+            const path = name.startsWith('aldugo') ? `assets/tumbang-preso-skins-assets/audio/${file}` : name.startsWith('steel')
+              ? `assets/jolens-blast-skin-assets/audio/${file}` : `assets/${directory}/audio/${file}`;
             const response = await fetch(path, { signal: AbortSignal.timeout(10000) });
             if (!response.ok) throw new Error('Sound download failed');
             return context.decodeAudioData(await response.arrayBuffer());
@@ -242,6 +258,7 @@ export class TumbangAudio {
   }
   private spawn(sound: GameSound, strength: number, delay = 0, bank: AudioBank = this.bank): void {
     if (sound.startsWith('aldugo') && (bank !== 'tumbang' || !this.canUseAldugo)) return;
+    if (sound.startsWith('steel') && (bank !== 'jolens' || !this.canUseSteel)) return;
     const context = this.context;
     const key = `${bank}:${sound}`;
     const buffers = this.buffers.get(key);
@@ -259,7 +276,7 @@ export class TumbangAudio {
       : (last + 1 + Math.floor(Math.random() * (buffers.length - 1))) % buffers.length;
     this.lastVariant.set(key, variant);
     source.buffer = buffers[variant];
-    const jingle = sound.startsWith('aldugo') || sound === 'win' || sound === 'miss' || sound === 'empty' || sound === 'collect';
+    const jingle = sound.startsWith('steel') || sound.startsWith('aldugo') || sound === 'win' || sound === 'miss' || sound === 'empty' || sound === 'collect';
     if (!jingle) {
       const high = !this.highPitch.get(key);
       this.highPitch.set(key, high);

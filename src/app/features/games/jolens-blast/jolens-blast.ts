@@ -386,7 +386,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (Math.hypot(mouseX - this.currentShooter.x, mouseY - this.currentShooter.y) < this.marbleRadius * 2) {
       void this.audio.activate();
       this.audio.resetAttempt();
-      this.audio.play('aim');
+      this.audio.play(this.steelEquipped ? 'steelAim' : 'aim');
       this.isDragging = true;
       this.dragStartX = mouseX;
       this.dragStartY = mouseY;
@@ -438,7 +438,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.currentShooter.dy = dy * 0.15;
       this.currentShooter.isMoving = true;
       if (this.steelEquipped) this.steelFx.burst(this.currentShooter.x, this.currentShooter.y, 'launch');
-      this.audio.play('throw', dragDistance / this.maxDragDistance);
+      this.audio.play(this.steelEquipped ? 'steelLaunch' : 'throw',
+        this.steelEquipped ? .6 + .4 * dragDistance / this.maxDragDistance : dragDistance / this.maxDragDistance);
       this.effects.play(this.currentShooter.x, this.currentShooter.y + 12, 'dust');
       this.feedback.launch(this.currentShooter.x, this.currentShooter.y,
         this.currentShooter.dx, this.currentShooter.dy);
@@ -483,8 +484,10 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       { ...this.targetCenter, radius: this.playAreaRadius },
       { width: this.canvasWidth, height: this.canvasHeight },
       (x, y, speed, _involvesShooter, a, b) => {
+        const chargedContact = this.steelEquipped && (a === this.currentShooter || b === this.currentShooter
+          || this.steelFx.isCharged(a) || this.steelFx.isCharged(b));
         if (this.steelEquipped) this.steelFx.contact(a, b, this.currentShooter);
-        this.audio.play('clink', speed / 18);
+        this.audio.play(chargedContact ? 'steelArc' : 'clink', chargedContact ? .45 + .55 * Math.min(1, speed / 18) : speed / 18);
         this.effects.play(x, y, 'sparks');
         this.feedback.impact(x, y, speed / 20, FEEDBACK_COLORS.glass);
       },
@@ -494,7 +497,10 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.feedback.ripple(marble.x, marble.y, '#facc65');
       this.popText('OUT!', marble.x, marble.y, '#fef08a');
     }
-    if (knockedOut.size) this.audio.play('knockout', .7);
+    if (knockedOut.size) {
+      const chargedExit = this.steelEquipped && [...knockedOut].some(marble => this.steelFx.isCharged(marble));
+      this.audio.play(chargedExit ? 'steelThunder' : 'knockout', .7);
+    }
     this.pendingKnockouts.push(...this.marblesOnBoard.filter(marble => knockedOut.has(marble)));
     this.marblesOnBoard = this.marblesOnBoard.filter(marble => !knockedOut.has(marble));
     const allTargets = [...this.marblesOnBoard, ...this.pendingKnockouts, ...this.outsideMarbles];

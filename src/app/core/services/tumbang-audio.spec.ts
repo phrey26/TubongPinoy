@@ -104,6 +104,57 @@ describe('Tumbang audio', () => {
     expect(FakeContext.instances[0].sources).toHaveLength(1);
   });
 
+  it('gates Steel Ball cues by ownership, equipment and bank, with five nonrepeating takes', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(.5);
+    const state = TestBed.inject(AccountState);
+    const user = { id: 1, username: 'Steel', tansans: 0, juice: 100,
+      ownedSkins: ['shooter_steel_ball'], equippedSkins: { 'jolens-blast': 'shooter_steel_ball' } };
+    state.set(user);
+    const audio = TestBed.inject(TumbangAudio);
+    audio.start('jolens');
+    await vi.waitFor(() => expect(FakeContext.instances[0].sources).toHaveLength(1));
+    const context = FakeContext.instances[0];
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).includes('jolens-blast-skin-assets/audio'))).toHaveLength(16);
+    for (const sound of ['steelLaunch', 'steelArc', 'steelThunder'] as const) {
+      const heard = new Set();
+      let previous: unknown;
+      for (let i = 0; i < 10; i++) {
+        context.currentTime += .12;
+        audio.play(sound);
+        const source = context.sources.at(-1)!;
+        expect(source.buffer).not.toBe(previous);
+        expect(source.playbackRate.value).toBe(1);
+        heard.add(source.buffer); previous = source.buffer;
+      }
+      expect(heard.size).toBe(5);
+    }
+    const count = context.sources.length;
+    audio.play('steelThunder');
+    expect(context.sources).toHaveLength(count);
+    state.set({ ...user, equippedSkins: {} });
+    expect(audio['voices'].size).toBe(0);
+    audio.play('steelLaunch');
+    state.set({ ...user, ownedSkins: [] });
+    audio.play('steelLaunch');
+    expect(context.sources).toHaveLength(count);
+    state.set(user);
+    audio.start('tumbang');
+    await vi.waitFor(() => expect(context.sources).toHaveLength(count + 1));
+    audio.play('steelLaunch');
+    expect(context.sources).toHaveLength(count + 1);
+  });
+
+  it('does not download Steel Ball audio for a nonowner with its equipment id', async () => {
+    TestBed.inject(AccountState).set({ id: 2, username: 'Other', tansans: 0, juice: 100,
+      ownedSkins: [], equippedSkins: { 'jolens-blast': 'shooter_steel_ball' } });
+    const audio = TestBed.inject(TumbangAudio);
+    audio.start('jolens');
+    await vi.waitFor(() => expect(FakeContext.instances[0].sources).toHaveLength(1));
+    expect(fetch).toHaveBeenCalledTimes(11);
+    audio.play('steelArc');
+    expect(FakeContext.instances[0].sources).toHaveLength(1);
+  });
+
   it('routes independent effects/interface gains through the master and respects mute', async () => {
     const audio = await start(); const context = FakeContext.instances[0];
     audio.setVolume('master', 40); audio.setVolume('effects', 20);
