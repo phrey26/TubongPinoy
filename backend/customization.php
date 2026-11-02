@@ -36,16 +36,27 @@ function owned_game_skins(array $user): array
 
 function starter_skins(): array
 {
-    $items = [];
-    foreach (['pink', 'blue', 'green', 'orange', 'red', 'yellow'] as $color) {
-        $items[] = ['id' => 'slipper_' . $color, 'name' => ucfirst($color) . ' Slipper',
-            'game' => 'tumbang-preso', 'imageUrl' => 'assets/tumbang-preso-assets/slippers/slipper_' . $color . '.png'];
-    }
-    foreach (['chrome' => 'Classic Chrome', 'gold' => 'Golden Jolens', 'blue_swirl' => 'Blue Swirl'] as $key => $name) {
-        $items[] = ['id' => 'shooter_' . $key, 'name' => $name,
-            'game' => 'jolens-blast', 'imageUrl' => 'assets/jolens-blast-assets/shooters/shooter_' . $key . '.png'];
-    }
-    return $items;
+    // Permanent free IDs; independent of shop rotation and display names.
+    return [
+        ['id' => 'slipper_pink', 'name' => 'Pink Slipper', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-assets/slippers/slipper_pink.png'],
+        ['id' => 'slipper_blue', 'name' => 'Blue Slipper', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-assets/slippers/slipper_blue.png'],
+        ['id' => 'slipper_green', 'name' => 'Green Slipper', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-assets/slippers/slipper_green.png'],
+        ['id' => 'slipper_orange', 'name' => 'Orange Slipper', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-assets/slippers/slipper_orange.png'],
+        ['id' => 'slipper_red', 'name' => 'Red Slipper', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-assets/slippers/slipper_red.png'],
+        ['id' => 'slipper_yellow', 'name' => 'Yellow Slipper', 'game' => 'tumbang-preso',
+            'imageUrl' => 'assets/tumbang-preso-assets/slippers/slipper_yellow.png'],
+        ['id' => 'shooter_chrome', 'name' => 'Classic Chrome', 'game' => 'jolens-blast',
+            'imageUrl' => 'assets/jolens-blast-assets/shooters/shooter_chrome.png'],
+        ['id' => 'shooter_gold', 'name' => 'Golden Jolens', 'game' => 'jolens-blast',
+            'imageUrl' => 'assets/jolens-blast-assets/shooters/shooter_gold.png'],
+        ['id' => 'shooter_blue_swirl', 'name' => 'Blue Swirl', 'game' => 'jolens-blast',
+            'imageUrl' => 'assets/jolens-blast-assets/shooters/shooter_blue_swirl.png'],
+    ];
 }
 
 function account_profile(PDO $db, int $userId, string $username): array

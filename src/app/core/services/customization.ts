@@ -18,6 +18,19 @@ export const DEFAULT_GAME_SKINS: Record<GameId, string> = {
   'tumbang-preso': 'slipper_pink', 'jolens-blast': 'shooter_chrome',
 };
 
+// Permanent free IDs: keep these even when names, artwork or shop collections change.
+export const STARTER_SKINS = [
+  { id: 'slipper_pink', name: 'Pink Slipper', game: 'tumbang-preso', imageUrl: 'assets/tumbang-preso-assets/slippers/slipper_pink.png' },
+  { id: 'slipper_blue', name: 'Blue Slipper', game: 'tumbang-preso', imageUrl: 'assets/tumbang-preso-assets/slippers/slipper_blue.png' },
+  { id: 'slipper_green', name: 'Green Slipper', game: 'tumbang-preso', imageUrl: 'assets/tumbang-preso-assets/slippers/slipper_green.png' },
+  { id: 'slipper_orange', name: 'Orange Slipper', game: 'tumbang-preso', imageUrl: 'assets/tumbang-preso-assets/slippers/slipper_orange.png' },
+  { id: 'slipper_red', name: 'Red Slipper', game: 'tumbang-preso', imageUrl: 'assets/tumbang-preso-assets/slippers/slipper_red.png' },
+  { id: 'slipper_yellow', name: 'Yellow Slipper', game: 'tumbang-preso', imageUrl: 'assets/tumbang-preso-assets/slippers/slipper_yellow.png' },
+  { id: 'shooter_chrome', name: 'Classic Chrome', game: 'jolens-blast', imageUrl: 'assets/jolens-blast-assets/shooters/shooter_chrome.png' },
+  { id: 'shooter_gold', name: 'Golden Jolens', game: 'jolens-blast', imageUrl: 'assets/jolens-blast-assets/shooters/shooter_gold.png' },
+  { id: 'shooter_blue_swirl', name: 'Blue Swirl', game: 'jolens-blast', imageUrl: 'assets/jolens-blast-assets/shooters/shooter_blue_swirl.png' },
+] as const;
+
 // Permanent archive: append new IDs; never remove or reuse IDs during shop rotation.
 export const TUMBANG_COLLECTION_SKINS = [
   { id: 'skin_4', name: 'Guyabanos', rarity: 'Common', imageUrl: 'assets/tumbang-preso-skins-assets/slipper_guyabanos.webp' },
@@ -36,12 +49,9 @@ export const JOLENS_COLLECTION_SKINS = [
 export function gameSkinUrl(game: GameId, id?: string): string {
   const collectible = (game === 'tumbang-preso' ? TUMBANG_COLLECTION_SKINS : JOLENS_COLLECTION_SKINS).find(skin => skin.id === id);
   if (collectible) return collectible.imageUrl;
-  const valid = game === 'tumbang-preso'
-    ? SLIPPER_COLORS.map(color => `slipper_${color}`)
-    : SHOOTER_STYLES.map(style => `shooter_${style}`);
-  const safeId = id && valid.includes(id) ? id : DEFAULT_GAME_SKINS[game];
-  const directory = game === 'tumbang-preso' ? 'slippers' : 'shooters';
-  return `assets/${game}-assets/${directory}/${safeId}.png`;
+  const starter = STARTER_SKINS.find(skin => skin.game === game && skin.id === id)
+    ?? STARTER_SKINS.find(skin => skin.id === DEFAULT_GAME_SKINS[game])!;
+  return starter.imageUrl;
 }
 
 export interface GameSkin { id: string; name: string; game: GameId; imageUrl: string; rarity?: string; }
@@ -49,6 +59,9 @@ export interface Collectible { id: string; name: string; imageUrl: string; }
 
 /** Permanent effect identity is independent of shop listings, names and rarity. */
 export const SKIN_EFFECTS = {
+  slipper_pink: 'none', slipper_blue: 'none', slipper_green: 'none',
+  slipper_orange: 'none', slipper_red: 'none', slipper_yellow: 'none',
+  shooter_chrome: 'none', shooter_gold: 'none', shooter_blue_swirl: 'none',
   skin_4: 'none', skin_3: 'none', skin_2: 'gatorz', skin_1: 'aldugo',
   shooter_8ball: 'none', shooter_golf: 'none', shooter_jupiter: 'jupiter', shooter_steel_ball: 'steel',
 } as const;

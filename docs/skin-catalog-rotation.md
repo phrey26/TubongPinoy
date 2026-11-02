@@ -13,3 +13,19 @@ To release a new set:
 3. Returning an archived ID to this list relists the same skin; prior owners still own it. Current sessions fetch the updated catalog when the shop reloads, and purchases always check server availability.
 
 No rotation is applied as part of this implementation; the current shop selection remains available.
+
+## Free starter IDs
+
+These permanent IDs remain available to every account without purchase or a `user_skins` row. They never depend on shop availability and retain standard game effects and audio. Existing equipped IDs are unchanged.
+
+| Game | Starter | Permanent ID |
+| --- | --- | --- |
+| tumbang-preso | Pink Slipper | `slipper_pink` |
+| tumbang-preso | Blue Slipper | `slipper_blue` |
+| tumbang-preso | Green Slipper | `slipper_green` |
+| tumbang-preso | Orange Slipper | `slipper_orange` |
+| tumbang-preso | Red Slipper | `slipper_red` |
+| tumbang-preso | Yellow Slipper | `slipper_yellow` |
+| jolens-blast | Classic Chrome | `shooter_chrome` |
+| jolens-blast | Golden Jolens | `shooter_gold` |
+| jolens-blast | Blue Swirl | `shooter_blue_swirl` |
