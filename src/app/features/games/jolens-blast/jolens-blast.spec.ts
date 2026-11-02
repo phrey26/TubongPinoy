@@ -267,6 +267,24 @@ describe('JolensBlast', () => {
     expect(clear).toHaveBeenCalled();
   });
 
+  it.each([
+    [['shooter_jupiter'], 'shooter_jupiter', true],
+    [[], 'shooter_jupiter', false],
+    [['shooter_jupiter'], 'shooter_gold', false],
+  ])('shows Jupiter orbit only for its owned, equipped ID', (ownedSkins, skin, enabled) => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', tansans: 0, juice: 100,
+      ownedSkins, equippedSkins: { 'jolens-blast': skin } });
+    component.spawnShooter();
+    const orbit = vi.spyOn(component['jupiterFx'], 'drawOrbit').mockImplementation(() => {});
+    const dust = vi.spyOn(component['jupiterFx'], 'drawDust');
+    component.draw();
+    expect(orbit).toHaveBeenCalledTimes(enabled ? 2 : 0);
+    expect(dust).toHaveBeenCalledTimes(enabled ? 1 : 0);
+    const clear = vi.spyOn(component['jupiterFx'], 'clear');
+    component.spawnShooter();
+    expect(clear).toHaveBeenCalled();
+  });
+
   it('does not stake marbles or start a round while the Juice payment is pending or fails', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;

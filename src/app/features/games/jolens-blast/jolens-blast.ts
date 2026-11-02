@@ -14,6 +14,7 @@ import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
 import { stepMarbles } from './marble-physics';
 import { scatterMarbles } from './marble-placement';
+import { JupiterEffects } from './jupiter-effects';
 import { SteelBallEffects } from './steel-ball-effects';
 import { STEEL_BALL_FX_ATLAS, JOLENS_ASSETS, JOLENS_ASSET_PATHS } from './jolens-assets';
 import { MarbleEffects } from './marble-effects';
@@ -191,6 +192,12 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   private currentShooter!: Marble;
   readonly assets = JOLENS_ASSETS;
   private readonly sprites = new Map<string, HTMLImageElement>();
+  private readonly jupiterFx = new JupiterEffects();
+  private get jupiterEquipped(): boolean {
+    const user = this.account.user();
+    return user?.equippedSkins?.['jolens-blast'] === 'shooter_jupiter'
+      && !!user.ownedSkins?.includes('shooter_jupiter');
+  }
   private readonly steelFx = new SteelBallEffects();
   private get steelEquipped(): boolean {
     const user = this.account.user();
@@ -242,9 +249,10 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     const syncMotion = () => {
       this.effects.reducedMotion = motion?.matches ?? false;
       this.steelFx.reducedMotion = this.effects.reducedMotion;
+      this.jupiterFx.reducedMotion = this.effects.reducedMotion;
       this.feedback.reducedMotion = this.effects.reducedMotion;
       if (this.effects.reducedMotion) {
-        this.effects.clear(); this.steelFx.clear();
+        this.effects.clear(); this.steelFx.clear(); this.jupiterFx.clear();
         this.canvasRef.nativeElement.style.transform = '';
       }
     };
@@ -279,7 +287,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     cancelAnimationFrame(this.animationFrameId);
     this.audio.stop();
-    this.effects.clear(); this.steelFx.clear();
+    this.effects.clear(); this.steelFx.clear(); this.jupiterFx.clear();
     this.feedback.clear();
     if (this.energySub) this.energySub.unsubscribe();
   }
@@ -321,7 +329,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   private initRound() {
     this.audio.resetAttempt();
     this.audio.play('click');
-    this.effects.clear(); this.steelFx.clear();
+    this.effects.clear(); this.steelFx.clear(); this.jupiterFx.clear();
     this.feedback.clear();
     this.canvasRef.nativeElement.style.transform = '';
     this.outsideMarbles = [];
@@ -347,7 +355,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   spawnShooter() {
-    this.steelFx.clear();
+    this.steelFx.clear(); this.jupiterFx.clear();
     // A new shooter marks the next turn; the previous winnings are collected.
     this.outsideMarbles = [];
     this.currentShooter = {
@@ -437,6 +445,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.currentShooter.dx = dx * 0.15;
       this.currentShooter.dy = dy * 0.15;
       this.currentShooter.isMoving = true;
+      if (this.jupiterEquipped) this.jupiterFx.burst(this.currentShooter.x, this.currentShooter.y);
       if (this.steelEquipped) this.steelFx.burst(this.currentShooter.x, this.currentShooter.y, 'launch');
       this.audio.play(this.steelEquipped ? 'steelLaunch' : 'throw',
         this.steelEquipped ? .6 + .4 * dragDistance / this.maxDragDistance : dragDistance / this.maxDragDistance);
@@ -454,6 +463,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.feedback.update(elapsed / 1000);
     this.steelFx.update(elapsed / 1000);
     if (!this.steelEquipped) this.steelFx.clear();
+    if (this.jupiterEquipped) this.jupiterFx.update(elapsed / 1000);
+    else this.jupiterFx.clear();
     this.frameAccumulator += elapsed;
     while (this.frameAccumulator >= 1000 / 60) {
       this.updatePhysics();
@@ -463,6 +474,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (!paused && this.shotInProgress) {
       if (this.steelEquipped && this.currentShooter.isMoving) {
         this.steelFx.flight(this.currentShooter.x, this.currentShooter.y, this.currentShooter.dx, this.currentShooter.dy);
+      } else if (this.jupiterEquipped && this.currentShooter.isMoving) {
+        this.jupiterFx.flight(this.currentShooter.x, this.currentShooter.y);
       } else this.feedback.trail(this.currentShooter.x, this.currentShooter.y,
         Math.hypot(this.currentShooter.dx, this.currentShooter.dy), '#bae6fd');
     }
@@ -484,6 +497,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       { ...this.targetCenter, radius: this.playAreaRadius },
       { width: this.canvasWidth, height: this.canvasHeight },
       (x, y, speed, _involvesShooter, a, b) => {
+        if (this.jupiterEquipped && _involvesShooter) this.jupiterFx.burst(x, y, true);
         const chargedContact = this.steelEquipped && (a === this.currentShooter || b === this.currentShooter
           || this.steelFx.isCharged(a) || this.steelFx.isCharged(b));
         if (this.steelEquipped) this.steelFx.contact(a, b, this.currentShooter);
@@ -597,11 +611,17 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       this.steelFx.drawTrail(this.ctx, atlas);
       if (!this.steelFx.isCharged(this.currentShooter)) this.steelFx.drawAura(this.ctx, this.currentShooter.x, this.currentShooter.y, atlas);
     }
+    if (this.jupiterEquipped) {
+      this.jupiterFx.drawDust(this.ctx);
+      this.jupiterFx.drawOrbit(this.ctx, this.currentShooter.x, this.currentShooter.y, this.currentShooter.radius, false);
+    }
     this.drawMarble(this.currentShooter);
+    if (this.jupiterEquipped) this.jupiterFx.drawOrbit(this.ctx, this.currentShooter.x, this.currentShooter.y, this.currentShooter.radius, true);
 
     this.effects.draw((...args) => this.drawSprite(...args));
     this.feedback.draw(this.ctx);
     if (this.steelEquipped) this.steelFx.drawImpact(this.ctx, this.sprites.get(STEEL_BALL_FX_ATLAS));
+    if (this.jupiterEquipped) this.jupiterFx.drawImpact(this.ctx);
     this.drawTextPopups();
     if (this.isDragging) {
       const dx = this.dragStartX - this.currentMouseX;
@@ -713,7 +733,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.audio.resetAttempt();
     this.audio.play('click');
     this.feedback.clear();
-    this.effects.clear(); this.steelFx.clear();
+    this.effects.clear(); this.steelFx.clear(); this.jupiterFx.clear();
     this.canvasRef.nativeElement.style.transform = '';
     this.hasCompletedShot = false;
     this.marbleInventory = 10;
