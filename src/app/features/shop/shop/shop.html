@@ -103,7 +103,7 @@
         <div class="product-grid skin-grid grid gap-5">
           @for (skin of skinsFor(section.game); track skin.id) {
             <article class="product-card skin-card" [attr.data-rarity]="skin.type" [class.shooter-card]="section.game === 'jolens-blast'" [class.product-owned]="owns(skin.id)">
-              <div class="product-art product-art-purple">
+              <div class="product-art skin-preview" [class.skin-preview-dirt]="section.game === 'jolens-blast'">
                 <img [src]="skin.imageUrl" [alt]="skin.name" />
                 @if (owns(skin.id)) { <span class="shop-badge shop-badge-green owned-badge absolute top-2 right-2">Owned</span> }
               </div>

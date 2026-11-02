@@ -69,3 +69,7 @@
 .skin-card .skin-rarity { align-self: flex-start; padding: 4px 9px; border: 1px solid var(--rarity-edge); border-radius: 20px; color: var(--rarity-ink); background: var(--rarity-tint); font-weight: 800; }
 .skin-card .skin-perks { border-color: var(--rarity-edge); color: var(--rarity-ink); }
 .skin-description { margin: 0 0 14px; color: #475569; font-size: 13px; line-height: 1.6; }
+
+.skin-card .skin-preview { background-color: #c9b89c; background-image: url('/assets/tumbang-preso-assets/background/street_bg_clean.png'); background-size: cover; background-position: center; }
+.skin-card .skin-preview-dirt { background-image: url('/assets/jolens-blast-assets/background/dirt_bg_clean.png'); }
+.skin-preview > img { filter: drop-shadow(0 3px 3px #0005); }
