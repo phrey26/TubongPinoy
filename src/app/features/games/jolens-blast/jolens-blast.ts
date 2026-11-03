@@ -1,3 +1,4 @@
+import { GamePause } from '../../../shared/game-pause/game-pause';
 import { equippedSkinEffect } from '../../../core/services/customization';
 import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
 import { Confirmation } from '../../../core/services/confirmation';
@@ -38,7 +39,7 @@ interface Marble {
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-jolens-blast',
-  imports: [JuiceTimer, CommonModule, RouterModule, Leaderboard],
+  imports: [GamePause, JuiceTimer, CommonModule, RouterModule, Leaderboard],
   templateUrl: './jolens-blast.html',
   styleUrl: './jolens-blast.css',
 })
@@ -60,6 +61,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   selectedBet = 3;
   showBetSetup = false;
   hasStarted = false;
+  isPaused = false;
+  private windowAway = false;
   hasCompletedShot = false;
   showIntroduction = true;
   readonly tutorialLoading = signal(true);
@@ -123,7 +126,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   closeTutorial(): void {
     this.isDragging = false;
     this.showIntroduction = false;
-    this.audio.setPaused(!!this.confirmation.active());
+    this.audio.setPaused(this.isPaused || !!this.confirmation.active());
     this.introDialog.nativeElement.close?.();
     if (!this.tutorialSeen && !this.savingTutorial && !this.tutorialLoading()) {
       this.savingTutorial = true;
@@ -140,6 +143,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (this.showIntroduction || this.hasStarted || this.savingJuice() || this.retrySync) return;
     this.syncRun('start', () => {
       this.hasStarted = true; this.audio.start('jolens'); this.showBetSetup = true;
+      if (this.windowAway || document.hidden) this.pauseGame();
       this.showCashOut = (this.energyLevel < 20 && !this.energyService.hasUnlimited());
     });
   }
@@ -149,6 +153,38 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.selectBet(this.selectedBet + direction);
   }
 
+
+  @HostListener('window:blur')
+  onWindowBlur(): void {
+    this.windowAway = true;
+    this.pauseGame();
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus(): void { this.windowAway = false; }
+
+  @HostListener('document:visibilitychange')
+  onVisibilityChange(): void {
+    if (document.hidden) this.pauseGame();
+  }
+
+  private pauseGame(): void {
+    if (!this.hasStarted || this.showGameOver || this.isPaused) return;
+    this.isPaused = true;
+    this.isDragging = false;
+    this.lastFrameTime = null;
+    this.audio.setPaused(true);
+    this.changeDetector.markForCheck();
+  }
+
+  resumeGame(): void {
+    if (!this.isPaused || document.hidden) return;
+    this.isPaused = false;
+    this.lastFrameTime = null;
+    this.audio.setPaused(this.showIntroduction || !!this.confirmation.active());
+    void this.audio.activate();
+    this.changeDetector.markForCheck();
+  }
 
   async toggleFullscreen(): Promise<void> {
     this.isDragging = false;
@@ -381,7 +417,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onMouseDown(event: MouseEvent) {
-    if (this.confirmation.active() || this.savingJuice() || this.retrySync || this.roundWinAge !== null) return;
+    if (this.isPaused || this.confirmation.active() || this.savingJuice() || this.retrySync || this.roundWinAge !== null) return;
     if (
       this.showIntroduction ||
       !this.hasStarted ||
@@ -414,7 +450,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onMouseMove(event: MouseEvent) {
-    if (!this.isDragging) return;
+    if (this.isPaused || !this.isDragging) return;
 
     const rect = this.canvasRef.nativeElement.getBoundingClientRect();
     this.currentMouseX = (event.clientX - rect.left) * (this.canvasWidth / rect.width);
@@ -432,7 +468,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onMouseUp() {
-    if (this.confirmation.active()) { this.isDragging = false; return; }
+    if (this.isPaused || this.confirmation.active()) { this.isDragging = false; return; }
     if (!this.isDragging) return;
     this.isDragging = false;
 
@@ -467,7 +503,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   gameLoop(timestamp = performance.now()) {
-    const paused = this.showIntroduction || !!this.confirmation.active();
+    const paused = this.isPaused || this.showIntroduction || !!this.confirmation.active();
     this.audio.setPaused(paused);
     const elapsed = this.lastFrameTime === null || paused ? 0 : Math.min(50, Math.max(0, timestamp - this.lastFrameTime));
     this.lastFrameTime = timestamp;
@@ -485,7 +521,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (this.jupiterEquipped) this.jupiterFx.update(elapsed / 1000);
     else this.jupiterFx.clear();
     this.frameAccumulator += elapsed;
-    while (this.frameAccumulator >= 1000 / 60) {
+    while (!paused && this.frameAccumulator >= 1000 / 60) {
       this.updatePhysics();
       this.frameAccumulator -= 1000 / 60;
     }
@@ -506,7 +542,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   updatePhysics() {
-    if (this.confirmation.active()) return;
+    if (this.isPaused || this.confirmation.active()) return;
     if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.roundWinAge !== null || this.showBetSetup) return;
     if (!this.shotInProgress && !this.currentShooter.isMoving &&
         !this.marblesOnBoard.some(marble => marble.isMoving)) return;

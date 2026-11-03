@@ -52,6 +52,70 @@ describe('TumbangPreso', () => {
     component['lastFrameTime'] = 0;
   });
 
+
+  it('freezes a shot after switching away and continues only after Resume without spending Juice', () => {
+    vi.spyOn(component.canvas.nativeElement, 'getBoundingClientRect').mockReturnValue({
+      left: 0, top: 0, width: 450, height: 800,
+    } as DOMRect);
+    component.onMouseDown(new MouseEvent('mousedown', { clientX: 225, clientY: 680 }));
+    component.onMouseMove(new MouseEvent('mousemove', { clientX: 225, clientY: 750 }));
+    component.onMouseUp();
+    component['render'](100);
+    component['render'](120);
+    const position = { x: component['slipperPos'].x, y: component['slipperPos'].y };
+    const juice = component.energyLevel;
+    const sound = vi.spyOn(component.audio, 'setPaused');
+    window.dispatchEvent(new Event('blur'));
+    expect(sound).toHaveBeenCalledWith(true);
+    component['render'](5000);
+    window.dispatchEvent(new Event('focus'));
+    component['render'](6000);
+    expect(component.isPaused).toBe(true);
+    expect(component['slipperPos']).toMatchObject(position);
+    fixture.detectChanges();
+    const dialog = fixture.nativeElement.querySelector('app-game-pause dialog') as HTMLDialogElement;
+    expect(dialog.textContent).toContain('Game paused');
+    const cancel = new Event('cancel', { cancelable: true });
+    dialog.dispatchEvent(cancel);
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(component.isPaused).toBe(true);
+    dialog.querySelector('button')!.click();
+    fixture.detectChanges();
+    expect(component.isPaused).toBe(false);
+    expect(fixture.nativeElement.querySelector('app-game-pause')).toBeNull();
+    component['render'](9000);
+    expect(component['slipperPos']).toMatchObject(position);
+    component['render'](9020);
+    expect(component['slipperPos'].y).not.toBe(position.y);
+    expect(component.energyLevel).toBe(juice);
+  });
+
+  it('cancels an aiming drag when the tab is hidden and stays paused when visible again', () => {
+    const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+    component['isDragging'] = true;
+    document.dispatchEvent(new Event('visibilitychange'));
+    component.onMouseUp();
+    expect(component['isDragging']).toBe(false);
+    expect(component.isPaused).toBe(true);
+    component.resumeGame();
+    expect(component.isPaused).toBe(true);
+    hidden.mockReturnValue(false);
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(component.isPaused).toBe(true);
+    component.closeTutorial();
+    expect(component.audio.setPaused).toHaveBeenLastCalledWith(true);
+    component.resumeGame();
+    expect(component.isPaused).toBe(false);
+    component.onMouseUp();
+    expect(component['isLaunched']).toBe(false);
+  });
+
+  it('does not show a pause window before Play', () => {
+    component.hasStarted = false;
+    window.dispatchEvent(new Event('blur'));
+    expect(component.isPaused).toBe(false);
+  });
+
   it('skips automatic tutorials for a returning account but allows How to Play', async () => {
     fixture.changeDetectorRef.markForCheck();
     fixture.detectChanges();

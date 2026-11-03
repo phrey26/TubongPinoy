@@ -1,3 +1,4 @@
+import { GamePause } from '../../../shared/game-pause/game-pause';
 import { equippedSkinEffect } from '../../../core/services/customization';
 import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
 import { Confirmation } from '../../../core/services/confirmation';
@@ -26,7 +27,7 @@ import { TUMBANG_COLLECTION_SKINS, gameSkinUrl, SLIPPER_COLORS } from '../../../
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-tumbang-preso',
-  imports: [JuiceTimer, CommonModule, RouterModule, Leaderboard],
+  imports: [GamePause, JuiceTimer, CommonModule, RouterModule, Leaderboard],
   templateUrl: './tumbang-preso.html',
   styleUrl: './tumbang-preso.css',
 })
@@ -46,6 +47,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private tutorialSeen = false;
   private savingTutorial = false;
   hasStarted = false;
+  isPaused = false;
+  private windowAway = false;
   isFullscreen = false;
   private animationFrameId = 0;
   private energySub?: Subscription;
@@ -81,6 +84,38 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   ];
 
   constructor(private energyService: Energy) {}
+
+  @HostListener('window:blur')
+  onWindowBlur(): void {
+    this.windowAway = true;
+    this.pauseGame();
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus(): void { this.windowAway = false; }
+
+  @HostListener('document:visibilitychange')
+  onVisibilityChange(): void {
+    if (document.hidden) this.pauseGame();
+  }
+
+  private pauseGame(): void {
+    if (!this.hasStarted || this.isPaused) return;
+    this.isPaused = true;
+    this.isDragging = false;
+    this.lastFrameTime = null;
+    this.audio.setPaused(true);
+    this.changeDetector.markForCheck();
+  }
+
+  resumeGame(): void {
+    if (!this.isPaused || document.hidden) return;
+    this.isPaused = false;
+    this.lastFrameTime = null;
+    this.audio.setPaused(this.showIntroduction || !!this.confirmation.active());
+    void this.audio.activate();
+    this.changeDetector.markForCheck();
+  }
 
   async toggleFullscreen(): Promise<void> {
     if (this.isFullscreen) {
@@ -265,7 +300,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
-    if (this.confirmation.active() || this.savingJuice() || this.retrySync) return;
+    if (this.isPaused || this.confirmation.active() || this.savingJuice() || this.retrySync) return;
     if (
       this.showIntroduction ||
       !this.hasStarted ||
@@ -289,7 +324,10 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   startGame(): void {
     if (this.showIntroduction || this.hasStarted || this.savingJuice() || this.retrySync) return;
-    this.syncRun('start', () => { this.hasStarted = true; this.audio.start(); });
+    this.syncRun('start', () => {
+      this.hasStarted = true; this.audio.start();
+      if (this.windowAway || document.hidden) this.pauseGame();
+    });
   }
 
   private loadTutorial(): void {
@@ -321,7 +359,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   closeTutorial(): void {
     this.isDragging = false;
     this.showIntroduction = false;
-    this.audio.setPaused(!!this.confirmation.active());
+    this.audio.setPaused(this.isPaused || !!this.confirmation.active());
     this.introDialog.nativeElement.close?.();
     if (!this.tutorialSeen && !this.savingTutorial && !this.tutorialLoading()) {
       this.savingTutorial = true;
@@ -336,7 +374,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
-    if (!this.isDragging) return;
+    if (this.isPaused || !this.isDragging) return;
 
     const rect = this.canvas.nativeElement.getBoundingClientRect();
     const mouseX = (event.clientX - rect.left) * (this.CANVAS_WIDTH / rect.width);
@@ -354,7 +392,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   @HostListener('mouseup')
   onMouseUp() {
-    if (this.confirmation.active()) { this.isDragging = false; return; }
+    if (this.isPaused || this.confirmation.active()) { this.isDragging = false; return; }
     if (!this.isDragging) return;
     this.isDragging = false;
     this.velocity.x = (this.dragStart.x - this.dragCurrent.x) * 0.22;
@@ -473,7 +511,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private render(timestamp = performance.now()) {
-    const paused = this.showIntroduction || !!this.confirmation.active();
+    const paused = this.isPaused || this.showIntroduction || !!this.confirmation.active();
     this.audio.setPaused(paused);
     const seconds = this.lastFrameTime === null || paused ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
     this.lastFrameTime = timestamp;

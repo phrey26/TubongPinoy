@@ -10,6 +10,10 @@
     <section class="play-section">
       <div #gamePanel [class.is-fullscreen]="isFullscreen" class="game-panel bg-black p-4 rounded-3xl shadow-lg border-4 border-blue-300 relative overflow-hidden">
 
+        @if (isPaused) {
+          <app-game-pause theme="blue" (resume)="resumeGame()" />
+        }
+
         <dialog #introDialog class="intro-dialog" aria-labelledby="jolens-intro-title" aria-describedby="jolens-intro-description"
           (cancel)="$event.preventDefault(); closeTutorial()">
           <div class="flex items-center justify-end gap-3 mb-2">
