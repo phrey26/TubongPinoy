@@ -29,7 +29,7 @@ export class MemoryRanked {
         if (action === 'shot') {
           run.completed = true;
           if (game === 'tumbang-preso') { run.status = ui.hitAge ? 'hit' : 'miss'; run.score += ui.hitAge ? 100 : 0; }
-          else run.status = run.inventory <= 0 ? 'finished' : ui.showRoundWon ? 'won' : 'playing';
+          else run.status = run.inventory <= 0 ? 'finished' : run.targets.length === 0 ? 'won' : 'playing';
         }
         if (action === 'round') {
           run.inventory -= input.bet!; run.status = 'playing';

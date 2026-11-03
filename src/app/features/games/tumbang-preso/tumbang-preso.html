@@ -53,7 +53,7 @@
           @if (accountError()) {
             <p role="alert" class="game-account-error w-full text-sm text-red-700">{{ accountError() }}</p>
           }
-          @if (savingJuice()) { <p role="status" class="w-full text-sm font-bold">Saving game progress…</p> }
+          <p role="status" class="sr-only">{{ savingJuice() ? 'Saving game progress…' : '' }}</p>
           @if (retrySync) { <button type="button" class="ui-button" [disabled]="savingJuice()" (click)="retrySync()">Retry game sync</button> }
           @if (audio.error()) {
             <div class="w-full text-sm text-purple-800" role="status">{{ audio.error() }}

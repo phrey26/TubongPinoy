@@ -215,7 +215,9 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   private settleShot(): void {
     this.syncRun('shot', run => {
-      this.showTryAgain = run.status === 'miss'; this.showNiceShot = run.status === 'hit';
+      this.showTryAgain = run.status === 'miss';
+      this.showNiceShot = false;
+      if (run.status === 'hit' && this.hitAge === 0) this.hitAge = 0.001;
       if (run.status !== 'hit') this.hitAge = 0;
     }, this.shotInput);
   }
@@ -412,7 +414,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       if (!this.reducedMotion) this.impacts.play(this.canPos.x, this.canPos.y, 'spark');
       this.feedback.impact(this.canPos.x, this.canPos.y, 1, FEEDBACK_COLORS.tin);
       this.feedback.celebrate(this.canPos.x, this.canPos.y);
-      this.showNiceShot = this.reducedMotion;
+      this.showNiceShot = false;
       this.settleShot();
       this.changeDetector.markForCheck();
       return;
@@ -500,7 +502,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     }
     if (this.hitAge > 0 && !this.showNiceShot) {
       this.hitAge += seconds;
-      if (this.hitAge >= (this.legendarySkin ? 0.88 : 0.65)) {
+      if (this.hitAge >= (this.legendarySkin ? 0.88 : 0.65) && this.rankedRun?.status === 'hit' && !this.savingJuice() && !this.retrySync) {
         this.showNiceShot = true;
         this.changeDetector.markForCheck();
       }

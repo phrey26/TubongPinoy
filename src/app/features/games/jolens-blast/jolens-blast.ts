@@ -205,6 +205,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   // Overlays
   showRoundWon = false;
+  private roundWinAge: number | null = null;
   showGameOver = false;
   showOutOfJuice = false;
   showCashOut = false;
@@ -380,7 +381,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onMouseDown(event: MouseEvent) {
-    if (this.confirmation.active() || this.savingJuice() || this.retrySync) return;
+    if (this.confirmation.active() || this.savingJuice() || this.retrySync || this.roundWinAge !== null) return;
     if (
       this.showIntroduction ||
       !this.hasStarted ||
@@ -435,7 +436,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isDragging) return;
     this.isDragging = false;
 
-    if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) {
+    if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.roundWinAge !== null || this.showBetSetup) {
       return;
     }
 
@@ -471,6 +472,14 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     const elapsed = this.lastFrameTime === null || paused ? 0 : Math.min(50, Math.max(0, timestamp - this.lastFrameTime));
     this.lastFrameTime = timestamp;
     this.feedback.update(elapsed / 1000);
+    if (this.roundWinAge !== null) {
+      this.roundWinAge += elapsed / 1000;
+      if (this.roundWinAge >= 0.65) {
+        this.roundWinAge = null;
+        this.showRoundWon = true;
+        this.changeDetector.markForCheck();
+      }
+    }
     this.steelFx.update(elapsed / 1000);
     if (!this.steelEquipped) this.steelFx.clear();
     if (this.jupiterEquipped) this.jupiterFx.update(elapsed / 1000);
@@ -489,7 +498,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       } else this.feedback.trail(this.currentShooter.x, this.currentShooter.y,
         Math.hypot(this.currentShooter.dx, this.currentShooter.dy), '#bae6fd');
     }
-    this.canvasRef.nativeElement.style.transform = paused ? '' : this.feedback.canvasTransform;
+    this.canvasRef.nativeElement.style.transform = paused || !this.shotInProgress ? '' : this.feedback.canvasTransform;
     for (const popup of this.textPopups) popup.age += elapsed / 1000;
     this.textPopups = this.textPopups.filter(popup => popup.age < 0.9);
     this.draw();
@@ -498,7 +507,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   updatePhysics() {
     if (this.confirmation.active()) return;
-    if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.showBetSetup) return;
+    if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.roundWinAge !== null || this.showBetSetup) return;
     if (!this.shotInProgress && !this.currentShooter.isMoving &&
         !this.marblesOnBoard.some(marble => marble.isMoving)) return;
     this.shotInProgress = true;
@@ -557,9 +566,9 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
       }
       this.pendingKnockouts = [];
       this.spawnShooter();
-      this.showRoundWon = this.marblesOnBoard.length === 0;
-      this.audio.play(this.showRoundWon ? 'win' : collected > 0 ? 'collect' : 'miss');
-      if (this.showRoundWon) {
+      const wonRound = this.marblesOnBoard.length === 0;
+      if (!wonRound) this.audio.play(collected > 0 ? 'collect' : 'miss');
+      if (wonRound) {
         this.outsideMarbles = [];
         this.feedback.celebrate(this.targetCenter.x, this.targetCenter.y);
       }
@@ -567,7 +576,11 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
         this.marblesOnBoard = run.targets.map((ball, index) => ({ ...ball, isMoving: false,
           sprite: this.marblesOnBoard[index]?.sprite ?? JOLENS_ASSETS.marbles[0],
           color: this.marblesOnBoard[index]?.color ?? this.colors[0] }));
-        this.showRoundWon = run.status === 'won';
+        this.showRoundWon = false;
+        if (run.status === 'won') {
+          this.audio.play('win');
+          this.roundWinAge = 0;
+        }
         if (run.status === 'finished') { this.showGameOver = true; this.showRoundWon = false; }
       }, this.shotInput);
     }
@@ -704,7 +717,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get canEndSession(): boolean {
-    return !this.savingJuice() && !this.retrySync && this.hasStarted && !this.showIntroduction && !this.showGameOver && !this.shotInProgress && !this.isDragging;
+    return this.roundWinAge === null && !this.savingJuice() && !this.retrySync && this.hasStarted && !this.showIntroduction && !this.showGameOver && !this.shotInProgress && !this.isDragging;
   }
 
   requestEndSession(): void {

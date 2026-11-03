@@ -216,6 +216,19 @@ describe('TumbangPreso', () => {
     expect(clear).toHaveBeenCalled();
   });
 
+  it('lets the winning jingle play before opening the verified win window', () => {
+    component['slipperPos'] = { x: 225, y: 120 };
+    component['velocity'] = { x: 0, y: 0 };
+    component['updatePhysics']();
+    expect(component.currentScore).toBe(100);
+    expect(component.showNiceShot).toBe(false);
+    component['lastFrameTime'] = 0;
+    for (let time = 50; time <= 600; time += 50) component['render'](time);
+    expect(component.showNiceShot).toBe(false);
+    component['render'](650);
+    expect(component.showNiceShot).toBe(true);
+  });
+
   it('waits for server verification and corrects an optimistic local hit', () => {
     const pending = new Subject<RunResult>();
     const request = vi.spyOn(TestBed.inject(Game), 'runAction').mockReturnValueOnce(pending);
@@ -225,6 +238,9 @@ describe('TumbangPreso', () => {
     expect(request).toHaveBeenCalledWith('tumbang-preso', 'shot', expect.any(Object), { vx: 0, vy: 0 });
     expect(component.currentScore).toBe(0);
     expect(component.savingJuice()).toBe(true);
+    component['lastFrameTime'] = 0;
+    for (let time = 50; time <= 1000; time += 50) component['render'](time);
+    expect(component.showNiceShot).toBe(false);
     pending.next({ run: { ...component['rankedRun']!, status: 'miss', score: 0, sequence: 1 },
       user: { id: 1, username: 'Player', tansans: 0, juice: 100 } });
     pending.complete();

@@ -434,6 +434,12 @@ describe('JolensBlast', () => {
     component.draw();
     expect(draw).toHaveBeenCalledWith(target);
     for (let tick = 0; tick < 601; tick++) component.updatePhysics();
+    expect(component.showRoundWon).toBe(false);
+    expect(component.canEndSession).toBe(false);
+    component['lastFrameTime'] = 0;
+    for (let time = 50; time <= 600; time += 50) component.gameLoop(time);
+    expect(component.showRoundWon).toBe(false);
+    component.gameLoop(700);
     expect(component.showRoundWon).toBe(true);
     expect(sound.mock.calls.filter(([cue]) => cue === 'win')).toHaveLength(1);
     expect(sound).not.toHaveBeenCalledWith('collect');
