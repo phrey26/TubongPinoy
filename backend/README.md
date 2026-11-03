@@ -3,6 +3,9 @@
 Local setup: PHP 8.3+, PDO MySQL, Apache on port 8888, MySQL on port 8889,
 database `tubongpinoy_db`. No Composer dependencies are needed.
 
+See [local verification and hosting migration](../docs/backend-hosting.md) for
+the read-only database check, data transfer steps, and production routing.
+
 ## Setup
 
 1. Create `tubongpinoy_db` in phpMyAdmin if it does not exist.
