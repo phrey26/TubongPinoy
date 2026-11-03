@@ -50,3 +50,12 @@ Thumbs.db
 # Python smoke-test bytecode
 __pycache__/
 *.pyc
+
+# Private environment files and key material
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx

@@ -1,6 +1,6 @@
 Options -Indexes
 Require all granted
 
-<FilesMatch "(^\.|\.(bak|old|orig|sql|log|ini)$)">
+<FilesMatch "(^\.|\.(bak|old|orig|sql|log|ini|env|pem|key|p12|pfx|sqlite|sqlite3|db|zip|gz|tgz|7z)$)">
     Require all denied
 </FilesMatch>

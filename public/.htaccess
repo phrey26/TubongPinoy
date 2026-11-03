@@ -13,7 +13,7 @@ DirectoryIndex index.html
     </Files>
 </IfModule>
 
-<FilesMatch "(^\.|\.(php|sql|log|bak|old|orig|ini|map)$)">
+<FilesMatch "(^\.|\.(php|sql|log|bak|old|orig|ini|map|env|pem|key|p12|pfx|sqlite|sqlite3|db|zip|gz|tgz|7z)$)">
     Require all denied
 </FilesMatch>
 

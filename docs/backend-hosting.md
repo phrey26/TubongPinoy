@@ -71,3 +71,25 @@ Real payment processing is not implemented; demo top-ups are disabled in product
 
 No host has been selected or deployed yet. Provider-specific routing, database
 permissions, TLS, and PHP configuration still need verification on that host.
+
+## Keeping backend details private
+
+`npm run build` now checks frontend source/public files before building and checks
+the resulting browser directory afterward. It rejects private file types, source
+maps in the output, symlinks, and recognizable credential patterns. This is a
+guardrail, not a complete secret detector: never place secret API keys or database
+settings in Angular source, frontend environment files, or `public/`. Production
+source maps are explicitly disabled. Keep API keys in private backend configuration
+or the host's secret manager and call third-party services from the backend.
+
+Upload only the browser build for the frontend, never the repository or a database
+export. Apache deny rules provide extra protection; they require Apache with
+overrides enabled and do not apply to static hosts or nginx. Configure equivalent
+rules on those hosts and test inaccessible files after deployment. Keep MySQL
+restricted to the backend/private network, not open to browser clients.
+
+API endpoint URLs and the data intentionally returned to an authorized player are
+visible in browser developer tools. They cannot be hidden in a functioning web app.
+Protection comes from authentication, authorization, CSRF validation and server-side
+checks, not secret endpoint names. PHP source and credentials must never be served
+as static downloads; the API route must execute PHP through the host's PHP handler.

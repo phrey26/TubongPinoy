@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "prebuild": "node scripts/check-public-files.mjs source",
+    "postbuild": "node scripts/check-public-files.mjs build"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
