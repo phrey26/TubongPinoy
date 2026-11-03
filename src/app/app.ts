@@ -1,4 +1,4 @@
-import { afterNextRender, Component, Injector, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { afterNextRender, Component, Injector, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, skip } from 'rxjs';
@@ -16,10 +16,8 @@ import { ConfirmDialog } from './shared/confirm-dialog/confirm-dialog';
   styleUrl: './app.css'
 })
 export class App {
-  private readonly juiceRecovery = inject(JuiceRecovery);
-  protected readonly title = signal('tubongpinoybeta2');
-
   constructor() {
+    inject(JuiceRecovery);
     const document = inject(DOCUMENT);
     const injector = inject(Injector);
     inject(Router).events.pipe(

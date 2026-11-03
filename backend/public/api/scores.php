@@ -21,9 +21,14 @@ if ($method === 'POST') {
     }
     // Identity comes exclusively from the session. Concurrent/lower submissions
     // can never overwrite this user's best score for this game.
+    $db->beginTransaction();
+    $lock = $db->prepare('SELECT id FROM users WHERE id = ? FOR UPDATE');
+    $lock->execute([$user['id']]);
+    require_current_session($db, $user['id']);
     $query = $db->prepare('INSERT INTO game_high_scores (user_id, game, points) VALUES (?, ?, ?)
         ON DUPLICATE KEY UPDATE points = GREATEST(points, VALUES(points))');
     $query->execute([$user['id'], $game, $points]);
+    $db->commit();
 }
 $query = $db->prepare('SELECT s.user_id AS userId, u.username,
     COALESCE(p.display_name, u.username) AS displayName, COALESCE(p.avatar_id, \'sunny\') AS avatarId, s.points

@@ -46,3 +46,7 @@ Thumbs.db
 # Local backend credentials and PHP sessions
 /backend/config.local.php
 /backend/var/
+
+# Python smoke-test bytecode
+__pycache__/
+*.pyc

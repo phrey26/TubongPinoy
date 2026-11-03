@@ -1,5 +1,8 @@
 # Website readiness
 
+For the current November 3 code audit, security fixes, verification, and production
+configuration, see [prehosting-audit.md](prehosting-audit.md). The notes below are historical.
+
 Updated November 1, 2026. These changes target the current local Angular/PHP app.
 They do not deploy the project or make the existing build ready to upload to itch.io.
 

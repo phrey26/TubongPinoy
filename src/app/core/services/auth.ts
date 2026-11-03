@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, finalize, shareReplay, switchMap, tap, throwError, timeout } from 'rxjs';
+import { Observable, catchError, defer, finalize, shareReplay, switchMap, tap, throwError, timeout } from 'rxjs';
 import { AccountState } from './account-state';
 
 export interface AuthUser {
@@ -36,13 +36,23 @@ export class Auth {
   // The server cookie establishes identity; browser storage is never trusted.
   loadSession(): Observable<AuthSession> {
     if (!this.sessionRequest) {
-      this.sessionRequest = this.http.get<AuthSession>('/api/session.php').pipe(
-        timeout(8000),
-        tap(session => this.account.set(session.user)),
-        catchError(error => {
-          this.account.set(null);
-          return throwError(() => error);
-        }),
+      this.sessionRequest = defer(() => {
+        const revision = this.account.identityRevision;
+        return this.http.get<AuthSession>('/api/session.php').pipe(
+          timeout(8000),
+          tap(session => {
+            if (this.account.identityRevision !== revision) {
+              throw new HttpErrorResponse({ status: 409,
+                error: { message: 'Your account changed. Please try again.' } });
+            }
+            this.account.set(session.user);
+          }),
+          catchError(error => {
+            if (this.account.identityRevision === revision) this.account.set(null);
+            return throwError(() => error);
+          }),
+        );
+      }).pipe(
         finalize(() => this.sessionRequest = undefined),
         shareReplay({ bufferSize: 1, refCount: false }),
       );

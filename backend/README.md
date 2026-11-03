@@ -9,7 +9,7 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
 2. Copy `config.example.php` to `config.local.php` and set your MySQL credentials.
    The local file is ignored by Git and stays outside the web document root.
    Environment variables `TUBONG_DB_HOST`, `TUBONG_DB_PORT`, `TUBONG_DB_DATABASE`,
-   `TUBONG_DB_USERNAME`, and `TUBONG_DB_PASSWORD` override the local settings. The database name must remain `tubongpinoy_db`; the connection rejects any other database name.
+   `TUBONG_DB_USERNAME`, and `TUBONG_DB_PASSWORD` override the local settings. The default database is `tubongpinoy_db`. Hosting-specific names are supported using 1–64 ASCII letters, digits, or underscores. Host and port values are validated before creating the connection.
 3. Run `schema.sql` in phpMyAdmin's SQL tab with `tubongpinoy_db` selected, or run:
 
    ```sh
@@ -327,3 +327,31 @@ Apply `migrations/2026-11-01-jolens-shooter-skins.sql` to add 8ball (Common,
 The catalog returns a game identifier so each collection has its own shop section.
 Owned shooters appear in Jolens Blast inventory and can be equipped for that game
 only. Purchases use the existing confirmation, success dialog, and wallet checks.
+
+## Production settings
+
+See [the pre-hosting audit](../docs/prehosting-audit.md) for the checked deployment
+layout and remaining launch requirements. Keep local MAMP credentials on this
+machine; supply deployment credentials through the environment or a private host file.
+
+| Setting | Behavior |
+| --- | --- |
+| `TUBONG_ENV=production` | Forces Secure session cookies, disables simulated credits, rejects root/empty-password database credentials. |
+| `TUBONG_SECURE_COOKIES=1` | Forces Secure cookies outside production too, for HTTPS testing. Never trusts client-supplied forwarding headers. |
+| `TUBONG_ALLOW_DEMO_TOPUPS=1` | Enables demo credits only in development; production always ignores this switch. |
+
+Boolean environment values must be `0` or `1`; invalid values fail closed.
+The equivalent private configuration keys are `environment`, `secure_cookies`,
+and `allow_demo_topups`. HTTPS and HTTP-to-HTTPS redirection belong on the host.
+A reverse proxy must set the real client address using its own trusted-proxy
+configuration so IP request limits remain per client. Do not trust arbitrary
+`X-Forwarded-For` headers in application code.
+
+## Isolated regression runner
+
+`python3 backend/tests/run_smoke.py` creates a randomly named database, starts a
+local PHP server, runs the smoke and calculation suites, then stops the server and
+drops only that disposable database. It requires a development MySQL user that
+can create/drop databases; never grant these privileges to the production runtime
+user. Each suite gets clean request-limit buckets in the disposable database.
+The configured application database and its accounts are not modified.

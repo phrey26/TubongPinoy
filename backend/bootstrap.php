@@ -8,6 +8,8 @@ ini_set('display_errors', '0');
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: same-origin');
+header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'");
 
 set_exception_handler(function (Throwable $error): void {
     // Log details on the server; never send SQL, credentials or traces to the browser.
@@ -27,10 +29,11 @@ ini_set('session.gc_maxlifetime', (string) (30 * 86400));
 session_name('tubong_session');
 session_set_cookie_params([
     'lifetime' => 0, 'path' => '/', 'httponly' => true,
-    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    // Explicit production setting also works behind TLS termination; never trust arbitrary forwarded headers.
+    'secure' => app_config()['secure_cookies'] || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
     'samesite' => 'Lax',
 ]);
-session_start();
+if (!session_start()) throw new RuntimeException('Cannot start session storage.');
 if (isset($_SESSION['expires_at']) && $_SESSION['expires_at'] <= time()) {
     $_SESSION = [];
     session_regenerate_id(true);
@@ -88,7 +91,14 @@ function public_user(array $row): array
     if ($ownTransaction) $db->beginTransaction();
     $query = $db->prepare('SELECT id, username, tansans, juice FROM users WHERE id = ? FOR UPDATE');
     $query->execute([$row['id']]);
-    [$row, $state] = recover_account_juice($db, $query->fetch());
+    $row = $query->fetch();
+    if (!$row) {
+        if ($db->inTransaction()) $db->rollBack();
+        unset($_SESSION['user_id']);
+        respond(['message' => 'Please log in again.'], 401);
+    }
+    require_current_session($db, (int) $row['id']);
+    [$row, $state] = recover_account_juice($db, $row);
     $query = $db->prepare('SELECT skin_id FROM user_skins WHERE user_id = ? ORDER BY skin_id');
     $query->execute([$row['id']]);
     $result = ['id' => (int) $row['id'], 'username' => $row['username'],
@@ -123,6 +133,19 @@ function current_user(): ?array
 function require_user(): array
 {
     return current_user() ?? respond(['message' => 'Please log in to continue.'], 401);
+}
+
+/** Call while holding the users row lock, shared with credential changes. */
+function require_current_session(PDO $db, int $userId): void
+{
+    $query = $db->prepare('SELECT version FROM account_security WHERE user_id = ?');
+    $query->execute([$userId]);
+    if ((int) $query->fetchColumn() !== (int) ($_SESSION['auth_version'] ?? 0) ||
+        $userId !== (int) ($_SESSION['user_id'] ?? 0)) {
+        if ($db->inTransaction()) $db->rollBack();
+        unset($_SESSION['user_id']);
+        respond(['message' => 'Your sign-in details changed. Please log in again.'], 401);
+    }
 }
 
 function establish_session(int $userId, bool $remember = false): void

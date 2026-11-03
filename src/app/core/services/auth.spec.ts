@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Auth, safeReturnUrl } from './auth';
+import { AccountState } from './account-state';
 
 describe('Auth', () => {
   let service: Auth;
@@ -35,6 +36,16 @@ describe('Auth', () => {
     service.loadSession().subscribe();
     service.loadSession().subscribe();
     http.expectOne('/api/session.php').flush({ user: null, csrfToken: 'token' });
+  });
+
+  it.each([200, 503])('ignores a delayed session result after identity changes (%s)', status => {
+    let receivedStatus = 0;
+    service.loadSession().subscribe({ error: error => receivedStatus = error.status });
+    const request = http.expectOne('/api/session.php');
+    TestBed.inject(AccountState).set(user);
+    request.flush({ user: null, csrfToken: 'old' }, { status, statusText: 'Result' });
+    expect(service.user()).toEqual(user);
+    expect(receivedStatus).toBe(status === 200 ? 409 : 503);
   });
 
   it('sends credentials with CSRF protection and clears identity after logout', () => {

@@ -1,10 +1,10 @@
 <main class="shop-page">
-  <div class="shop-container max-w-6xl mx-auto">
-    <a routerLink="/games" class="shop-back">
+  <div class="max-w-6xl mx-auto">
+    <a routerLink="/games" class="shop-back inline-flex items-center gap-2 mb-6 text-purple-700 text-sm font-bold no-underline hover:underline">
       <img class="w-5 h-5" src="assets/icons/back.svg" alt="" aria-hidden="true" /> Back to Games
     </a>
 
-    <header class="shop-heading">
+    <header class="shop-heading flex items-center justify-between gap-5 mb-7">
       <div>
         <span class="shop-eyebrow">YOUR NEIGHBORHOOD SHOP</span>
         <h1>Sari-Sari Store</h1>
@@ -13,23 +13,23 @@
       <img class="shop-heading-icon w-[72px] h-[72px]" src="assets/icons/shop.svg" alt="" aria-hidden="true" />
     </header>
 
-    <section class="shop-wallet" aria-label="Your account balances">
-      <div class="wallet-item">
-        <div class="wallet-icon wallet-icon-gold"><img class="w-9 h-9" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /></div>
+    <section class="shop-wallet grid grid-cols-2 overflow-hidden max-[719px]:grid-cols-1" aria-label="Your account balances">
+      <div class="wallet-item flex items-center gap-4 p-6 max-[419px]:p-5">
+        <div class="wallet-icon grid place-items-center w-14 h-14 shrink-0 rounded-2xl wallet-icon-gold"><img class="w-9 h-9" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /></div>
         <div>
-          <span class="wallet-label block">Your Tansans</span>
+          <span class="wallet-label text-slate-500 text-[13px] font-bold block">Your Tansans</span>
           <strong class="wallet-value block">{{ userCoins | number }}</strong>
-          <span class="wallet-detail block">Available to spend</span>
+          <span class="wallet-detail min-h-[22px] text-slate-500 text-xs leading-[1.8] block">Available to spend</span>
         </div>
       </div>
-      <div class="wallet-item">
-        <div class="wallet-icon wallet-icon-green"><img class="w-9 h-9" src="assets/icons/juice.svg" alt="" aria-hidden="true" /></div>
+      <div class="wallet-item flex items-center gap-4 p-6 max-[419px]:p-5">
+        <div class="wallet-icon grid place-items-center w-14 h-14 shrink-0 rounded-2xl wallet-icon-green"><img class="w-9 h-9" src="assets/icons/juice.svg" alt="" aria-hidden="true" /></div>
         <div>
-          <span class="wallet-label block">Your Juice</span>
+          <span class="wallet-label text-slate-500 text-[13px] font-bold block">Your Juice</span>
           <strong class="wallet-value block">{{ unlimitedActive ? 'Unlimited' : userEnergy + ' / 100' }}</strong>
-          <span class="wallet-detail block">
+          <span class="wallet-detail min-h-[22px] text-slate-500 text-xs leading-[1.8] block">
             @if (permanentJuice) {
-              <span class="shop-badge shop-badge-green">No expiry</span>
+              <span class="shop-badge inline-flex items-center py-1 px-2.5 rounded-[20px] bg-purple-100 text-purple-700 text-xs font-bold whitespace-nowrap shop-badge-green">No expiry</span>
             } @else if (unlimitedActive) {
               Active until {{ unlimitedUntil | date:'shortTime' }} · {{ unlimitedUntil | date:'MMM d' }}
             } @else {
@@ -48,26 +48,26 @@
       </div>
     }
 
-    <section class="shop-section mt-10" aria-labelledby="refills-heading">
-      <div class="section-heading">
+    <section class="mt-10" aria-labelledby="refills-heading">
+      <div class="section-heading flex items-center justify-between gap-3 mb-5 max-[719px]:items-start max-[719px]:flex-col">
         <div>
           <h2 id="refills-heading">Juice Refills</h2>
           <p class="text-sm">Juice refills for free: +1 every 2 minutes and 24 seconds, up to 100. Buy a boost to refill instantly.</p>
         </div>
-        @if (unlimitedActive) { <span class="shop-badge shop-badge-green">Unlimited Juice active</span> }
+        @if (unlimitedActive) { <span class="shop-badge inline-flex items-center py-1 px-2.5 rounded-[20px] bg-purple-100 text-purple-700 text-xs font-bold whitespace-nowrap shop-badge-green">Unlimited Juice active</span> }
       </div>
 
-      <div class="product-grid refill-grid grid gap-5">
+      <div class="refill-grid grid gap-5">
         @for (item of refills; track item.id) {
-          <article class="product-card">
-            <div class="product-art" [class.product-art-gold]="item.id === 'energy_med'" [class.product-art-blue]="item.id === 'energy_unli'">
+          <article class="flex flex-col p-5 min-w-0 product-card">
+            <div class="product-art relative grid place-items-center h-28 mb-[18px] rounded-[14px] bg-green-50" [class.product-art-gold]="item.id === 'energy_med'" [class.product-art-blue]="item.id === 'energy_unli'">
               <img [src]="item.icon" alt="" aria-hidden="true" />
             </div>
-            <span class="product-benefit">{{ item.benefit }}</span>
+            <span class="product-benefit mb-1.5 text-purple-700 text-xs font-bold">{{ item.benefit }}</span>
             <h3>{{ item.name }}</h3>
             <p class="product-description">{{ item.description }}</p>
-            <div class="product-footer mt-auto pt-3">
-              <p class="product-price"><img class="w-6 h-6" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ item.price | number }} <span>Tansans</span></p>
+            <div class="mt-auto pt-3">
+              <p class="product-price flex items-center gap-1.5 mb-3 text-lg font-extrabold text-yellow-800"><img class="w-6 h-6" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ item.price | number }} <span>Tansans</span></p>
               <button type="button" class="ui-button shop-button w-full text-sm" [disabled]="refillUnavailable(item)" (click)="buyItem(item.id)"
                 [attr.aria-label]="item.name + ': ' + refillButtonLabel(item)">
                 {{ refillButtonLabel(item) }}
@@ -79,14 +79,14 @@
     </section>
 
     @for (section of skinSections; track section.game) {
-    <section class="shop-section mt-10" [attr.aria-labelledby]="section.game + '-skins-heading'">
-      <div class="section-heading">
+    <section class="mt-10" [attr.aria-labelledby]="section.game + '-skins-heading'">
+      <div class="section-heading flex items-center justify-between gap-3 mb-5 max-[719px]:items-start max-[719px]:flex-col">
         <div>
           <h2 [id]="section.game + '-skins-heading'">{{ section.title }}</h2>
           <p class="text-sm">Buy a {{ section.item }} skin with Tansans, then equip it in your <a routerLink="/account/inventory" class="underline font-bold">inventory</a>.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <span class="shop-badge">{{ ownedFor(section.game) }} owned</span>
+          <span class="shop-badge inline-flex items-center py-1 px-2.5 rounded-[20px] bg-purple-100 text-purple-700 text-xs font-bold whitespace-nowrap">{{ ownedFor(section.game) }} owned</span>
         </div>
       </div>
 
@@ -100,31 +100,31 @@
       } @else if (skinsFor(section.game).length === 0) {
         <div class="shop-empty">New skins are on their way. Check back soon!</div>
       } @else {
-        <div class="product-grid skin-grid grid gap-5">
+        <div class="skin-grid grid gap-5">
           @for (skin of skinsFor(section.game); track skin.id) {
-            <article class="product-card skin-card" [attr.data-rarity]="skin.type" [class.shooter-card]="section.game === 'jolens-blast'" [class.product-owned]="owns(skin.id)">
-              <div class="product-art skin-preview" [class.skin-preview-dirt]="section.game === 'jolens-blast'">
+            <article class="flex flex-col p-5 min-w-0 product-card skin-card" [attr.data-rarity]="skin.type" [class.shooter-card]="section.game === 'jolens-blast'">
+              <div class="product-art relative grid place-items-center h-28 mb-[18px] rounded-[14px] bg-green-50 skin-preview" [class.skin-preview-dirt]="section.game === 'jolens-blast'">
                 <img [src]="skin.imageUrl" [alt]="skin.name" />
-                @if (owns(skin.id)) { <span class="shop-badge shop-badge-green owned-badge absolute top-2 right-2">Owned</span> }
+                @if (owns(skin.id)) { <span class="shop-badge inline-flex items-center py-1 px-2.5 rounded-[20px] bg-purple-100 text-purple-700 text-xs font-bold whitespace-nowrap shop-badge-green absolute top-2 right-2">Owned</span> }
               </div>
-              <span class="product-benefit skin-rarity" [attr.data-rarity]="skin.type">{{ skin.type }}</span>
+              <span class="product-benefit mb-1.5 text-purple-700 text-xs font-bold skin-rarity" [attr.data-rarity]="skin.type">{{ skin.type }}</span>
               <h3>{{ skin.name }}</h3>
-              <p class="skin-description">{{ skinTheme(skin).description }}</p>
+              <p class="skin-description mt-0 mb-3.5 text-slate-600 text-[13px] leading-[1.6]">{{ skinTheme(skin).description }}</p>
               @if (skin.type === 'Legendary Skin' || skin.type === 'Epic Skin') {
                 <div class="skin-perks" [class.skin-perks-legendary]="skin.type === 'Legendary Skin'">
-                  <p class="skin-perks-heading">{{ skinTheme(skin).heading }}</p>
-                  <ul class="skin-features">
-                    <li><strong>Special FX</strong><span>{{ skinTheme(skin).fx }}</span></li>
+                  <p class="skin-perks-heading mt-0 mb-2.5 text-[13px] font-extrabold leading-[1.4]">{{ skinTheme(skin).heading }}</p>
+                  <ul class="skin-features space-y-2.5 m-0 pl-[18px] list-disc">
+                    <li><strong class="block text-[15px] font-extrabold leading-[1.4]">Special FX</strong><span class="block mt-0.5 text-xs leading-[1.5]">{{ skinTheme(skin).fx }}</span></li>
                     @if (skin.type === 'Legendary Skin') {
-                      <li><strong>Special sound FX</strong><span>{{ skinTheme(skin).sound }}</span></li>
+                      <li><strong class="block text-[15px] font-extrabold leading-[1.4]">Special sound FX</strong><span class="block mt-0.5 text-xs leading-[1.5]">{{ skinTheme(skin).sound }}</span></li>
                     }
                   </ul>
                 </div>
               }
-              <div class="product-footer mt-auto pt-3">
-                <p class="product-price"><img class="w-6 h-6" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ skin.price | number }} <span>Tansans</span></p>
+              <div class="mt-auto pt-3">
+                <p class="product-price flex items-center gap-1.5 mb-3 text-lg font-extrabold text-yellow-800"><img class="w-6 h-6" src="assets/icons/tansan.svg" alt="" aria-hidden="true" /> {{ skin.price | number }} <span>Tansans</span></p>
                 <button type="button" class="ui-button shop-button w-full text-sm" [class.shop-button-owned]="owns(skin.id)"
-                  [disabled]="!skinsAvailable || pending() || owns(skin.id) || userCoins < skin.price" (click)="buyCosmetic(skin.id)"
+                  [disabled]="pending() || owns(skin.id) || userCoins < skin.price" (click)="buyCosmetic(skin.id)"
                   [attr.aria-label]="skin.name + ': ' + skinButtonLabel(skin)">
                   {{ skinButtonLabel(skin) }}
                 </button>

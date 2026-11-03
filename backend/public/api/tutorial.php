@@ -15,8 +15,13 @@ if (!is_string($game) || !in_array($game, ['tumbang-preso', 'jolens-blast'], tru
 $db = database();
 if ($method === 'POST') {
     // Dismissing a tutorial records it for the authenticated account only.
+    $db->beginTransaction();
+    $lock = $db->prepare('SELECT id FROM users WHERE id = ? FOR UPDATE');
+    $lock->execute([$user['id']]);
+    require_current_session($db, $user['id']);
     $query = $db->prepare('INSERT IGNORE INTO game_tutorials (user_id, game) VALUES (?, ?)');
     $query->execute([$user['id'], $game]);
+    $db->commit();
 }
 $query = $db->prepare('SELECT 1 FROM game_tutorials WHERE user_id = ? AND game = ?');
 $query->execute([$user['id'], $game]);

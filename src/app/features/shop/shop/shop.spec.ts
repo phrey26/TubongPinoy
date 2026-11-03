@@ -28,6 +28,14 @@ describe('Shop', () => {
     expect(component).toBeTruthy();
   });
 
+  it('keeps an unlimited pass active using server time despite device clock skew', () => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Player', tansans: 1000, juice: 100,
+      serverTime: 1000000, unlimitedJuiceUntil: 1060000 });
+    fixture.detectChanges();
+    expect(component.unlimitedActive).toBe(true);
+    expect(component.refillButtonLabel(component.refills[0])).toBe('Unlimited active');
+  });
+
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
   it('confirms skin purchases and only shows success after the server saves ownership', () => {

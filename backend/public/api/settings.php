@@ -57,12 +57,15 @@ try {
     $db->prepare('INSERT INTO account_security (user_id, version) VALUES (?, 1)
         ON DUPLICATE KEY UPDATE version = version + 1')->execute([$user['id']]);
     $db->prepare('UPDATE account_state SET version = version + 1 WHERE user_id = ?')->execute([$user['id']]);
+    // The response snapshot validates against the new version while the row is locked.
+    $_SESSION['auth_version'] = $version + 1;
     $result = public_user($row);
     $db->commit();
     rotate_account_session($version + 1);
     respond(['user' => $result, 'csrfToken' => $_SESSION['csrf']]);
 } catch (Throwable $error) {
     if ($db->inTransaction()) $db->rollBack();
+    if (isset($version)) $_SESSION['auth_version'] = $version;
     if ($error instanceof PDOException && ($error->errorInfo[1] ?? null) === 1062) {
         respond(['message' => 'Username is taken.'], 409);
     }

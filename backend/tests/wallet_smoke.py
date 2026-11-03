@@ -167,7 +167,9 @@ try:
         second = pool.submit(b2.change, 'purchase', 'skin_3')
         outcomes = [first.result()[0], second.result()[0]]
     final_b = b.user()
-    check(sorted(outcomes) == [200, 409] and final_b['tansans'] in [0, 50] and len(final_b['ownedSkins']) == 1,
+    prices = {skin['id']: skin['price'] for skin in catalog['skins']}
+    expected_balance = 200 - prices[final_b['ownedSkins'][0]] if len(final_b['ownedSkins']) == 1 else -1
+    check(sorted(outcomes) == [200, 409] and final_b['tansans'] == expected_balance and len(final_b['ownedSkins']) == 1,
           'Concurrent purchases from separate sessions cannot overspend the account')
     check(same_account(a.user(), saved_a), 'Concurrent changes to account B leave account A unchanged')
     print(f'{passed} wallet checks passed.', flush=True)

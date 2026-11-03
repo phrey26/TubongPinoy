@@ -1,7 +1,7 @@
 # Tubongpinoybeta2
 
-A gaming website made to represent the Tradinional Filipino Games 
-This project targets Angular and Angular CLI 22.2.3 with TypeScript 6.0.
+A browser gaming website featuring traditional Filipino games.
+This project uses Angular 22.2.4, Angular CLI 22.2.5, and TypeScript 6.0.
 
 PHP/MySQL authentication setup and SQL are documented in [backend/README.md](backend/README.md).
 The lobby is public; playing games, shopping, and top-ups require login.
@@ -59,15 +59,16 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 ng test
 ```
 
-## Running end-to-end tests
+## Backend verification and deployment
 
-For end-to-end (e2e) testing, run:
+Run `python3 backend/tests/run_smoke.py` to exercise the PHP APIs in a disposable
+MySQL database. This requires local MySQL credentials with CREATE/DROP DATABASE
+permission. The runner removes its test database and stops its PHP server afterward.
+`TUBONG_PHP_BIN` can override the local MAMP PHP executable.
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+There is no configured `ng e2e` target. Production hosting configuration, audit
+results, and remaining launch requirements are in
+[docs/prehosting-audit.md](docs/prehosting-audit.md).
 
 ## Additional Resources
 

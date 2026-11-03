@@ -1,0 +1,2 @@
+# Defense in depth if a parent directory is accidentally exposed by Apache.
+Require all denied

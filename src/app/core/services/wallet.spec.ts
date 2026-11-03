@@ -88,4 +88,32 @@ describe('Per-account balances and inventory', () => {
     state.set({ ...alice, unlimitedJuiceUntil: 0, permanentJuice: true });
     expect(energy.hasUnlimited()).toBe(true);
   });
+
+  it('does not charge a different account discovered during session refresh', () => {
+    state.set(alice);
+    let status = 0;
+    TestBed.inject(Wallet).change('purchase', 'skin_2').subscribe({ error: error => status = error.status });
+    http.expectOne('/api/session.php').flush({ user: bob, csrfToken: 'bob-token' });
+    http.expectNone('/api/wallet.php');
+    expect(status).toBe(409);
+    expect(state.user()).toEqual(bob);
+  });
+
+  it('does not log out a new account when an old purchase returns 401', () => {
+    state.set(alice);
+    TestBed.inject(Wallet).change('purchase', 'skin_2').subscribe({ error: () => {} });
+    http.expectOne('/api/session.php').flush({ user: alice, csrfToken: 'token' });
+    const request = http.expectOne('/api/wallet.php');
+    state.set(bob);
+    request.flush({}, { status: 401, statusText: 'Unauthorized' });
+    expect(state.user()).toEqual(bob);
+  });
+
+  it('uses server time for unlimited passes when the device clock is incorrect', () => {
+    const energy = TestBed.inject(Energy);
+    state.set({ ...alice, serverTime: 1000000, unlimitedJuiceUntil: 1060000 });
+    expect(energy.hasUnlimited()).toBe(true);
+    state.set({ ...alice, serverTime: Date.now() + 120000, unlimitedJuiceUntil: Date.now() + 60000 });
+    expect(energy.hasUnlimited()).toBe(false);
+  });
 });

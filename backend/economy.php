@@ -1,12 +1,10 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/configuration.php';
 
 function demo_topups_enabled(): bool
 {
-    $env = getenv('TUBONG_ALLOW_DEMO_TOPUPS');
-    if ($env !== false) return $env === '1';
-    $local = is_file(__DIR__ . '/config.local.php') ? require __DIR__ . '/config.local.php' : [];
-    return ($local['allow_demo_topups'] ?? false) === true;
+    return app_config()['allow_demo_topups'];
 }
 
 function shop_catalog(): array
@@ -32,7 +30,7 @@ function update_wallet(int $userId, array $body): array
 {
     $requestId = input_string($body, 'requestId');
     $action = input_string($body, 'action');
-    if (!preg_match('/\A[0-9a-f-]{36}\z/', $requestId)) {
+    if (!preg_match('/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/', $requestId)) {
         throw new WalletFailure('Invalid request ID.', 422);
     }
     // Ignore client-supplied balances, prices and user IDs. Identity comes from the session.
@@ -46,6 +44,7 @@ function update_wallet(int $userId, array $body): array
         $query->execute([$userId]);
         $user = $query->fetch();
         if (!$user) throw new WalletFailure('Please log in again.', 401);
+        require_current_session($db, $userId);
         [$user, $entitlement] = recover_account_juice($db, $user);
         $query = $db->prepare('SELECT request_hash FROM wallet_operations WHERE user_id = ? AND request_id = ?');
         $query->execute([$userId, $requestId]);

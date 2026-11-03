@@ -3,7 +3,8 @@ require dirname(__DIR__, 2) . '/bootstrap.php';
 $body = json_input();
 $identity = trim(input_string($body, 'identity'));
 $password = input_string($body, 'password');
-if ($identity === '' || strlen($identity) > 50 || $password === '' || strlen($password) > 72 || str_contains($password, "\0")) {
+// Match registration's alphabet, so database collation aliases cannot bypass identity limits.
+if (!preg_match('/\A[A-Za-z0-9_]{3,50}\z/', $identity) || $password === '' || strlen($password) > 72 || str_contains($password, "\0")) {
     respond(['message' => 'Enter your username and password.'], 422);
 }
 $ip = $_SERVER['REMOTE_ADDR'] ?? '';

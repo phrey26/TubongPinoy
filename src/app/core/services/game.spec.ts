@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Game } from './game';
+import { AccountState } from './account-state';
 
 describe('Game scores API', () => {
   let service: Game;
@@ -21,6 +22,7 @@ describe('Game scores API', () => {
   });
 
   it('submits the score with session CSRF protection and no client identity', () => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Alice', tansans: 0, juice: 100 });
     service.saveScore('jolens-blast', 600).subscribe();
     http.expectOne('/api/session.php').flush({ user: { id: 1 }, csrfToken: 'token' });
     const request = http.expectOne('/api/scores.php');
@@ -35,6 +37,7 @@ describe('Game scores API', () => {
   });
 
   it('marks a tutorial seen using a server session and CSRF token', () => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Alice', tansans: 0, juice: 100 });
     service.markTutorialSeen('jolens-blast').subscribe();
     http.expectOne('/api/session.php').flush({ user: { id: 1 }, csrfToken: 'token' });
     const request = http.expectOne('/api/tutorial.php');
@@ -49,5 +52,14 @@ describe('Game scores API', () => {
     http.expectOne('/api/session.php').flush({ user: null, csrfToken: 'token' });
     http.expectNone('/api/scores.php');
     expect(status).toBe(401);
+  });
+
+  it('does not save another player’s score after an account switch', () => {
+    TestBed.inject(AccountState).set({ id: 1, username: 'Alice', tansans: 0, juice: 100 });
+    let status = 0;
+    service.saveScore('tumbang-preso', 100).subscribe({ error: error => status = error.status });
+    http.expectOne('/api/session.php').flush({ user: { id: 2 }, csrfToken: 'other-account' });
+    http.expectNone('/api/scores.php');
+    expect(status).toBe(409);
   });
 });

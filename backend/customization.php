@@ -80,6 +80,7 @@ function save_customization(int $userId, array $values): array
         $query->execute([$userId]);
         $user = $query->fetch();
         if (!$user) throw new RuntimeException('Account no longer exists.');
+        require_current_session($db, $userId);
         $db->prepare('INSERT IGNORE INTO user_profiles (user_id, display_name) VALUES (?, ?)')
             ->execute([$userId, $user['username']]);
         // Column names are fixed here, never taken from request data.

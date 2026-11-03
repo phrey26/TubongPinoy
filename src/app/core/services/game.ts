@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { switchMap, throwError, timeout } from 'rxjs';
+import { defer, switchMap, throwError, timeout } from 'rxjs';
 import { Auth } from './auth';
 
 export type GameId = 'tumbang-preso' | 'jolens-blast';
@@ -27,24 +27,29 @@ export class Game {
   }
 
   markTutorialSeen(game: GameId) {
-    return this.auth.loadSession().pipe(
-      switchMap(session => session.user
-        ? this.http.post<TutorialStatus>('/api/tutorial.php', { game }, {
-          headers: { 'X-CSRF-Token': session.csrfToken },
-        })
-        : throwError(() => new HttpErrorResponse({ status: 401 }))),
-      timeout(8000),
-    );
+    return this.save<TutorialStatus>('tutorial', { game });
   }
 
   saveScore(game: GameId, points: number) {
-    return this.auth.loadSession().pipe(
-      switchMap(session => session.user
-        ? this.http.post<GameScores>('/api/scores.php', { game, points }, {
-          headers: { 'X-CSRF-Token': session.csrfToken },
-        })
-        : throwError(() => new HttpErrorResponse({ status: 401 }))),
-      timeout(8000),
-    );
+    return this.save<GameScores>('scores', { game, points });
+  }
+
+  private save<T>(endpoint: 'scores' | 'tutorial', body: object) {
+    return defer(() => {
+      const accountId = this.auth.user()?.id;
+      return this.auth.loadSession().pipe(
+        switchMap(session => {
+          if (!session.user || !accountId) return throwError(() => new HttpErrorResponse({ status: 401 }));
+          if (session.user.id !== accountId || this.auth.user()?.id !== accountId) {
+            return throwError(() => new HttpErrorResponse({ status: 409,
+              error: { message: 'Your account changed. Please reload the game before continuing.' } }));
+          }
+          return this.http.post<T>(`/api/${endpoint}.php`, body, {
+            headers: { 'X-CSRF-Token': session.csrfToken },
+          });
+        }),
+        timeout(8000),
+      );
+    });
   }
 }

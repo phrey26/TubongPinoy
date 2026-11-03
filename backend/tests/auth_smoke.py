@@ -118,7 +118,7 @@ try:
     check(request('session', opener=replay_cookie(authenticated_cookie))[1]['user'] is None, 'Logged-out cookies cannot be replayed')
     token = request('session')[1]['csrfToken']
     check(request('login', {'identity': username, 'password': 'wrong-password'}, token)[0] == 401, 'Wrong password is rejected')
-    check(request('login', {'identity': "' OR 1=1 --", 'password': password}, token)[0] == 401, 'SQL injection does not authenticate')
+    check(request('login', {'identity': "' OR 1=1 --", 'password': password}, token)[0] == 422, 'Malformed usernames are rejected before database lookup')
     old_cookie = cookie_value()
     status, result, headers = request('login', {'identity': username, 'password': password, 'rememberMe': True}, token)
     check(status == 200 and result['user']['username'] == username, 'Login works with username')
