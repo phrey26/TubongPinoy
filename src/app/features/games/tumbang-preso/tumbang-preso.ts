@@ -18,7 +18,7 @@ import { ALDUGO_FX_ATLAS, AldugoEffects } from './aldugo-effects';
 import { ImpactEffects } from './impact-effects';
 import { FEEDBACK_COLORS, GameFeedback } from '../../../shared/canvas/game-feedback';
 import { drawPixelText } from './pixel-text';
-import { generateLevel } from './level-generation';
+import { RankedRun, RunAction } from '../../../core/services/game';
 import { launchShot, Obstacle, stepShot } from './shot-physics';
 import { TumbangAudio } from '../../../core/services/tumbang-audio';
 import { TUMBANG_COLLECTION_SKINS, gameSkinUrl, SLIPPER_COLORS } from '../../../core/services/customization';
@@ -190,7 +190,35 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private angularVelocity = 0;
   private canPos = { x: 225, y: 120 };
 
-  obstacles: Obstacle[] = generateLevel(1).obstacles;
+  obstacles: Obstacle[] = [];
+  private rankedRun?: RankedRun;
+  private shotInput = { vx: 0, vy: 0 };
+  private physicsAccumulator = 0;
+  retrySync: (() => void) | null = null;
+
+  private syncRun(action: RunAction, done: (run: RankedRun) => void, input: { vx?: number; vy?: number } = {}): void {
+    const request = this.gameService.runAction('tumbang-preso', action, action === 'start' ? undefined : this.rankedRun, input);
+    const send = () => {
+      if (this.savingJuice()) return;
+      this.savingJuice.set(true); this.accountError.set('');
+      request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.savingJuice.set(false))).subscribe({
+        next: result => {
+          this.retrySync = null; this.rankedRun = result.run; this.currentScore = result.run.score;
+          this.currentLevel = result.run.level; this.obstacles = result.run.obstacles;
+          done(result.run); this.changeDetector.markForCheck();
+        },
+        error: error => { this.retrySync = send; this.accountError.set(authErrorMessage(error)); },
+      });
+    };
+    send();
+  }
+
+  private settleShot(): void {
+    this.syncRun('shot', run => {
+      this.showTryAgain = run.status === 'miss'; this.showNiceShot = run.status === 'hit';
+      if (run.status !== 'hit') this.hitAge = 0;
+    }, this.shotInput);
+  }
 
   ngAfterViewInit() {
     this.slipperSprite = gameSkinUrl('tumbang-preso', this.account.user()?.equippedSkins?.['tumbang-preso']);
@@ -235,7 +263,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
-    if (this.confirmation.active()) return;
+    if (this.confirmation.active() || this.savingJuice() || this.retrySync) return;
     if (
       this.showIntroduction ||
       !this.hasStarted ||
@@ -258,9 +286,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   }
 
   startGame(): void {
-    if (this.showIntroduction || this.hasStarted) return;
-    this.hasStarted = true;
-    this.audio.start();
+    if (this.showIntroduction || this.hasStarted || this.savingJuice() || this.retrySync) return;
+    this.syncRun('start', () => { this.hasStarted = true; this.audio.start(); });
   }
 
   private loadTutorial(): void {
@@ -336,6 +363,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     if (this.legendarySkin) this.aldugo.burst(this.slipperPos.x, this.slipperPos.y, 'launch');
     if (this.gatorzEquipped) this.gatorz.burst(this.slipperPos.x, this.slipperPos.y, 'launch');
     this.feedback.launch(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
+    this.shotInput = { vx: this.velocity.x, vy: this.velocity.y };
+    this.physicsAccumulator = 0;
     this.isLaunched = true;
   }
 
@@ -384,7 +413,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.feedback.impact(this.canPos.x, this.canPos.y, 1, FEEDBACK_COLORS.tin);
       this.feedback.celebrate(this.canPos.x, this.canPos.y);
       this.showNiceShot = this.reducedMotion;
-      this.currentScore += 100;
+      this.settleShot();
       this.changeDetector.markForCheck();
       return;
     }
@@ -394,35 +423,25 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.isLaunched = false;
       this.angularVelocity = 0;
       this.showTryAgain = true;
+      this.settleShot();
       if (!this.reducedMotion) this.impacts.play(shot.x, Math.max(24, Math.min(this.CANVAS_HEIGHT - 24, shot.y)), 'dust');
       this.changeDetector.markForCheck();
     }
   }
 
   nextLevel() {
-    this.currentLevel++;
-    this.resetSlipper();
-    this.audio.play('click');
-    this.showNiceShot = false;
-
-    this.obstacles = generateLevel(this.currentLevel).obstacles;
+    if (!this.showNiceShot || this.savingJuice() || this.retrySync) return;
+    this.syncRun('next', () => { this.resetSlipper(); this.audio.play('click'); });
   }
 
   tryAgain() {
-    if (!this.showTryAgain || this.savingJuice()) return;
+    if (!this.showTryAgain || this.savingJuice() || this.retrySync) return;
     if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
       if (!this.showOutOfJuice) this.audio.play('empty');
       this.showOutOfJuice = true;
       return;
     }
-    this.savingJuice.set(true);
-    this.accountError.set('');
-    this.energyService.consumeEnergy('tumbang_retry').pipe(
-      finalize(() => this.savingJuice.set(false)),
-    ).subscribe({
-      next: () => { this.resetSlipper(); this.showOutOfJuice = false; this.audio.play('click'); },
-      error: (error: unknown) => this.accountError.set(authErrorMessage(error)),
-    });
+    this.syncRun('retry', () => { this.resetSlipper(); this.showOutOfJuice = false; this.audio.play('click'); });
   }
 
   resetSlipper() {
@@ -466,7 +485,10 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       else if (this.gatorzEquipped) this.gatorz.flight(this.slipperPos.x, this.slipperPos.y);
       else this.feedback.trail(this.slipperPos.x, this.slipperPos.y,
         Math.hypot(this.velocity.x, this.velocity.y), '#f9a8d4');
-      this.updatePhysics();
+      this.physicsAccumulator += seconds;
+      while (this.physicsAccumulator + 1e-9 >= 1 / 60 && this.isLaunched) {
+        this.updatePhysics(); this.physicsAccumulator = Math.max(0, this.physicsAccumulator - 1 / 60);
+      }
     }
     this.canvas.nativeElement.style.transform = paused ? '' : this.feedback.canvasTransform;
     for (const popup of this.bankPopups) popup.age += seconds;

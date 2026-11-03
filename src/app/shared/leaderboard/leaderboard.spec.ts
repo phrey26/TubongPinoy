@@ -9,7 +9,7 @@ const scores: GameScores = { game: 'tumbang-preso', highScores: [
 ], personalBest: 500 };
 
 function setup() {
-  const service = { scores: vi.fn(() => of(scores)), saveScore: vi.fn(() => of(scores)) };
+  const service = { scores: vi.fn(() => of(scores)) };
   TestBed.configureTestingModule({ providers: [{ provide: Game, useValue: service }] });
   const fixture = TestBed.createComponent(Leaderboard);
   fixture.componentRef.setInput('game', 'tumbang-preso');
@@ -19,43 +19,43 @@ function setup() {
 }
 
 describe('Leaderboard', () => {
-  it('shows saved players and the current user best, then saves changed scores', () => {
+  it('shows saved players and the current user best, then refreshes after verified scores change', () => {
     const { fixture, service } = setup();
     expect(fixture.nativeElement.textContent).toContain('Juan');
     expect(fixture.nativeElement.textContent).toContain('Your best: 500');
-    expect(service.saveScore).not.toHaveBeenCalled();
+    expect(service.scores).toHaveBeenCalledTimes(1);
     fixture.componentRef.setInput('score', 600);
     fixture.detectChanges();
-    expect(service.saveScore).toHaveBeenCalledWith('tumbang-preso', 600);
+    expect(service.scores).toHaveBeenCalledWith('tumbang-preso');
     fixture.componentRef.setInput('score', 0);
     fixture.detectChanges();
-    expect(service.saveScore).toHaveBeenCalledTimes(1);
+    expect(service.scores).toHaveBeenCalledTimes(2);
   });
 
-  it('keeps failed scores available for retry even after a new game starts', () => {
+  it('allows retrying a failed leaderboard read', () => {
     const { fixture, service, component } = setup();
-    service.saveScore.mockReturnValueOnce(throwError(() => new Error('offline')));
+    service.scores.mockReturnValueOnce(throwError(() => new Error('offline')));
     fixture.componentRef.setInput('score', 600);
     fixture.detectChanges();
-    expect(component.error()).toContain('could not be saved');
+    expect(component.error()).toContain('could not be loaded');
     fixture.componentRef.setInput('score', 0);
     fixture.detectChanges();
     component.refresh();
-    expect(service.saveScore).toHaveBeenLastCalledWith('tumbang-preso', 600);
-    expect(component.failedScore).toBe(0);
+    expect(service.scores).toHaveBeenLastCalledWith('tumbang-preso');
+    expect(component.error()).toBe('');
   });
 
-  it('serializes score updates behind an outstanding save', () => {
+  it('serializes refreshes behind an outstanding read', () => {
     const { fixture, service } = setup();
     const pending = new Subject<GameScores>();
-    service.saveScore.mockReturnValueOnce(pending);
+    service.scores.mockReturnValueOnce(pending);
     fixture.componentRef.setInput('score', 600);
     fixture.detectChanges();
     fixture.componentRef.setInput('score', 700);
     fixture.detectChanges();
-    expect(service.saveScore).toHaveBeenCalledTimes(1);
+    expect(service.scores).toHaveBeenCalledTimes(2);
     pending.next(scores);
     pending.complete();
-    expect(service.saveScore).toHaveBeenLastCalledWith('tumbang-preso', 700);
+    expect(service.scores).toHaveBeenLastCalledWith('tumbang-preso');
   });
 });

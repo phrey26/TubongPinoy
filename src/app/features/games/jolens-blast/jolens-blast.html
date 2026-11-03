@@ -51,6 +51,8 @@
           @if (accountError()) {
             <p role="alert" class="game-account-error w-full text-sm text-red-700">{{ accountError() }}</p>
           }
+          @if (savingJuice()) { <p role="status" class="w-full text-sm font-bold">Saving game progress…</p> }
+          @if (retrySync) { <button type="button" class="ui-button" [disabled]="savingJuice()" (click)="retrySync()">Retry game sync</button> }
           @if (audio.error()) {
             <div class="w-full text-sm text-blue-800" role="status">{{ audio.error() }}
               <button type="button" class="ui-button ui-button-soft" [disabled]="audio.loading()" (click)="audio.activate()">Retry sound</button>
@@ -76,7 +78,7 @@
             <div class="bg-white p-6 rounded-3xl border-4 border-blue-400 text-center">
               <h2 class="text-2xl font-black text-blue-700 mb-3">Ready to enter the circle?</h2>
               <p class="text-gray-700">Choose your stake after pressing Play.</p>
-              <button type="button" [disabled]="tutorialLoading()" (click)="play()" class="ui-button ui-button-blue jolens-action mt-4 w-full">
+              <button type="button" [disabled]="tutorialLoading() || savingJuice() || !!retrySync" (click)="play()" class="ui-button ui-button-blue jolens-action mt-4 w-full">
                 <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> {{ tutorialLoading() ? 'Loading…' : 'Play' }}
               </button>
             </div>
@@ -98,7 +100,7 @@
               </div>
               <p class="text-gray-700">{{ selectedBet * 2 }} targets in the circle.<br />{{ marbleInventory - selectedBet }} marbles stay with you.</p>
               <p class="text-sm text-gray-600">Stake 1–5 and keep at least one shooter.</p>
-              <button type="button" (click)="startRound()" [disabled]="savingJuice() || selectedBet < 1 || selectedBet > maxBet"
+              <button type="button" (click)="startRound()" [disabled]="savingJuice() || !!retrySync || selectedBet < 1 || selectedBet > maxBet"
                 class="ui-button ui-button-blue jolens-action mt-4 w-full">Confirm Bet &amp; Play</button>
               <p class="mt-3 text-sm font-semibold text-pink-700">20 <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /> per round · Shots are free</p>
             </div>
@@ -110,7 +112,7 @@
               <h2 class="text-4xl font-black text-blue-600 mb-2">Board Cleared!</h2>
               <p class="text-gray-600 mb-6 font-medium">You knocked every marble out!</p>
               <div class="flex flex-col gap-3">
-                <button (click)="chooseNextBet()" class="ui-button ui-button-blue px-10 py-3">
+                <button [disabled]="savingJuice() || !!retrySync" (click)="chooseNextBet()" class="ui-button ui-button-blue px-10 py-3">
                   Place Another Bet
                 </button>
                 <button (click)="requestEndSession()" class="ui-button ui-button-blue text-sm">
@@ -126,7 +128,7 @@
               <h2 class="text-3xl font-black text-purple-700 mb-2">Session Complete!</h2>
               <p class="text-gray-600 mb-6 font-medium">{{ hasCompletedShot ? marbleInventory + ' marbles × 50 = ' + currentScore + ' points.' : 'No shots completed. No points awarded.' }}</p>
               <div class="flex flex-col gap-3">
-                <button (click)="tryAgain()" class="ui-button ui-button-blue px-10 py-3">
+                <button [disabled]="savingJuice() || !!retrySync" (click)="tryAgain()" class="ui-button ui-button-blue px-10 py-3">
                   New Game
                 </button>
                 <button routerLink="/games" class="ui-button ui-button-soft text-xs">

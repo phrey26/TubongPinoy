@@ -20,7 +20,7 @@
           <h2>Information used by the app</h2>
           <ul>
             <li><strong>Account details:</strong> your username and a password hash used to verify your password. Passwords are not stored as readable text.</li>
-            <li><strong>Profile and play:</strong> your display name, chosen avatar, equipped skins, purchased collectibles, Tansans, Juice, tutorial preferences, and personal best scores.</li>
+            <li><strong>Profile and play:</strong> your display name, chosen avatar, equipped skins, purchased collectibles, Tansans, Juice, tutorial preferences, current game-run state used to verify results, and personal best scores.</li>
             <li><strong>Account activity:</strong> wallet operation records, account update timestamps, and session information needed to sign you in and protect account changes.</li>
             <li><strong>Security:</strong> registration uses a short arithmetic challenge tied to your session. Its verification data expires after five minutes and is replaced after an attempt or a new question. No third-party CAPTCHA service is loaded. Request limits use hashed identifiers derived from a network address, login identity, or account ID. The web server may also keep request and error logs.</li>
           </ul>
@@ -65,7 +65,7 @@
         <section>
           <h2>Play fairly</h2>
           <p>Do not submit fabricated scores, tamper with balances, impersonate other players, bypass access controls, or use automated requests to disrupt the service. Do not exploit a bug to interfere with another player’s account.</p>
-          <p>Scores are submitted by the browser and are not independently verified game replays. Leaderboards are for friendly play; no cash prizes are offered.</p>
+          <p>Scores are calculated on the server by replaying shots against the game’s rules. This rejects invented totals, but does not guarantee that a human played. Leaderboards are for friendly play; no cash prizes are offered.</p>
         </section>
         <section>
           <h2>Juice, Tansans, and virtual items</h2>
@@ -97,8 +97,9 @@
           <details><summary>What do new players start with?</summary><p>Each new account starts with 100 Juice, 0 Tansans, six free slipper colors, and three free Jolens shooter styles. Starter skins are available in <a routerLink="/account/inventory">Inventory</a>.</p></details>
           <details><summary>How does Juice refill?</summary><p>You recover 1 Juice every 2 minutes and 24 seconds, up to 100. A full refill from zero takes four hours. Recovery also works while you are away or logged out. The timer shows when the next point is due; an internet connection is needed to confirm the new balance.</p></details>
           <details><summary>When does a game spend Juice?</summary><p>Tumbang Preso’s first attempt is free. Choosing Try Again after a miss costs 20 Juice. In Jolens Blast, each confirmed round costs 20 Juice; individual shots are free. Spending your final 20 Juice still lets you finish that attempt or round. An active unlimited pass prevents these costs.</p></details>
-          <details><summary>How do the games award points?</summary><p>Tumbang Preso awards 100 points per can hit and saves your cumulative high score as you progress. Jolens Blast awards 50 points per marble you own when you end a session after completing a shot. Use End Session to save that result before leaving. Points do not award Tansans.</p></details>
+          <details><summary>How do the games award points?</summary><p>Tumbang Preso awards 100 points per verified can hit and saves your cumulative high score as you progress. Jolens Blast awards 50 points per marble you own when you end a session after completing a shot. Use End Session to save that result before leaving. Points do not award Tansans.</p></details>
           <details><summary>What happens when I leave a game?</summary><p>Your account balances, equipment, tutorial preferences, and saved personal bests remain on your account. An unfinished level or Jolens session resets when you leave or reload. If a score could not be saved, use Retry saving score before leaving the game page.</p></details>
+          <details><summary>Why is my earlier leaderboard score missing?</summary><p>The leaderboard now includes only scores verified from game runs. Earlier scores are kept as historical results and are no longer ranked. Play a new game to set your verified personal best.</p></details>
           <details><summary>Can I buy Tansans or cash out marbles?</summary><p>Real-money top-ups are coming soon and payment buttons are disabled. Jolens marbles become game points at session end, not cash or Tansans. No cash-out feature is available.</p></details>
           <details><summary>Can I equip items from the store?</summary><p>Store skins are coming soon and cannot be purchased yet. Any previously owned collectibles remain on your account. You can equip any free starter slipper or shooter from <a routerLink="/account/inventory">Inventory</a> without spending Tansans.</p></details>
           <details><summary>How do I change my account or recover a password?</summary><p>Use the account menu to edit your profile or open <a routerLink="/account/settings">Settings</a>. Changing your username or password requires your current password and signs out other sessions. Password recovery is not available yet.</p></details>

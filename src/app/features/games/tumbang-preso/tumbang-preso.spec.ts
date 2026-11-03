@@ -1,8 +1,10 @@
+import { MemoryRanked } from '../../../testing/ranked-stub';
+import { inject } from '@angular/core';
 import { signal } from '@angular/core';
 import { TumbangAudio, DEFAULT_AUDIO } from '../../../core/services/tumbang-audio';
 import { Confirmation } from '../../../core/services/confirmation';
 import { AccountState } from '../../../core/services/account-state';
-import { Game } from '../../../core/services/game';
+import { Game, RunResult } from '../../../core/services/game';
 import { of, throwError } from 'rxjs';
 import { MemoryEnergy } from '../../../testing/energy-stub';
 import { Subject } from 'rxjs';
@@ -36,16 +38,18 @@ describe('TumbangPreso', () => {
         settings: signal({ ...DEFAULT_AUDIO }), loading: signal(false), error: signal(''),
         start: vi.fn(), stop: vi.fn(), play: vi.fn(), activate: vi.fn(), setPaused: vi.fn(),
         resetAttempt: vi.fn(), toggleMute: vi.fn(),
-      }) }, { provide: Game, useValue: { tutorial: () => of({ seen: false }), markTutorialSeen: () => of({ seen: true }), scores: () => of({ highScores: [], personalBest: 0 }), saveScore: () => of({ highScores: [], personalBest: 0 }) } }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
+      }) }, { provide: Game, useFactory: () => new MemoryRanked(inject(Energy) as unknown as MemoryEnergy) }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
       imports: [TumbangPreso],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TumbangPreso);
     component = fixture.componentInstance;
+    (TestBed.inject(Game) as unknown as MemoryRanked).client = component as unknown as MemoryRanked['client'];
     await fixture.whenStable();
     component.closeTutorial();
     component.startGame();
     await fixture.whenStable();
+    component['lastFrameTime'] = 0;
   });
 
   it('skips automatic tutorials for a returning account but allows How to Play', async () => {
@@ -212,6 +216,23 @@ describe('TumbangPreso', () => {
     expect(clear).toHaveBeenCalled();
   });
 
+  it('waits for server verification and corrects an optimistic local hit', () => {
+    const pending = new Subject<RunResult>();
+    const request = vi.spyOn(TestBed.inject(Game), 'runAction').mockReturnValueOnce(pending);
+    component['slipperPos'] = { x: 225, y: 120 };
+    component['velocity'] = { x: 0, y: 0 };
+    component['updatePhysics']();
+    expect(request).toHaveBeenCalledWith('tumbang-preso', 'shot', expect.any(Object), { vx: 0, vy: 0 });
+    expect(component.currentScore).toBe(0);
+    expect(component.savingJuice()).toBe(true);
+    pending.next({ run: { ...component['rankedRun']!, status: 'miss', score: 0, sequence: 1 },
+      user: { id: 1, username: 'Player', tansans: 0, juice: 100 } });
+    pending.complete();
+    expect(component.currentScore).toBe(0);
+    expect(component.showNiceShot).toBe(false);
+    expect(component.showTryAgain).toBe(true);
+  });
+
   it('waits for a confirmed Juice deduction before granting a retry', () => {
     const pending = new Subject<never>();
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
@@ -237,6 +258,7 @@ describe('TumbangPreso', () => {
     component.closeTutorial();
     component.onMouseDown(new MouseEvent('mousedown', { clientX: 225, clientY: 680 }));
     expect(component['isDragging']).toBe(false);
+    fixture.changeDetectorRef.markForCheck();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Ready to knock it down?');
     component.startGame();
@@ -265,7 +287,7 @@ describe('TumbangPreso', () => {
     component.onMouseMove(new MouseEvent('mousemove', { clientX: 225, clientY: 760 }));
     component.onMouseUp();
     for (let frame = 0; frame < 100 && !component.showNiceShot; frame++) {
-      vi.mocked(window.requestAnimationFrame).mock.lastCall![0](frame * 16);
+      component['render']((frame + 1) * (1000 / 60));
     }
     expect(component.currentScore).toBe(100);
     expect(component.showOutOfJuice).toBe(false);
@@ -309,7 +331,7 @@ describe('TumbangPreso', () => {
     }));
     component.onMouseUp();
     for (let frame = 0; frame < 420 && !component.showNiceShot; frame++) {
-      vi.mocked(window.requestAnimationFrame).mock.lastCall![0](frame * 16);
+      component['render']((frame + 1) * (1000 / 60));
     }
     expect(component.showNiceShot).toBe(true);
     expect(component.currentScore).toBe(100);
@@ -353,15 +375,14 @@ describe('TumbangPreso', () => {
     component.onMouseUp();
 
     for (let frame = 0; frame < 100 && !component.showNiceShot; frame++) {
-      const callback = vi.mocked(window.requestAnimationFrame).mock.lastCall![0];
-      callback(frame * 16);
+      component['render']((frame + 1) * (1000 / 60));
     }
 
     expect(component.showNiceShot).toBe(true);
     expect(component.currentScore).toBe(100);
-    const save = vi.spyOn(TestBed.inject(Game), 'saveScore');
+    const read = vi.spyOn(TestBed.inject(Game), 'scores');
     fixture.detectChanges();
-    expect(save).toHaveBeenCalledWith('tumbang-preso', 100);
+    expect(read).toHaveBeenCalledWith('tumbang-preso');
     expect(component.showTryAgain).toBe(false);
   });
 
@@ -376,7 +397,7 @@ describe('TumbangPreso', () => {
     component.onMouseMove(new MouseEvent('mousemove', { clientX: 225, clientY: 760 }));
     component.onMouseUp();
     for (let frame = 0; frame < 10; frame++) {
-      vi.mocked(window.requestAnimationFrame).mock.lastCall![0](frame * 16);
+      component['render']((frame + 1) * (1000 / 60));
     }
     const angles = rotate.mock.calls.map(([angle]) => angle);
     expect(angles[0]).toBeGreaterThan(0);
@@ -384,7 +405,7 @@ describe('TumbangPreso', () => {
     expect(angles[9] - angles[8]).toBeLessThan(angles[1] - angles[0]);
 
     component.resetSlipper();
-    vi.mocked(window.requestAnimationFrame).mock.lastCall![0](160);
+    component['render'](200);
     expect(rotate.mock.lastCall![0]).toBe(0);
   });
 
@@ -406,7 +427,7 @@ describe('TumbangPreso', () => {
     component.onMouseMove(new MouseEvent('mousemove', { clientX: pullX, clientY: 680 }));
     component.onMouseUp();
     for (let frame = 0; frame < 45; frame++) {
-      vi.mocked(window.requestAnimationFrame).mock.lastCall![0](frame * 16);
+      component['render']((frame + 1) * (1000 / 60));
     }
 
     const positions = translate.mock.calls.map(([x]) => x);

@@ -14,25 +14,11 @@ if (!is_string($game) || !in_array($game, ['tumbang-preso', 'jolens-blast'], tru
 }
 $db = database();
 if ($method === 'POST') {
-    $points = $body['points'] ?? null;
-    $step = $game === 'tumbang-preso' ? 100 : 50;
-    if (!is_int($points) || $points <= 0 || $points > 1000000000 || $points % $step !== 0) {
-        respond(['message' => 'Invalid score for this game.'], 422);
-    }
-    // Identity comes exclusively from the session. Concurrent/lower submissions
-    // can never overwrite this user's best score for this game.
-    $db->beginTransaction();
-    $lock = $db->prepare('SELECT id FROM users WHERE id = ? FOR UPDATE');
-    $lock->execute([$user['id']]);
-    require_current_session($db, $user['id']);
-    $query = $db->prepare('INSERT INTO game_high_scores (user_id, game, points) VALUES (?, ?, ?)
-        ON DUPLICATE KEY UPDATE points = GREATEST(points, VALUES(points))');
-    $query->execute([$user['id'], $game, $points]);
-    $db->commit();
+    respond(['message' => 'Scores are calculated from verified game runs. Start a new game to earn points.'], 422);
 }
 $query = $db->prepare('SELECT s.user_id AS userId, u.username,
     COALESCE(p.display_name, u.username) AS displayName, COALESCE(p.avatar_id, \'sunny\') AS avatarId, s.points
-    FROM game_high_scores s JOIN users u ON u.id = s.user_id
+    FROM verified_game_high_scores s JOIN users u ON u.id = s.user_id
     LEFT JOIN user_profiles p ON p.user_id = u.id
     WHERE s.game = ? ORDER BY s.points DESC, s.user_id ASC LIMIT 10');
 $query->execute([$game]);
@@ -42,7 +28,7 @@ foreach ($scores as &$score) {
     $score['points'] = (int) $score['points'];
 }
 unset($score);
-$query = $db->prepare('SELECT points FROM game_high_scores WHERE user_id = ? AND game = ?');
+$query = $db->prepare('SELECT points FROM verified_game_high_scores WHERE user_id = ? AND game = ?');
 $query->execute([$user['id'], $game]);
 $best = $query->fetchColumn();
 respond(['game' => $game, 'highScores' => $scores, 'personalBest' => $best === false ? 0 : (int) $best]);

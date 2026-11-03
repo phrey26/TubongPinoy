@@ -14,7 +14,7 @@ import { RouterModule, Router } from '@angular/router';
 import { Energy } from '../../../core/services/energy';
 import { Subscription } from 'rxjs';
 import { stepMarbles } from './marble-physics';
-import { scatterMarbles } from './marble-placement';
+import { RankedRun, RunAction } from '../../../core/services/game';
 import { JupiterEffects } from './jupiter-effects';
 import { SteelBallEffects } from './steel-ball-effects';
 import { STEEL_BALL_FX_ATLAS, JOLENS_ASSETS, JOLENS_ASSET_PATHS } from './jolens-assets';
@@ -72,6 +72,28 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   private savingTutorial = false;
   @ViewChild('introDialog') introDialog!: ElementRef<HTMLDialogElement>;
 
+  private rankedRun?: RankedRun;
+  private shotInput = { vx: 0, vy: 0 };
+  retrySync: (() => void) | null = null;
+
+  private syncRun(action: RunAction, done: (run: RankedRun) => void, input: { vx?: number; vy?: number; bet?: number } = {}): void {
+    const request = this.gameService.runAction('jolens-blast', action, action === 'start' ? undefined : this.rankedRun, input);
+    const send = () => {
+      if (this.savingJuice()) return;
+      this.savingJuice.set(true); this.accountError.set('');
+      request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.savingJuice.set(false))).subscribe({
+        next: result => {
+          this.retrySync = null; this.rankedRun = result.run;
+          this.currentScore = result.run.score; this.marbleInventory = result.run.inventory;
+          this.hasCompletedShot = result.run.completed;
+          done(result.run); this.changeDetector.markForCheck();
+        },
+        error: error => { this.retrySync = send; this.accountError.set(authErrorMessage(error)); },
+      });
+    };
+    send();
+  }
+
   private loadTutorial(): void {
     this.gameService.tutorial('jolens-blast').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: status => {
@@ -115,11 +137,11 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   play(): void {
-    if (this.showIntroduction || this.hasStarted) return;
-    this.hasStarted = true;
-    this.audio.start('jolens');
-    this.showBetSetup = true;
-    this.showCashOut = (this.energyLevel < 20 && !this.energyService.hasUnlimited());
+    if (this.showIntroduction || this.hasStarted || this.savingJuice() || this.retrySync) return;
+    this.syncRun('start', () => {
+      this.hasStarted = true; this.audio.start('jolens'); this.showBetSetup = true;
+      this.showCashOut = (this.energyLevel < 20 && !this.energyService.hasUnlimited());
+    });
   }
 
   changeBet(direction: number): void {
@@ -301,28 +323,17 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   startRound(): void {
-    if (this.savingJuice() || this.showIntroduction || !this.hasStarted || this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
+    if (this.savingJuice() || this.retrySync || this.showIntroduction || !this.hasStarted || this.showGameOver || !this.showBetSetup || !Number.isInteger(this.selectedBet) ||
         this.selectedBet < 1 || this.selectedBet > this.maxBet) return;
     if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
       if (!this.showCashOut) this.audio.play('empty');
       this.showCashOut = true;
       return;
     }
-    this.savingJuice.set(true);
-    this.accountError.set('');
-    const bet = this.selectedBet;
-    this.energyService.consumeEnergy('jolens_round').pipe(
-      finalize(() => this.savingJuice.set(false)),
-    ).subscribe({
-      next: () => {
-        this.marbleInventory -= bet;
-        this.showBetSetup = false;
-        this.showCashOut = false;
-        this.showOutOfJuice = false;
-        this.initRound();
-      },
-      error: (error: unknown) => this.accountError.set(authErrorMessage(error)),
-    });
+    this.syncRun('round', () => {
+      this.showBetSetup = false; this.showCashOut = false; this.showOutOfJuice = false;
+      this.initRound();
+    }, { bet: this.selectedBet });
   }
 
   private initRound() {
@@ -341,8 +352,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.pendingKnockouts = [];
     this.textPopups = [];
 
-    const positions = scatterMarbles(this.selectedBet * 2, this.targetCenter,
-      this.playAreaRadius, this.marbleRadius);
+    const positions = this.rankedRun?.targets ?? [];
     this.marblesOnBoard = positions.slice(0, this.selectedBet * 2).map(position => ({
       ...position, radius: this.marbleRadius,
       sprite: JOLENS_ASSETS.marbles[Math.floor(Math.random() * JOLENS_ASSETS.marbles.length)],
@@ -370,7 +380,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onMouseDown(event: MouseEvent) {
-    if (this.confirmation.active()) return;
+    if (this.confirmation.active() || this.savingJuice() || this.retrySync) return;
     if (
       this.showIntroduction ||
       !this.hasStarted ||
@@ -443,6 +453,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
       this.currentShooter.dx = dx * 0.15;
       this.currentShooter.dy = dy * 0.15;
+      this.shotInput = { vx: this.currentShooter.dx, vy: this.currentShooter.dy };
       this.currentShooter.isMoving = true;
       if (this.jupiterEquipped) this.jupiterFx.burst(this.currentShooter.x, this.currentShooter.y);
       if (this.steelEquipped) this.steelFx.burst(this.currentShooter.x, this.currentShooter.y, 'launch');
@@ -552,7 +563,13 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
         this.outsideMarbles = [];
         this.feedback.celebrate(this.targetCenter.x, this.targetCenter.y);
       }
-      if (this.marbleInventory <= 0) this.endSession();
+      this.syncRun('shot', run => {
+        this.marblesOnBoard = run.targets.map((ball, index) => ({ ...ball, isMoving: false,
+          sprite: this.marblesOnBoard[index]?.sprite ?? JOLENS_ASSETS.marbles[0],
+          color: this.marblesOnBoard[index]?.color ?? this.colors[0] }));
+        this.showRoundWon = run.status === 'won';
+        if (run.status === 'finished') { this.showGameOver = true; this.showRoundWon = false; }
+      }, this.shotInput);
     }
     this.changeDetector.markForCheck();
   }
@@ -687,7 +704,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get canEndSession(): boolean {
-    return !this.savingJuice() && this.hasStarted && !this.showIntroduction && !this.showGameOver && !this.shotInProgress && !this.isDragging;
+    return !this.savingJuice() && !this.retrySync && this.hasStarted && !this.showIntroduction && !this.showGameOver && !this.shotInProgress && !this.isDragging;
   }
 
   requestEndSession(): void {
@@ -705,29 +722,22 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   endSession(): void {
     if (!this.canEndSession) return;
-    this.audio.setPaused(false);
-    this.showCashOut = false;
-    this.currentScore = this.hasCompletedShot ? this.marbleInventory * 50 : 0;
-    this.showGameOver = true;
-    this.showBetSetup = false;
-    this.showRoundWon = false;
-    this.showOutOfJuice = false;
-    this.outsideMarbles = [];
-    if (this.currentScore > 0) {
-      this.audio.resetAttempt();
-      this.audio.play('win');
-      this.feedback.celebrate(100, 210);
-      this.feedback.celebrate(350, 210);
-    }
+    this.syncRun('finish', () => {
+      this.audio.setPaused(false); this.showCashOut = false; this.showGameOver = true;
+      this.showBetSetup = false; this.showRoundWon = false; this.showOutOfJuice = false;
+      this.outsideMarbles = [];
+      if (this.currentScore > 0) { this.audio.resetAttempt(); this.audio.play('win'); this.feedback.celebrate(225, 210); }
+    });
   }
 
   tryAgain() {
-    if (!this.showGameOver) return;
+    if (!this.showGameOver || this.savingJuice() || this.retrySync) return;
     if (this.energyLevel < 20 && !this.energyService.hasUnlimited()) {
       if (!this.showOutOfJuice) this.audio.play('empty');
       this.showOutOfJuice = true;
       return;
     }
+    this.syncRun('start', () => {
     this.currentScore = 0;
     this.audio.resetAttempt();
     this.audio.play('click');
@@ -747,10 +757,11 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     this.shotInProgress = false;
     this.textPopups = [];
     this.spawnShooter();
+    });
   }
 
   chooseNextBet(): void {
-    if (!this.showRoundWon) return;
+    if (!this.showRoundWon || this.savingJuice() || this.retrySync) return;
     this.audio.resetAttempt();
     this.showRoundWon = false;
     this.showBetSetup = this.maxBet >= 1;

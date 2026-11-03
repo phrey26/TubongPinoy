@@ -1,5 +1,8 @@
 # Pre-hosting audit — November 3, 2026
 
+Follow-up: [server-verified scoring](verified-scores.md) now replaces browser-reported
+leaderboard totals. Its additive migration preserves historical scores.
+
 This audit fixes verified issues in the local Angular/PHP application. No deployment
 was performed. The private `backend/config.local.php` was neither printed nor edited.
 This is a code and regression review, not a guarantee that every vulnerability has
@@ -99,9 +102,9 @@ work around that limitation.
 
 ## Remaining launch decisions and limitations
 
-- Scores are still browser-reported. Integer validation and account authorization do
-  not prevent a modified client from fabricating scores or bypassing local gameplay.
-  Do not use rankings for prizes or valuable rewards without server-verified runs.
+- Server-verified runs now reject fabricated scores; see [verified-scores.md](verified-scores.md).
+  Automated solvers remain possible. Prizes or valuable rewards need additional
+  bot-abuse monitoring and competitive-integrity controls.
 - Real payments are not implemented. Demo credits are blocked in production; Top Up
   must remain unavailable until provider verification and payment lifecycle handling exist.
 - Contact is a preview and does not send messages. Password recovery, self-service

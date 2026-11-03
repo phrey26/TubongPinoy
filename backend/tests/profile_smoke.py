@@ -181,7 +181,12 @@ try:
     check(a.login(names[0])[1]['user']['equippedSkins'][collection[-1]['game']] == collection[-1]['id'],
           'Collection skin selection persists across login')
     # A high fixture score makes this account visible even on a populated local leaderboard.
-    a.request('scores.php', {'game': 'tumbang-preso', 'points': 1000000000})
+    code = r'''
+    require $argv[1] . '/database.php';
+    if (!preg_match('/\Atp_profile_[a-f0-9]{12}\z/', $argv[2])) exit(2);
+    database()->prepare("INSERT INTO verified_game_high_scores (user_id,game,points) SELECT id,'tumbang-preso',1000000000 FROM users WHERE username=?")->execute([$argv[2]]);
+    '''
+    subprocess.run([PHP, '-r', code, str(ROOT), names[0]], check=True, capture_output=True)
     scores = a.request('scores.php?game=tumbang-preso')[1]['highScores']
     row = next(row for row in scores if row['userId'] == initial['id'])
     check(row['displayName'] == 'New Name' and row['avatarId'] == 'miko',

@@ -1,3 +1,5 @@
+import { MemoryRanked } from '../../../testing/ranked-stub';
+import { inject } from '@angular/core';
 import { Confirmation } from '../../../core/services/confirmation';
 import { AccountState } from '../../../core/services/account-state';
 import { Game } from '../../../core/services/game';
@@ -30,12 +32,13 @@ describe('JolensBlast', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 
     await TestBed.configureTestingModule({
-      providers: [{ provide: Game, useValue: { tutorial: () => of({ seen: false }), markTutorialSeen: () => of({ seen: true }), scores: () => of({ highScores: [], personalBest: 0 }), saveScore: () => of({ highScores: [], personalBest: 0 }) } }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
+      providers: [{ provide: Game, useFactory: () => new MemoryRanked(inject(Energy) as unknown as MemoryEnergy) }, provideRouter([]), { provide: Energy, useClass: MemoryEnergy }],
       imports: [JolensBlast],
     }).compileComponents();
 
     fixture = TestBed.createComponent(JolensBlast);
     component = fixture.componentInstance;
+    (TestBed.inject(Game) as unknown as MemoryRanked).client = component as unknown as MemoryRanked['client'];
     await fixture.whenStable();
     component.closeTutorial();
     component.play();
@@ -110,8 +113,20 @@ describe('JolensBlast', () => {
     expect(component.currentScore).toBe(0);
   });
 
+  it('uses the verified final result instead of a modified local inventory', () => {
+    component.hasCompletedShot = true;
+    component.marbleInventory = 99999;
+    vi.spyOn(TestBed.inject(Game), 'runAction').mockReturnValueOnce(of({
+      run: { ...component['rankedRun']!, status: 'finished', inventory: 7, score: 350, completed: true },
+      user: { id: 1, username: 'Player', tansans: 0, juice: 80 },
+    }));
+    component.endSession();
+    expect(component.currentScore).toBe(350);
+    expect(component.marbleInventory).toBe(7);
+  });
+
   it('saves the final score to the Jolens leaderboard only when the session ends', () => {
-    const save = vi.spyOn(TestBed.inject(Game), 'saveScore');
+    const save = vi.spyOn(TestBed.inject(Game), 'runAction');
     fixture.detectChanges();
     expect(save).not.toHaveBeenCalled();
     component.hasCompletedShot = true;
@@ -119,7 +134,7 @@ describe('JolensBlast', () => {
     component.endSession();
     fixture.changeDetectorRef.markForCheck();
     fixture.detectChanges();
-    expect(save).toHaveBeenCalledWith('jolens-blast', 600);
+    expect(save).toHaveBeenCalledWith('jolens-blast', 'finish', expect.any(Object), {});
     component.endSession();
     fixture.changeDetectorRef.markForCheck();
     fixture.detectChanges();
@@ -445,7 +460,7 @@ describe('JolensBlast', () => {
     const oldShooter = component['currentShooter'];
     component.updatePhysics();
     expect(component.currentScore).toBe(0);
-    expect(component['marblesOnBoard']).toEqual([target]);
+    expect(component['marblesOnBoard']).toEqual([expect.objectContaining(target)]);
     expect(component['outsideMarbles']).toHaveLength(0);
     expect(component['pendingKnockouts']).toHaveLength(0);
     expect([target.x, target.y]).toEqual([225, 300]);
@@ -623,13 +638,13 @@ describe('JolensBlast', () => {
     expect(component['currentShooter'].isMoving).toBe(false);
     expect(component['outsideMarbles']).toHaveLength(0);
     expect(component['pendingKnockouts']).toHaveLength(0);
-    expect(component['marblesOnBoard']).toEqual([inside]);
+    expect(component['marblesOnBoard']).toEqual([expect.objectContaining(inside)]);
     expect(component.marbleInventory).toBe(inventory + 1);
     expect(component.showRoundWon).toBe(false);
     const draw = vi.spyOn(component, 'drawMarble');
     component.draw();
     expect(draw).not.toHaveBeenCalledWith(target);
-    expect(draw).toHaveBeenCalledWith(inside);
+    expect(draw).toHaveBeenCalledWith(expect.objectContaining(inside));
   });
 
   it('leaves room for a full pull inside every edge and keeps targets above the shooter', () => {

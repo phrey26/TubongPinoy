@@ -10,12 +10,12 @@ import { avatarUrl } from '../../core/services/customization';
   imports: [DecimalPipe],
   template: `
     <section class="bg-white p-4 rounded-3xl shadow-lg border-4 border-purple-300" aria-label="Game high scores">
-      <h2 class="text-xl font-extrabold text-purple-700 mb-3">Leaderboard</h2>
+      <h2 class="text-xl font-extrabold text-purple-700 mb-3">Verified leaderboard</h2>
       <p class="text-sm font-bold mb-3">Your best: {{ personalBest() | number }}</p>
       @if (loading()) { <p role="status">Updating scores…</p> }
       @if (error()) { <p role="alert" class="text-sm text-red-700 mb-3">{{ error() }}</p> }
       @if (!loading() && !error() && highScores().length === 0) {
-        <p class="text-sm mb-3">No scores yet. Be the first to play!</p>
+        <p class="text-sm mb-3">No verified scores yet. Be the first to play!</p>
       }
       <ol class="space-y-3">
         @for (score of highScores(); track score.userId; let i = $index) {
@@ -29,7 +29,7 @@ import { avatarUrl } from '../../core/services/customization';
         }
       </ol>
       <button type="button" class="ui-button mt-3 min-h-11 px-3"
-        [disabled]="loading()" (click)="refresh()">{{ failedScore ? 'Retry saving score' : 'Refresh scores' }}</button>
+        [disabled]="loading()" (click)="refresh()">Refresh scores</button>
     </section>
   `,
 })
@@ -44,22 +44,19 @@ export class Leaderboard implements OnInit, OnChanges {
   readonly personalBest = signal(0);
   readonly loading = signal(false);
   readonly error = signal('');
-  failedScore = 0;
 
   ngOnInit(): void {
-    // Serialize reads and writes so an earlier response cannot replace newer scores.
-    this.requests.pipe(concatMap(points => {
+    // The run endpoint saves verified scores; this widget only reads rankings.
+    this.requests.pipe(concatMap(() => {
       this.loading.set(true);
       this.error.set('');
-      return (points > 0 ? this.service.saveScore(this.game, points) : this.service.scores(this.game)).pipe(
+      return this.service.scores(this.game).pipe(
         tap(result => {
           this.highScores.set(result.highScores);
           this.personalBest.set(result.personalBest);
-          if (points >= this.failedScore) this.failedScore = 0;
         }),
         catchError(() => {
-          this.failedScore = Math.max(this.failedScore, points);
-          this.error.set(points > 0 ? 'Your score could not be saved. Please retry.' : 'Scores could not be loaded. Please retry.');
+          this.error.set('Scores could not be loaded. Please retry.');
           return EMPTY;
         }),
         finalize(() => this.loading.set(false)),
@@ -70,9 +67,9 @@ export class Leaderboard implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['score'] && !changes['score'].firstChange && this.score > 0) {
-      this.requests.next(Math.max(this.score, this.failedScore));
+      this.requests.next(this.score);
     }
   }
 
-  refresh(): void { this.requests.next(this.failedScore); }
+  refresh(): void { this.requests.next(0); }
 }

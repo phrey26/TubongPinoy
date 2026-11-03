@@ -52,6 +52,7 @@ database `tubongpinoy_db`. No Composer dependencies are needed.
 | GET | `/api/me.php` | Authenticated profile; returns 401 to guests |
 | GET | `/api/catalog.php` | Available skins and whether simulated top-ups are enabled |
 | POST | `/api/wallet.php` | Authenticated Juice consumption, shop purchases, or demo top-ups |
+| POST | `/api/game-run.php` | Start or progress a server-verified game run; calculate scores and charge game costs |
 | POST | `/api/settings.php` | Change username or password after verifying the current password |
 
 POST requests require JSON and the `X-CSRF-Token` from the session endpoint.
@@ -157,26 +158,23 @@ References: [Angular development proxy](https://angular.dev/tools/cli/serve#prox
 
 ## Game high scores
 
-Run `backend/bin/setup.php` after updating to create `game_high_scores` while
-preserving existing accounts. Each `(user_id, game)` has one personal best.
-`GET /api/scores.php?game=tumbang-preso` (or `jolens-blast`) returns that game's
-top 10 accounts and the signed-in user's `personalBest`. Ties use account ID
-ascending for stable ordering. Accounts without a positive score do not appear.
-`POST /api/scores.php` accepts JSON `{ "game": "tumbang-preso", "points": 100 }`
-and requires a session and CSRF token. The server derives identity from the session
-and atomically retains the greater score, including concurrent submissions.
-Tumbang Preso saves cumulative points after each hit. Jolens Blast saves its final
-score at session end. These scores do not grant Tansans or change the wallet.
+Scores are now calculated from server-owned runs. Apply
+`migrations/2026-11-03-verified-game-runs.sql` (or run setup) before deploying the
+updated frontend and API. Local MAMP already has the new tables.
 
-Scores are reported by browser gameplay and validated for game, integer range,
-and scoring increments. This does not verify physics or prevent a modified client
-from submitting fabricated scores; competitive anti-cheat would require server
-verification of game runs. Live rankings here mean saved database scores, refreshed
-on page load, score submission, or the Refresh scores button.
+`GET /api/scores.php?game=tumbang-preso` or `jolens-blast` returns verified rankings
+and the signed-in user's verified personal best. Direct POSTed totals are rejected.
+`POST /api/game-run.php` accepts start/shot/next/retry/round/finish actions and replays
+shots on the server, with account-bound runs, expiry, sequence checks, and atomic
+Juice charges. Only verified Tumbang hits and finished Jolens sessions update scores.
 
-Run `python3 backend/tests/scores_smoke.py` to verify authentication, validation,
-per-account/per-game isolation, persistence, and concurrent personal-best updates
-with temporary accounts that are cleaned up afterward.
+Legacy browser-reported scores remain in `game_high_scores` as history and are
+excluded from the new `verified_game_high_scores` leaderboard. No accounts, balances,
+purchases, or historical scores are deleted. Scores do not grant Tansans.
+
+See [verified-scores.md](../docs/verified-scores.md) for the protocol, migration,
+physics parity checks, retry behavior, and automation limits. Run
+`node scripts/check-ranked-physics.mjs` and `python3 backend/tests/run_smoke.py`.
 
 ## Tutorial preferences
 
