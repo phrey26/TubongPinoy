@@ -1,6 +1,7 @@
 interface Particle {
   x: number; y: number; vx: number; vy: number;
   age: number; life: number; size: number; color: string; gravity: number;
+  opacity?: number;
 }
 interface Ripple { x: number; y: number; age: number; radius: number; color: string; }
 
@@ -53,6 +54,22 @@ export class GameFeedback {
     this.lastTrail = this.time;
     this.trails.push({ x, y, vx: 0, vy: 0, age: 0, life: 0.18,
       size: Math.min(10, 3 + speed / 3), color, gravity: 0 });
+    this.trails = this.trails.slice(-24);
+  }
+
+  dustTrail(x: number, y: number, speed: number): void {
+    if (this.reducedMotion || speed < 3 || this.time - this.lastTrail < 1 / 45) return;
+    this.lastTrail = this.time;
+    // Small, softly drifting earth-toned specks, kept fainter than the marble trail.
+    for (let i = 0; i < 2; i++) {
+      this.trails.push({
+        x: x + (Math.random() - 0.5) * 10, y: y + (Math.random() - 0.5) * 8,
+        vx: (Math.random() - 0.5) * 16, vy: -6 - Math.random() * 8,
+        age: 0, life: 0.24, size: 2 + Math.random() * 2,
+        color: FEEDBACK_COLORS.dust[Math.floor(Math.random() * FEEDBACK_COLORS.dust.length)],
+        gravity: 12, opacity: 0.55,
+      });
+    }
     this.trails = this.trails.slice(-24);
   }
 
@@ -126,7 +143,7 @@ export class GameFeedback {
     for (const p of particles) {
       const remaining = 1 - p.age / p.life;
       const size = Math.max(2, Math.round(p.size * remaining));
-      ctx.globalAlpha = remaining * opacity;
+      ctx.globalAlpha = remaining * opacity * (p.opacity ?? 1);
       ctx.fillStyle = p.color;
       ctx.fillRect(Math.round(p.x - size / 2), Math.round(p.y - size / 2), size, size);
     }
@@ -141,7 +158,7 @@ export class GameFeedback {
     ctx.fillRect(Math.round(x - 43), Math.round(y - 3), 86, 14);
     for (let i = 0; i < 10; i++) {
       ctx.fillStyle = i < Math.ceil(level * 10)
-        ? (i >= 8 ? '#f9a8d4' : i >= 5 ? '#facc65' : '#86efac') : '#57534e';
+        ? (i >= 7 ? '#22c55e' : i >= 3 ? '#f97316' : '#ef4444') : '#57534e';
       ctx.fillRect(Math.round(x - 39 + i * 8), Math.round(y), 6, 8);
     }
     ctx.restore();

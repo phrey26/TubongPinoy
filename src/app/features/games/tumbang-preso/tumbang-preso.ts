@@ -537,8 +537,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     if (this.isLaunched && !paused) {
       if (this.legendarySkin) this.aldugo.flight(slipper.x, slipper.y, this.velocity.x, this.velocity.y);
       else if (this.gatorzEquipped) this.gatorz.flight(slipper.x, slipper.y);
-      else this.feedback.trail(slipper.x, slipper.y,
-        Math.hypot(this.velocity.x, this.velocity.y), '#f9a8d4');
+      else this.feedback.dustTrail(slipper.x, slipper.y,
+        Math.hypot(this.velocity.x, this.velocity.y));
     }
     this.canvas.nativeElement.style.transform = paused ? '' : this.feedback.canvasTransform;
     for (const popup of this.bankPopups) popup.age += seconds;
