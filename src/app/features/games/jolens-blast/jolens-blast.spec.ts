@@ -1,3 +1,4 @@
+import { stepMarbles } from './marble-physics';
 import { MemoryRanked } from '../../../testing/ranked-stub';
 import { inject } from '@angular/core';
 import { Confirmation } from '../../../core/services/confirmation';
@@ -45,6 +46,62 @@ describe('JolensBlast', () => {
     component.startRound();
   });
 
+
+  it.each([30, 60, 75, 90, 120, 144, 165, 240, 360, 'variable'] as const)(
+    'keeps marble speed identical at %s Hz', rate => {
+      const shooter = component['currentShooter'];
+      Object.assign(shooter, { dx: 2, dy: -6, isMoving: true });
+      component['marblesOnBoard'] = [{ ...shooter, x: 100, y: 200, dx: 1, dy: 0 }];
+      component['shotInProgress'] = true;
+      component['lastFrameTime'] = 0;
+      const expected = { ...shooter };
+      const targets = component['marblesOnBoard'].map(marble => ({ ...marble }));
+      let previous = { ...expected };
+      for (let tick = 0; tick < 30; tick++) {
+        previous = { ...expected };
+        stepMarbles(expected, targets, { x: 225, y: 300, radius: 150 }, { width: 450, height: 800 });
+      }
+      const times = rate === 'variable' ? [5, 17, 21, 58, 120, 128, 217, 333, 490]
+        : Array.from({ length: Math.ceil(rate / 2) - 1 }, (_, index) => (index + 1) * 1000 / rate);
+      for (const time of [...times, 500]) component.gameLoop(time);
+      expect(component['shotFrames']).toBe(30);
+      expect(shooter.x).toBeCloseTo(expected.x, 8);
+      expect(shooter.y).toBeCloseTo(expected.y, 8);
+      expect(component['marblesOnBoard'][0].x).toBeCloseTo(targets[0].x, 8);
+      expect(component['renderedPosition'](shooter).x).toBeCloseTo(previous.x, 8);
+      expect(component['renderedPosition'](shooter).y).toBeCloseTo(previous.y, 8);
+    });
+
+  it('draws fractional marble positions between physics ticks at 240 Hz and freezes them on pause', () => {
+    const shooter = component['currentShooter'];
+    Object.assign(shooter, { dx: 2, dy: -6, isMoving: true });
+    const target = { ...shooter, x: 100, y: 200, dx: 1, dy: 0 };
+    component['marblesOnBoard'] = [target];
+    component['shotInProgress'] = true;
+    component['lastFrameTime'] = 0;
+    component.gameLoop(1000 / 60);
+    const physics = { x: shooter.x, y: shooter.y };
+    const first = component['renderedPosition'](shooter);
+    component.gameLoop(1000 / 60 + 1000 / 240);
+    const second = component['renderedPosition'](shooter);
+    expect(shooter).toMatchObject(physics);
+    expect(second.y).toBeLessThan(first.y);
+    expect(second.y).toBeGreaterThan(physics.y);
+    expect(component['renderedPosition'](target).x).toBeCloseTo(100.25, 8);
+    const sprite = component['sprites'].get(shooter.sprite!)!;
+    Object.defineProperty(sprite, 'complete', { value: true });
+    Object.defineProperty(sprite, 'naturalWidth', { value: 16 });
+    component.drawMarble(shooter);
+    expect(component['ctx'].drawImage).toHaveBeenCalledWith(sprite, second.x - 20, second.y - 20, 40, 40);
+    component.onWindowBlur();
+    component.gameLoop(5000);
+    expect(component['renderedPosition'](shooter)).toEqual(second);
+    component.resumeGame();
+    component.gameLoop(6000);
+    expect(component['renderedPosition'](shooter)).toEqual(second);
+    component.spawnShooter();
+    expect(component['renderedPosition'](component['currentShooter'])).toMatchObject({ x: 225, y: 600 });
+  });
 
   it('freezes a shot after switching away and continues only after Resume without spending Juice', () => {
     vi.spyOn(component.canvasRef.nativeElement, 'getBoundingClientRect').mockReturnValue({

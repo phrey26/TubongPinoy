@@ -1,3 +1,4 @@
+import { frameSeconds, interpolatePosition, PHYSICS_STEP_MS, Position } from '../../../shared/canvas/frame-timing';
 import { GamePause } from '../../../shared/game-pause/game-pause';
 import { equippedSkinEffect } from '../../../core/services/customization';
 import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
@@ -53,6 +54,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   isFullscreen = false;
   private lastFrameTime: number | null = null;
   private frameAccumulator = 0;
+  private previousMarbles = new WeakMap<Position, Position>();
   private shotFrames = 0;
   private shotInProgress = false;
   private pendingKnockouts: Marble[] = [];
@@ -401,6 +403,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   }
 
   spawnShooter() {
+    this.previousMarbles = new WeakMap();
     this.steelFx.clear(); this.jupiterFx.clear();
     // A new shooter marks the next turn; the previous winnings are collected.
     this.outsideMarbles = [];
@@ -484,6 +487,8 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (dragDistance > 10) {
       if (this.marbleInventory < 1) return;
       this.shotFrames = 0;
+      this.frameAccumulator = 0;
+      this.previousMarbles = new WeakMap();
       this.shotInProgress = true;
       this.pendingKnockouts = [];
       this.textPopups = [];
@@ -505,7 +510,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   gameLoop(timestamp = performance.now()) {
     const paused = this.isPaused || this.showIntroduction || !!this.confirmation.active();
     this.audio.setPaused(paused);
-    const elapsed = this.lastFrameTime === null || paused ? 0 : Math.min(50, Math.max(0, timestamp - this.lastFrameTime));
+    const elapsed = frameSeconds(timestamp, this.lastFrameTime, paused) * 1000;
     this.lastFrameTime = timestamp;
     this.feedback.update(elapsed / 1000);
     if (this.roundWinAge !== null) {
@@ -521,17 +526,18 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (this.jupiterEquipped) this.jupiterFx.update(elapsed / 1000);
     else this.jupiterFx.clear();
     this.frameAccumulator += elapsed;
-    while (!paused && this.frameAccumulator >= 1000 / 60) {
+    while (!paused && this.frameAccumulator + 1e-7 >= PHYSICS_STEP_MS) {
       this.updatePhysics();
-      this.frameAccumulator -= 1000 / 60;
+      this.frameAccumulator = Math.max(0, this.frameAccumulator - PHYSICS_STEP_MS);
     }
     this.effects.update(elapsed / 1000);
+    const shooter = this.renderedPosition(this.currentShooter);
     if (!paused && this.shotInProgress) {
       if (this.steelEquipped && this.currentShooter.isMoving) {
-        this.steelFx.flight(this.currentShooter.x, this.currentShooter.y, this.currentShooter.dx, this.currentShooter.dy);
+        this.steelFx.flight(shooter.x, shooter.y, this.currentShooter.dx, this.currentShooter.dy);
       } else if (this.jupiterEquipped && this.currentShooter.isMoving) {
-        this.jupiterFx.flight(this.currentShooter.x, this.currentShooter.y);
-      } else this.feedback.trail(this.currentShooter.x, this.currentShooter.y,
+        this.jupiterFx.flight(shooter.x, shooter.y);
+      } else this.feedback.trail(shooter.x, shooter.y,
         Math.hypot(this.currentShooter.dx, this.currentShooter.dy), '#bae6fd');
     }
     this.canvasRef.nativeElement.style.transform = paused || !this.shotInProgress ? '' : this.feedback.canvasTransform;
@@ -546,6 +552,9 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (this.showIntroduction || !this.hasStarted || this.showOutOfJuice || this.showGameOver || this.showRoundWon || this.roundWinAge !== null || this.showBetSetup) return;
     if (!this.shotInProgress && !this.currentShooter.isMoving &&
         !this.marblesOnBoard.some(marble => marble.isMoving)) return;
+    for (const marble of [this.currentShooter, ...this.marblesOnBoard, ...this.pendingKnockouts, ...this.outsideMarbles]) {
+      this.previousMarbles.set(marble, { x: marble.x, y: marble.y });
+    }
     this.shotInProgress = true;
     this.shotFrames++;
     const knockedOut = stepMarbles(this.currentShooter, this.marblesOnBoard,
@@ -652,6 +661,7 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
 
   draw() {
     if (!this.ctx) return;
+    const shooter = this.renderedPosition(this.currentShooter);
 
     this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
     if (!this.drawSprite(JOLENS_ASSETS.background, 0, 0, this.canvasWidth, this.canvasHeight)) {
@@ -674,25 +684,25 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
     if (this.steelEquipped) {
       const atlas = this.sprites.get(STEEL_BALL_FX_ATLAS);
       this.steelFx.drawTrail(this.ctx, atlas);
-      if (!this.steelFx.isCharged(this.currentShooter)) this.steelFx.drawAura(this.ctx, this.currentShooter.x, this.currentShooter.y, atlas);
+      if (!this.steelFx.isCharged(this.currentShooter)) this.steelFx.drawAura(this.ctx, shooter.x, shooter.y, atlas);
     }
     if (this.jupiterEquipped) {
       this.jupiterFx.drawDust(this.ctx);
-      this.jupiterFx.drawOrbit(this.ctx, this.currentShooter.x, this.currentShooter.y, this.currentShooter.radius, false);
+      this.jupiterFx.drawOrbit(this.ctx, shooter.x, shooter.y, this.currentShooter.radius, false);
     }
     this.drawMarble(this.currentShooter);
-    if (this.jupiterEquipped) this.jupiterFx.drawOrbit(this.ctx, this.currentShooter.x, this.currentShooter.y, this.currentShooter.radius, true);
+    if (this.jupiterEquipped) this.jupiterFx.drawOrbit(this.ctx, shooter.x, shooter.y, this.currentShooter.radius, true);
 
     this.effects.draw((...args) => this.drawSprite(...args));
     this.feedback.draw(this.ctx);
-    if (this.steelEquipped) this.steelFx.drawImpact(this.ctx, this.sprites.get(STEEL_BALL_FX_ATLAS));
+    if (this.steelEquipped) this.steelFx.drawImpact(this.ctx, this.sprites.get(STEEL_BALL_FX_ATLAS), marble => this.renderedPosition(marble));
     if (this.jupiterEquipped) this.jupiterFx.drawImpact(this.ctx);
     this.drawTextPopups();
     if (this.isDragging) {
       const dx = this.dragStartX - this.currentMouseX;
       const dy = this.dragStartY - this.currentMouseY;
       const distance = Math.hypot(dx, dy);
-      this.feedback.drawPower(this.ctx, this.currentShooter.x, this.currentShooter.y + 42,
+      this.feedback.drawPower(this.ctx, shooter.x, shooter.y + 42,
         distance / this.maxDragDistance);
       if (distance > 4) {
         const length = distance * 1.25;
@@ -732,22 +742,30 @@ export class JolensBlast implements OnInit, AfterViewInit, OnDestroy {
   private drawSprite(path: string, x: number, y: number, width: number, height: number): boolean {
     const image = this.sprites.get(path);
     if (!image?.complete || !image.naturalWidth) return false;
-    this.ctx.drawImage(image, Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+    this.ctx.drawImage(image, x, y, Math.round(width), Math.round(height));
     return true;
   }
 
+  private renderedPosition(marble: Position): Position {
+    const previous = this.previousMarbles.get(marble);
+    return previous && this.shotInProgress
+      ? interpolatePosition(previous, marble, this.frameAccumulator / PHYSICS_STEP_MS)
+      : marble;
+  }
+
   drawMarble(marble: Marble) {
-    this.drawSprite(JOLENS_ASSETS.shadow, marble.x - marble.radius, marble.y + marble.radius - 5,
+    const position = this.renderedPosition(marble);
+    this.drawSprite(JOLENS_ASSETS.shadow, position.x - marble.radius, position.y + marble.radius - 5,
       marble.radius * 2, 10);
-    if (marble.sprite && this.drawSprite(marble.sprite, marble.x - marble.radius,
-      marble.y - marble.radius, marble.radius * 2, marble.radius * 2)) return;
+    if (marble.sprite && this.drawSprite(marble.sprite, position.x - marble.radius,
+      position.y - marble.radius, marble.radius * 2, marble.radius * 2)) return;
     this.ctx.beginPath();
-    this.ctx.arc(marble.x, marble.y, marble.radius, 0, Math.PI * 2);
+    this.ctx.arc(position.x, position.y, marble.radius, 0, Math.PI * 2);
     this.ctx.fillStyle = marble.color;
     this.ctx.fill();
 
     this.ctx.beginPath();
-    this.ctx.arc(marble.x - 5, marble.y - 5, marble.radius / 3, 0, Math.PI * 2);
+    this.ctx.arc(position.x - 5, position.y - 5, marble.radius / 3, 0, Math.PI * 2);
     this.ctx.fillStyle = 'rgba(255,255,255,0.4)';
     this.ctx.fill();
   }

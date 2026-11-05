@@ -75,19 +75,24 @@ export class SteelBallEffects {
     ctx.restore();
   }
 
-  drawImpact(ctx: CanvasRenderingContext2D, atlas?: HTMLImageElement): void {
+  drawImpact(ctx: CanvasRenderingContext2D, atlas?: HTMLImageElement,
+    position: (marble: PhysicsMarble) => { x: number; y: number } = marble => marble): void {
     if (!this.ready(atlas)) return;
     // Attached cages travel with charged marbles, rather than remaining at the collision point.
-    for (const marble of this.charged) this.drawAura(ctx, marble.x, marble.y, atlas);
+    for (const marble of this.charged) {
+      const point = position(marble);
+      this.drawAura(ctx, point.x, point.y, atlas);
+    }
     if (this.reducedMotion) return;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     for (const link of this.links) {
       // Electricity connects the two actual colliding marbles, following both as they roll.
-      const dx = link.target.x - link.source.x, dy = link.target.y - link.source.y;
+      const source = position(link.source), target = position(link.target);
+      const dx = target.x - source.x, dy = target.y - source.y;
       ctx.globalAlpha = Math.min(1, (1 - link.age / .56) * 2);
       this.frame(ctx, atlas, 12 + Math.min(3, Math.floor(link.age / .14)),
-        (link.source.x + link.target.x) / 2, (link.source.y + link.target.y) / 2,
+        (source.x + target.x) / 2, (source.y + target.y) / 2,
         Math.hypot(dx, dy), 76, Math.atan2(dy, dx));
     }
     for (const burst of this.bursts) {

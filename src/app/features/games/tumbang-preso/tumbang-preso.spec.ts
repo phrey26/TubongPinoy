@@ -1,3 +1,4 @@
+import { launchShot, stepShot } from './shot-physics';
 import { MemoryRanked } from '../../../testing/ranked-stub';
 import { inject } from '@angular/core';
 import { signal } from '@angular/core';
@@ -52,6 +53,53 @@ describe('TumbangPreso', () => {
     component['lastFrameTime'] = 0;
   });
 
+
+  it.each([30, 60, 75, 90, 120, 144, 165, 240, 360, 'variable'] as const)(
+    'keeps shot speed and rotation identical at %s Hz', rate => {
+      component.obstacles = [];
+      component['isDragging'] = true;
+      component['dragCurrent'] = { x: 215, y: 750 };
+      component.onMouseUp();
+      const expected = launchShot(2.2, -15.4);
+      let previous = { ...expected };
+      for (let tick = 0; tick < 30; tick++) {
+        previous = { ...expected };
+        stepShot(expected, []);
+      }
+      const times = rate === 'variable' ? [5, 17, 21, 58, 120, 128, 217, 333, 490]
+        : Array.from({ length: Math.ceil(rate / 2) - 1 }, (_, index) => (index + 1) * 1000 / rate);
+      for (const time of [...times, 500]) component['render'](time);
+      expect(component['slipperPos'].x).toBeCloseTo(expected.x, 8);
+      expect(component['slipperPos'].y).toBeCloseTo(expected.y, 8);
+      expect(component['slipperAngle']).toBeCloseTo(expected.angle, 8);
+      expect(component['renderedSlipper'].x).toBeCloseTo(previous.x, 8);
+      expect(component['renderedSlipper'].y).toBeCloseTo(previous.y, 8);
+    });
+
+  it('draws intermediate slipper positions and rotation on 240 Hz frames, including pause and reset', () => {
+    component.obstacles = [];
+    component['isDragging'] = true;
+    component['dragCurrent'] = { x: 215, y: 750 };
+    component.onMouseUp();
+    component['render'](1000 / 60);
+    const physics = { ...component['slipperPos'] };
+    const first = component['renderedSlipper'];
+    component['render'](1000 / 60 + 1000 / 240);
+    const second = component['renderedSlipper'];
+    expect(component['slipperPos']).toEqual(physics);
+    expect(second.y).toBeLessThan(first.y);
+    expect(second.y).toBeGreaterThan(physics.y);
+    expect(second.angle).toBeGreaterThan(first.angle);
+    expect(component['ctx'].translate).toHaveBeenCalledWith(second.x, second.y);
+    component.onWindowBlur();
+    component['render'](5000);
+    expect(component['renderedSlipper']).toEqual(second);
+    component.resumeGame();
+    component['render'](6000);
+    expect(component['renderedSlipper']).toEqual(second);
+    component.resetSlipper();
+    expect(component['renderedSlipper']).toEqual({ x: 225, y: 680, angle: 0 });
+  });
 
   it('freezes a shot after switching away and continues only after Resume without spending Juice', () => {
     vi.spyOn(component.canvas.nativeElement, 'getBoundingClientRect').mockReturnValue({
@@ -480,7 +528,9 @@ describe('TumbangPreso', () => {
       component['render']((frame + 1) * (1000 / 60));
     }
     const angles = rotate.mock.calls.map(([angle]) => angle);
-    expect(angles[0]).toBeGreaterThan(0);
+    // Interpolation starts at the launch pose and blends toward the next physics state.
+    expect(angles[0]).toBeCloseTo(0);
+    expect(angles[1]).toBeGreaterThan(0);
     expect(angles[9]).toBeGreaterThan(angles[8]);
     expect(angles[9] - angles[8]).toBeLessThan(angles[1] - angles[0]);
 

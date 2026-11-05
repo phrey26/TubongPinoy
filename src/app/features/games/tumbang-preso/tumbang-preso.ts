@@ -1,3 +1,4 @@
+import { frameSeconds, interpolateAngle, interpolatePosition, PHYSICS_STEP_SECONDS } from '../../../shared/canvas/frame-timing';
 import { GamePause } from '../../../shared/game-pause/game-pause';
 import { equippedSkinEffect } from '../../../core/services/customization';
 import { JuiceTimer } from '../../../shared/juice-timer/juice-timer';
@@ -229,6 +230,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private rankedRun?: RankedRun;
   private shotInput = { vx: 0, vy: 0 };
   private physicsAccumulator = 0;
+  private previousSlipper = { x: 225, y: 680, angle: 0 };
   retrySync: (() => void) | null = null;
 
   private syncRun(action: RunAction, done: (run: RankedRun) => void, input: { vx?: number; vy?: number } = {}): void {
@@ -405,10 +407,12 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.feedback.launch(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
     this.shotInput = { vx: this.velocity.x, vy: this.velocity.y };
     this.physicsAccumulator = 0;
+    this.previousSlipper = { ...this.slipperPos, angle: this.slipperAngle };
     this.isLaunched = true;
   }
 
   private updatePhysics() {
+    this.previousSlipper = { ...this.slipperPos, angle: this.slipperAngle };
     const shot = {
       x: this.slipperPos.x, y: this.slipperPos.y,
       vx: this.velocity.x, vy: this.velocity.y,
@@ -494,6 +498,8 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.dragCurrent = { x: 225, y: 680 };
     this.velocity = { x: 0, y: 0 };
     this.slipperAngle = 0;
+    this.previousSlipper = { ...this.slipperPos, angle: 0 };
+    this.physicsAccumulator = 0;
     this.angularVelocity = 0;
     this.hitAge = 0;
     this.shotBounces = 0;
@@ -513,7 +519,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   private render(timestamp = performance.now()) {
     const paused = this.isPaused || this.showIntroduction || !!this.confirmation.active();
     this.audio.setPaused(paused);
-    const seconds = this.lastFrameTime === null || paused ? 0 : Math.max(0, Math.min((timestamp - this.lastFrameTime) / 1000, 0.05));
+    const seconds = frameSeconds(timestamp, this.lastFrameTime, paused);
     this.lastFrameTime = timestamp;
     this.feedback.update(seconds);
     if (this.legendarySkin) this.aldugo.update(seconds);
@@ -521,14 +527,18 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     if (this.gatorzEquipped) this.gatorz.update(seconds);
     else this.gatorz.clear();
     if (this.isLaunched && !paused) {
-      if (this.legendarySkin) this.aldugo.flight(this.slipperPos.x, this.slipperPos.y, this.velocity.x, this.velocity.y);
-      else if (this.gatorzEquipped) this.gatorz.flight(this.slipperPos.x, this.slipperPos.y);
-      else this.feedback.trail(this.slipperPos.x, this.slipperPos.y,
-        Math.hypot(this.velocity.x, this.velocity.y), '#f9a8d4');
       this.physicsAccumulator += seconds;
-      while (this.physicsAccumulator + 1e-9 >= 1 / 60 && this.isLaunched) {
-        this.updatePhysics(); this.physicsAccumulator = Math.max(0, this.physicsAccumulator - 1 / 60);
+      while (this.physicsAccumulator + 1e-9 >= PHYSICS_STEP_SECONDS && this.isLaunched) {
+        this.updatePhysics();
+        this.physicsAccumulator = Math.max(0, this.physicsAccumulator - PHYSICS_STEP_SECONDS);
       }
+    }
+    const slipper = this.renderedSlipper;
+    if (this.isLaunched && !paused) {
+      if (this.legendarySkin) this.aldugo.flight(slipper.x, slipper.y, this.velocity.x, this.velocity.y);
+      else if (this.gatorzEquipped) this.gatorz.flight(slipper.x, slipper.y);
+      else this.feedback.trail(slipper.x, slipper.y,
+        Math.hypot(this.velocity.x, this.velocity.y), '#f9a8d4');
     }
     this.canvas.nativeElement.style.transform = paused ? '' : this.feedback.canvasTransform;
     for (const popup of this.bankPopups) popup.age += seconds;
@@ -552,7 +562,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.feedback.drawTrails(this.ctx);
     if (this.legendarySkin) {
       this.aldugo.drawTrail(this.ctx, this.sprites.get(ALDUGO_FX_ATLAS));
-      this.aldugo.drawAura(this.ctx, this.slipperPos.x, this.slipperPos.y, this.sprites.get(ALDUGO_FX_ATLAS), this.isLaunched);
+      this.aldugo.drawAura(this.ctx, slipper.x, slipper.y, this.sprites.get(ALDUGO_FX_ATLAS), this.isLaunched);
     }
     if (this.gatorzEquipped) this.gatorz.draw(this.ctx);
     this.drawSlipper();
@@ -567,10 +577,20 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
     this.animationFrameId = requestAnimationFrame(time => this.render(time));
   }
 
+  private get renderedSlipper() {
+    if (!this.isLaunched) return { ...this.slipperPos, angle: this.slipperAngle };
+    const alpha = this.physicsAccumulator / PHYSICS_STEP_SECONDS;
+    return {
+      ...interpolatePosition(this.previousSlipper, this.slipperPos, alpha),
+      angle: interpolateAngle(this.previousSlipper.angle, this.slipperAngle, alpha),
+    };
+  }
+
   private drawSlipper() {
+    const slipper = this.renderedSlipper;
     this.ctx.save();
-    this.ctx.translate(this.slipperPos.x, this.slipperPos.y);
-    this.ctx.rotate(this.slipperAngle);
+    this.ctx.translate(slipper.x, slipper.y);
+    this.ctx.rotate(slipper.angle);
     if (!this.drawSprite(this.slipperSprite,
       -this.SLIPPER_HALF_WIDTH, -this.SLIPPER_HALF_HEIGHT,
       this.SLIPPER_HALF_WIDTH * 2, this.SLIPPER_HALF_HEIGHT * 2)) {

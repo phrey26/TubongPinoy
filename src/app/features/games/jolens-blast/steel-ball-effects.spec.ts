@@ -39,6 +39,18 @@ describe('Steel Ball magnetic chain effects', () => {
     expect(fx.isCharged(target)).toBe(false);
   });
 
+  it('anchors charged markers and lightning to rendered positions without changing physics', () => {
+    const fx = new SteelBallEffects(), ctx = context();
+    const shooter = ball(225, 380), target = ball(225, 340);
+    fx.contact(shooter, target, shooter);
+    fx.drawImpact(ctx, atlas, marble => ({ x: marble.x + 0.5, y: marble.y - 2.5 }));
+    expect(ctx.translate).toHaveBeenCalledWith(225.5, 377.5);
+    expect(ctx.translate).toHaveBeenCalledWith(225.5, 337.5);
+    expect(ctx.translate).toHaveBeenCalledWith(225.5, 357.5);
+    expect(shooter).toMatchObject({ x: 225, y: 380 });
+    expect(target).toMatchObject({ x: 225, y: 340 });
+  });
+
   it('keeps static charged markers but suppresses animated discharges with reduced motion', () => {
     const fx = new SteelBallEffects(), ctx = context();
     const shooter = ball(225, 380), target = ball(225, 340);
