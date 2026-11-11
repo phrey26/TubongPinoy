@@ -15,9 +15,11 @@ Dashboard's Authentication user list. Use the SQL Editor to inspect
 
 Passwords are bcrypt-hashed. Sessions use 256-bit random bearer tokens; only a
 SHA-256 digest is stored in the database. Normal sessions expire after eight
-hours. On independent app origins they use sessionStorage; Remember Me uses localStorage and expires after
-30 days. On itch.io’s shared CDN origins, tokens remain only in page memory and
-Remember Me is unavailable. Reloading requires sign-in again. If storage is blocked, the token remains in page memory. The transport
+hours and use sessionStorage, which survives reload within the same tab. On
+independent app origins, Remember Me uses localStorage and expires after 30 days.
+On itch.io’s shared CDN origins, Remember Me is unavailable and localStorage
+tokens are ignored. If browser storage is blocked, the token remains in page
+memory and cannot survive a reload. The transport
 keeps tokens out of component/account response objects and rejects responses
 that arrive after an account switch. Username/password changes rotate the current
 token, preserve its expiry, and invalidate every other session and existing run

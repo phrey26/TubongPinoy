@@ -4,7 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { Auth, authErrorMessage, safeReturnUrl } from '../../../core/services/auth';
-import { canPersistSession } from '../../../core/services/session-storage-policy';
+import { REMEMBER_SESSION_ALLOWED } from '../../../core/services/session-storage-policy';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -16,7 +16,7 @@ import { canPersistSession } from '../../../core/services/session-storage-policy
 export class Login {
 
   showPassword = false;
-  readonly canRemember = canPersistSession();
+  readonly canRemember = inject(REMEMBER_SESSION_ALLOWED);
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
   private readonly router = inject(Router);

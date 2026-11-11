@@ -3,7 +3,7 @@ import { HttpBackend, HttpClient, HttpErrorResponse, HttpInterceptorFn, HttpResp
 import { defer, map } from 'rxjs';
 import { AccountState } from './account-state';
 import { environment } from '../../../environments/environment';
-import { canPersistSession } from './session-storage-policy';
+import { REMEMBER_SESSION_ALLOWED } from './session-storage-policy';
 
 const SESSION_KEY = 'tubong.session.v1';
 
@@ -16,7 +16,7 @@ export class BackendApi {
   private readonly guestId = crypto.randomUUID();
   private memoryToken = '';
   private revision = 0;
-  private readonly persistSession = canPersistSession();
+  private readonly canRemember = inject(REMEMBER_SESSION_ALLOWED);
 
   constructor() {
     const url = new URL(environment.supabaseUrl);
@@ -30,24 +30,28 @@ export class BackendApi {
       this.memoryToken = '';
       this.account.set(null);
     };
-    window.addEventListener('storage', onStorage);
-    this.destroyRef.onDestroy(() => window.removeEventListener('storage', onStorage));
+    if (this.canRemember) {
+      window.addEventListener('storage', onStorage);
+      this.destroyRef.onDestroy(() => window.removeEventListener('storage', onStorage));
+    }
   }
 
   private token(): string {
-    if (!this.persistSession) return this.memoryToken;
-    try { return sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || this.memoryToken; }
+    try { return sessionStorage.getItem(SESSION_KEY) || (this.canRemember ? localStorage.getItem(SESSION_KEY) : '') || this.memoryToken; }
     catch { return this.memoryToken; }
   }
 
   private store(token: string, remember: boolean): void {
     this.memoryToken = token;
     this.revision++;
-    if (!this.persistSession) return;
+    // Access stores independently: a blocked localStorage must not prevent a
+    // normal tab session from surviving reload in sessionStorage.
+    try { sessionStorage.removeItem(SESSION_KEY); } catch { /* Storage may be blocked. */ }
+    if (this.canRemember) {
+      try { localStorage.removeItem(SESSION_KEY); } catch { /* Storage may be blocked. */ }
+    }
     try {
-      sessionStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(SESSION_KEY);
-      if (token) (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, token);
+      if (token) (remember && this.canRemember ? localStorage : sessionStorage).setItem(SESSION_KEY, token);
     } catch { /* A blocked browser store keeps this login in memory for this page. */ }
   }
 
@@ -55,7 +59,7 @@ export class BackendApi {
     return defer(() => {
       const token = this.token(), revision = this.revision;
       let remember = false;
-      try { remember = this.persistSession && !!localStorage.getItem(SESSION_KEY); } catch { /* Memory-only session. */ }
+      try { remember = this.canRemember && !!localStorage.getItem(SESSION_KEY); } catch { /* Memory-only session. */ }
       return this.http.post<Record<string, unknown>>(`${environment.supabaseUrl}/functions/v1/tubong-api`, {
         endpoint, method, data, guestId: this.guestId,
       }, {

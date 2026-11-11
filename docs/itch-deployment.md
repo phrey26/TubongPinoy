@@ -13,10 +13,13 @@ separate backend upload belongs on itch.io.
    for free access.
 3. Under **Uploads**, upload `dist/tubong-pinoy-itch.zip` and mark it
    **This file will be played in the browser**. Upload the ZIP itself.
-4. For **Embed options**, use **Click to launch in fullscreen** so the whole web
-   app has room for its navigation and game pages. Enable scrolling if the
-   option is shown. Keep **Mobile friendly** off: Tumbang Preso currently
-   requires mouse controls.
+4. Under **Embed options**, enable **Scrollbars** (sometimes labelled **Enable
+   scrollbars**) so the web app's longer pages can scroll. itch.io disables
+   iframe scrolling by default. Use **Click to launch in fullscreen** for more
+   room. If that mode hides the scrollbar setting, choose **Embed in page**,
+   enable **Scrollbars** and **Fullscreen button**, and use the fullscreen button
+   to expand the app. Save the settings and relaunch the game. Keep **Mobile
+   friendly** off: Tumbang Preso currently requires mouse controls.
 5. Add your cover image and description. A suitable short description is:
 
    > Filipino playground games, reimagined for your browser. Play Tumbang Preso
@@ -30,8 +33,9 @@ separate backend upload belongs on itch.io.
 6. Leave visibility at **Draft**, save, and open **View page**. Launch the app
    and check signup/login, navigation, game start, audio after a click, profile
    saving, and store access. New Tumbang Preso runs require 20 Juice or an active
-   unlimited pass. Reloading on itch.io signs you out because login tokens stay
-   in memory; the page itself must still reload successfully.
+   unlimited pass. Reloading on itch.io must keep you signed in within the same
+   tab. A fresh tab requires sign-in; Remember Me is disabled on the shared
+   game host.
 7. Once the draft works, change visibility to **Public** and save. Use the
    actual project-page URL itch.io gives you when sharing the app.
 

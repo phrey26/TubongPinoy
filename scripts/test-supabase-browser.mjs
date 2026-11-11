@@ -69,9 +69,10 @@ try {
  assert.deepEqual(errors,[],'No JavaScript errors');
  assert.deepEqual(legacy,[],'No requests to a local PHP backend');
  // Serve the production artifact at the actual shared-origin hostname without uploading it.
- const shared=await browser.newPage({viewport:{width:1280,height:900}});
+ const sharedContext=await browser.newContext({viewport:{width:1280,height:900}});
+ const sharedPage=await sharedContext.newPage();
  const buildRoot=resolve('dist/tubongpinoybeta2/browser');
- await shared.route('https://html-classic.itch.zone/**',async route=>{
+ await sharedContext.route('https://html-classic.itch.zone/**',async route=>{
   const pathname=decodeURIComponent(new URL(route.request().url()).pathname);
   if(!pathname.startsWith('/html/tubong-security/'))return route.fulfill({status:404,body:''});
   // itch.io rejects directory requests instead of resolving them to index.html.
@@ -81,17 +82,45 @@ try {
   try { await route.fulfill({body:await readFile(file),contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.mp3':'audio/mpeg','.woff2':'font/woff2'})[extname(file)]??'application/octet-stream'}); }
   catch { await route.fulfill({status:404,body:''}); }
  });
- shared.on('pageerror',error=>errors.push(error.message));
- await shared.goto('https://html-classic.itch.zone/html/tubong-security/index.html#/login?returnUrl=/account/settings');
+ const parentUrl='https://bigchicostudio.itch.io/__tubong-session-test';
+ await sharedContext.route(parentUrl,route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><body style="margin:0"><iframe title="Game" style="border:0;width:100vw;height:100vh" sandbox="allow-scripts allow-same-origin allow-forms" src="https://html-classic.itch.zone/html/tubong-security/index.html#/account/settings"></iframe></body></html>'}));
+ sharedPage.on('pageerror',error=>errors.push(error.message));
+ await sharedPage.goto(parentUrl);
+ const shared=sharedPage.frameLocator('iframe');
+ await shared.locator('#login-identity').waitFor();
  assert.equal(await shared.locator('input[formcontrolname=rememberMe]').count(),0,'No Remember Me on itch.io');
  await shared.locator('#login-identity').fill(name); await shared.locator('#login-password').fill(password);
- await shared.locator('button[type=submit]').click(); await shared.waitForURL('**/index.html#/account/settings');
- assert.equal(await shared.evaluate(()=>localStorage.getItem('tubong.session.v1')),null,'Shared origin cannot read a stored login token');
- assert.equal(await shared.evaluate(()=>sessionStorage.getItem('tubong.session.v1')),null,'Shared session storage contains no token');
+ await shared.locator('button[type=submit]').click();
  await shared.locator('#username-value').waitFor();
- await shared.reload(); await shared.locator('#login-identity').waitFor();
+ let gameFrame=sharedPage.frames().find(frame=>frame.url().startsWith('https://html-classic.itch.zone/'));
+ assert.ok(gameFrame.url().includes('index.html#/account/settings'),'Protected route keeps index.html');
+ assert.equal(await gameFrame.evaluate(()=>localStorage.getItem('tubong.session.v1')),null,'No durable login token on the shared host');
+ const originalToken=await gameFrame.evaluate(()=>sessionStorage.getItem('tubong.session.v1'));
+ assert.ok(/^[a-f0-9]{64}$/.test(originalToken),'Login saves a tab-scoped session token');
+ await sharedPage.reload();
+ await shared.locator('#username-value').waitFor();
+ assert.equal(await shared.locator('#username-value').inputValue(),name,'Reload restores the original account');
+ gameFrame=sharedPage.frames().find(frame=>frame.url().startsWith('https://html-classic.itch.zone/'));
+ assert.ok(await gameFrame.evaluate(token=>sessionStorage.getItem('tubong.session.v1')===token,originalToken),'Reload restores the existing session');
+ const otherTab=await sharedContext.newPage();
+ await otherTab.goto(parentUrl);
+ await otherTab.frameLocator('iframe').locator('#login-identity').waitFor();
+ const otherFrame=otherTab.frames().find(frame=>frame.url().startsWith('https://html-classic.itch.zone/'));
+ assert.equal(await otherFrame.evaluate(()=>sessionStorage.getItem('tubong.session.v1')),null,'A separate tab does not inherit the login');
+ await otherTab.close();
+ await shared.getByRole('button',{name:'Browser Player, account options'}).click();
+ await shared.getByRole('button',{name:'Logout',exact:true}).click();
+ await shared.getByRole('dialog').getByRole('button',{name:'Log out',exact:true}).click();
+ await shared.getByRole('link',{name:'Login',exact:true}).waitFor();
+ assert.equal(await gameFrame.evaluate(()=>sessionStorage.getItem('tubong.session.v1')),null,'Logout removes the saved tab session');
+ // Even restoring the old token cannot bypass server-side logout/revocation.
+ await gameFrame.evaluate(token=>sessionStorage.setItem('tubong.session.v1',token),originalToken);
+ await sharedPage.reload();
+ await shared.locator('#login-identity').waitFor();
+ gameFrame=sharedPage.frames().find(frame=>frame.url().startsWith('https://html-classic.itch.zone/'));
+ assert.equal(await gameFrame.evaluate(()=>sessionStorage.getItem('tubong.session.v1')),null,'Server rejects and clears a revoked session after reload');
  assert.deepEqual(errors,[],'No JavaScript errors under the CSP');
- console.log('Chrome verified memory-only itch.io sessions, protected account settings and sign-out after reload.');
+ console.log('Chrome verified itch.io iframe login survives reload, remains isolated across tabs, and logout revokes the saved session.');
  console.log('Chrome verified 19 Juice blocks Play and exactly 20 admits the free first attempt.');
  console.log('Chrome verified cloud login, profile save/reload, protected game start, tutorial persistence and zero PHP requests.');
 } finally {

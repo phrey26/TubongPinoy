@@ -25,19 +25,21 @@ features are not part of this version. The four existing accounts were preserved
 | 15. CORS | Exact origins: `https://html-classic.itch.zone`, `https://html.itch.zone`, localhost/127.0.0.1 ports 4200 and 4173. Other/opaque browser origins are rejected before DB work. No credentialed CORS. Non-browser callers without Origin still require a session for protected operations. |
 | 16. HTTPS | The frontend connects only to the HTTPS Supabase endpoint. itch.io supplies HTTPS for uploaded games. |
 | 17. Headers | API responses add no-store, nosniff, no-referrer, HSTS, restrictive API CSP and Permissions-Policy. The static frontend has CSP/referrer meta policies. itch.io controls the HTTP response headers; uploaded `.htaccess` does not configure its CDN. |
-| 18. Cookies/storage | No authentication cookies. itch.io login tokens stay only in memory; Remember Me is disabled there. Separate app origins can use session/local storage. See limitation below. |
+| 18. Cookies/storage | No authentication cookies. itch.io login tokens use tab-scoped sessionStorage so reload preserves login; Remember Me and localStorage token restoration are disabled there. Separate app origins can use session/local storage. See limitation below. |
 | 19. Debug | Production builds disable source maps and Angular development mode. API errors hide database details; no detailed database errors or privileged credentials are returned to clients. |
 | 20. Production | `npm run build:itch` builds production with relative asset URLs and checks source/output for private files. Upload only the browser build, excluding `.htaccess`; never upload source, SQL, PHP, environment files, Git, or exports. |
 
 ## itch.io shared-origin limitation
 
-itch.io serves unrelated HTML games on the same CDN origins. Browser storage
-is origin-wide, so this app **does not persist login tokens on those hosts**.
-Refreshing the game requires signing in again; progress stays in Supabase.
+itch.io serves unrelated HTML games on the same CDN origins. Login tokens use
+**sessionStorage** so refreshing the same tab preserves sign-in. A new independent
+tab does not inherit the session; normal sessions expire after eight hours. The
+app disables Remember Me and ignores localStorage login tokens on those hosts.
 
-This mitigates browser-storage exposure. It does not turn itch.io's shared CDN
-into an isolated security origin: another same-origin page with a reference to
-the app window can potentially access its DOM. CORS also cannot distinguish one
+Session storage separates browser tabs, but is not isolated by upload path.
+Other same-origin frames in the same top-level tab, or a same-origin page opened
+in that tab, may be able to read it. Namespacing a key would not prevent this.
+A same-origin page with a reference to the app window can also access its DOM. CORS also cannot distinguish one
 itch.io upload from another at the same origin. For stronger isolation of login
 and personal information, host the authenticated app on a separate origin and
 link to it from the itch.io listing. Do not use this shared-origin deployment for

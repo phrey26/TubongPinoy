@@ -90,8 +90,9 @@ migrations, account transfer, security, and deployment instructions. The PHP cod
 and MAMP documentation above are retained for historical regression/reference.
 
 Before public release, follow the [security and deployment checklist](docs/security-deployment.md).
-Signup and login remain username/password only. On itch.io, sessions stay in
-memory and reloading the game requires signing in again.
+Signup and login remain username/password only. On itch.io, sessions use
+tab-scoped sessionStorage so refreshing keeps you signed in. Remember Me stays
+disabled on its shared CDN origins.
 
 The app uses hash routing for static itch.io hosting. Build the upload files with:
 
