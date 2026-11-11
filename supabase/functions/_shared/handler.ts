@@ -1,27 +1,38 @@
 import { replayShot, roundTargets, type RunContext } from './replay.ts';
 
 export type Rpc = (name: string, args: Record<string, unknown>) => Promise<Record<string, unknown>>;
-const cors = {
+const securityHeaders = {
   // No cookies: protected operations require an explicit, unguessable bearer token.
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-game-session',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '600',
   'Cache-Control': 'no-store',
   'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+  'Vary': 'Origin',
 };
 const endpoints = new Set(['session','signup','login','logout','username-availability','signup-challenge',
   'me','profile','inventory','settings','catalog','wallet','tutorial','scores','game-run']);
+export interface HandlerOptions { allowedOrigins?: string[]; }
+export const defaultOrigins = ['https://html-classic.itch.zone', 'https://html.itch.zone',
+  'http://localhost:4200', 'http://127.0.0.1:4200', 'http://localhost:4173', 'http://127.0.0.1:4173'];
 class ApiError extends Error {
   constructor(message: string, readonly status = 422) { super(message); }
 }
-export function createHandler(rpc: Rpc) {
+export function createHandler(rpc: Rpc, options: HandlerOptions = {}) {
+  const origins = new Set(options.allowedOrigins ?? defaultOrigins);
   return async (request: Request): Promise<Response> => {
+    const origin = request.headers.get('origin');
+    const cors = { ...securityHeaders, ...(origin && origins.has(origin) ? { 'Access-Control-Allow-Origin': origin } : {}) };
     const json = (body: unknown, status = 200) => Response.json(body, { status, headers: cors });
+    if (origin && !origins.has(origin)) return json({ message: 'This website is not allowed to use the account service.' }, 403);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (request.method !== 'POST') return json({ message: 'Method not allowed.' }, 405);
     try {
-      if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return json({ message: 'Send a JSON request.' }, 415);
+      if (request.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !== 'application/json') return json({ message: 'Send a JSON request.' }, 415);
       const reader = request.body?.getReader();
       if (!reader) return json({ message: 'Expected a JSON object.' }, 400);
       const chunks: Uint8Array[] = []; let length = 0;
@@ -41,7 +52,7 @@ export function createHandler(rpc: Rpc) {
       if (typeof endpoint !== 'string' || !endpoints.has(endpoint)) return json({ message: 'Endpoint not found.' }, 404);
       if (method !== 'GET' && method !== 'POST') return json({ message: 'Method not allowed.' }, 405);
       if (!data || typeof data !== 'object' || Array.isArray(data)) return json({ message: 'Expected a JSON object.' }, 400);
-      if (typeof guestId !== 'string' || !/^[a-f0-9-]{36}$/.test(guestId)) return json({ message: 'Invalid browser session.' }, 422);
+      if (typeof guestId !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(guestId)) return json({ message: 'Invalid browser session.' }, 422);
       const token = request.headers.get('x-game-session') ?? '';
       if (token && !/^[a-f0-9]{64}$/.test(token)) return json({ message: 'Please log in again.' }, 401);
       const body = data as Record<string, unknown>;
@@ -63,9 +74,10 @@ export function createHandler(rpc: Rpc) {
           replay = { targets: roundTargets(bet as number) };
         }
       }
-      // x-forwarded-for is populated by Supabase's gateway. Session/account limits
-      // are enforced independently by Postgres, not only by this network bucket.
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+      // Supabase's Cloudflare gateway overwrites this header. The first XFF
+      // entry can be supplied by a caller and must not be used for limits.
+      const address = request.headers.get('cf-connecting-ip') ?? '';
+      const ip = /^[0-9a-f:.]{3,45}$/i.test(address) ? address : 'unknown';
       const result = await rpc('tp_api', { p_endpoint: endpoint, p_method: method, p_body: body,
         p_token: token, p_guest: guestId, p_ip: ip, p_replay: replay });
       const status = typeof result['_status'] === 'number' ? result['_status'] : 200;

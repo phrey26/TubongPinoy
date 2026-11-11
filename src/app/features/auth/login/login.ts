@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { Auth, authErrorMessage, safeReturnUrl } from '../../../core/services/auth';
+import { canPersistSession } from '../../../core/services/session-storage-policy';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -15,6 +16,7 @@ import { Auth, authErrorMessage, safeReturnUrl } from '../../../core/services/au
 export class Login {
 
   showPassword = false;
+  readonly canRemember = canPersistSession();
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
   private readonly router = inject(Router);
@@ -37,7 +39,7 @@ export class Login {
     if (this.loginForm.valid) {
       const { identity, password, rememberMe } = this.loginForm.getRawValue();
       this.isSubmitting.set(true);
-      this.auth.login({ identity: identity!.trim(), password: password!, rememberMe: !!rememberMe })
+      this.auth.login({ identity: identity!.trim(), password: password!, rememberMe: this.canRemember && !!rememberMe })
         .pipe(finalize(() => this.isSubmitting.set(false)))
         .subscribe({
           next: () => void this.router.navigateByUrl(this.returnUrl),

@@ -3,6 +3,7 @@ import { HttpBackend, HttpClient, HttpErrorResponse, HttpInterceptorFn, HttpResp
 import { defer, map } from 'rxjs';
 import { AccountState } from './account-state';
 import { environment } from '../../../environments/environment';
+import { canPersistSession } from './session-storage-policy';
 
 const SESSION_KEY = 'tubong.session.v1';
 
@@ -15,8 +16,14 @@ export class BackendApi {
   private readonly guestId = crypto.randomUUID();
   private memoryToken = '';
   private revision = 0;
+  private readonly persistSession = canPersistSession();
 
   constructor() {
+    const url = new URL(environment.supabaseUrl);
+    if (url.protocol !== 'https:' || !url.hostname.endsWith('.supabase.co') ||
+        !/^sb_publishable_[A-Za-z0-9_-]+$/.test(environment.supabaseKey)) {
+      throw new Error('Invalid public Supabase configuration.');
+    }
     const onStorage = (event: StorageEvent) => {
       if (event.key !== SESSION_KEY && event.key !== null) return;
       this.revision++;
@@ -28,6 +35,7 @@ export class BackendApi {
   }
 
   private token(): string {
+    if (!this.persistSession) return this.memoryToken;
     try { return sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || this.memoryToken; }
     catch { return this.memoryToken; }
   }
@@ -35,6 +43,7 @@ export class BackendApi {
   private store(token: string, remember: boolean): void {
     this.memoryToken = token;
     this.revision++;
+    if (!this.persistSession) return;
     try {
       sessionStorage.removeItem(SESSION_KEY);
       localStorage.removeItem(SESSION_KEY);
@@ -46,7 +55,7 @@ export class BackendApi {
     return defer(() => {
       const token = this.token(), revision = this.revision;
       let remember = false;
-      try { remember = !!localStorage.getItem(SESSION_KEY); } catch { /* Memory-only session. */ }
+      try { remember = this.persistSession && !!localStorage.getItem(SESSION_KEY); } catch { /* Memory-only session. */ }
       return this.http.post<Record<string, unknown>>(`${environment.supabaseUrl}/functions/v1/tubong-api`, {
         endpoint, method, data, guestId: this.guestId,
       }, {

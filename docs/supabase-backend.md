@@ -8,22 +8,23 @@ required. The source PHP implementation remains available for regression checks.
 
 ## Identity and authorization
 
-Username-only login is preserved using application accounts in PostgreSQL, not
+Username login is preserved using application accounts in PostgreSQL, not
 Supabase Auth's email/phone accounts. These players will not appear in the
 Dashboard's Authentication user list. Use the SQL Editor to inspect
 `game_private.players` if necessary; do not expose that schema to the Data API.
 
 Passwords are bcrypt-hashed. Sessions use 256-bit random bearer tokens; only a
 SHA-256 digest is stored in the database. Normal sessions expire after eight
-hours and use sessionStorage; Remember Me uses localStorage and expires after
-30 days. If storage is blocked, the token remains in page memory. The transport
+hours. On independent app origins they use sessionStorage; Remember Me uses localStorage and expires after
+30 days. On itch.io’s shared CDN origins, tokens remain only in page memory and
+Remember Me is unavailable. Reloading requires sign-in again. If storage is blocked, the token remains in page memory. The transport
 keeps tokens out of component/account response objects and rejects responses
 that arrive after an account switch. Username/password changes rotate the current
 token, preserve its expiry, and invalidate every other session and existing run
 through the account security version.
 
 This avoids third-party cookies inside itch.io's iframe. The API accepts CORS
-requests without cookies: every protected call must supply `X-Game-Session`.
+requests only from the exact configured origins, without cookies: every protected call must supply `X-Game-Session`.
 CORS is not authorization. The public publishable key grants no access to private
 account tables or the privileged RPC functions. The Edge Function uses its
 platform-provided `SUPABASE_SERVICE_ROLE_KEY`, which must never reach the browser.
@@ -34,6 +35,10 @@ SECURITY DEFINER escape hatch is used.
 Registration keeps the single-use, guest-bound arithmetic check, two-second
 minimum, five-minute expiry, honeypot and agreement requirements. Server-side
 rate limits cover login, registration, username checks and protected actions.
+Review the [security and deployment checklist](security-deployment.md) before release.
+Signup and login use only usernames and passwords; no email verification or
+password-recovery feature is enabled.
+
 Rejected business operations roll back while rate counts and challenge
 consumption survive. This remains a basic abuse deterrent, not proof of humanity.
 
@@ -108,6 +113,9 @@ into cloud accounts, and hosted writes do not flow back to MAMP.
 - `npm run check:physics`: browser/PHP/Edge simulation parity.
 - `npm run test:supabase`: live API regression using uniquely named temporary
   accounts and controlled fixture funding; removes its accounts afterward.
+- `npm run test:security`: browser-request protections, database restrictions, input validation and live
+  failed-login throttling; temporary accounts with cleanup.
+- `npm run check:secrets`: current source and Git history credential pattern scan.
 - `node scripts/test-supabase-browser.mjs`: Chrome flow against a built frontend
   served on localhost:4173, with a temporary account and cleanup. Uses the system
   Chrome on this Mac; adjust executablePath on another machine.

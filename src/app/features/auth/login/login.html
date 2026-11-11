@@ -59,7 +59,11 @@
       </div>
 
       <div class="flex items-center justify-between px-1">
-        <label class="ui-check-label"><input type="checkbox" formControlName="rememberMe" class="ui-check" /> <span>Remember me for 30 days</span></label>
+        @if (canRemember) {
+          <label class="ui-check-label"><input type="checkbox" formControlName="rememberMe" class="ui-check" /> <span>Remember me for 30 days</span></label>
+        } @else {
+          <p class="text-sm">Your login lasts while this game stays open. Reloading or closing it signs you out.</p>
+        }
       </div>
 
       <button type="submit"

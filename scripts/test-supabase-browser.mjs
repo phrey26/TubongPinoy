@@ -1,6 +1,7 @@
 // Run after npm run build:itch and serving its browser folder on localhost:4173.
 import { chromium } from 'playwright-core';
 import { readFile } from 'node:fs/promises';
+import { resolve, extname } from 'node:path';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
@@ -20,6 +21,7 @@ try {
  const page=await browser.newPage({viewport:{width:1280,height:900}});
  const errors=[]; const legacy=[];
  page.on('pageerror',error=>errors.push(error.message));
+ page.on('console',message=>{if(message.type()==='error') errors.push(message.text());});
  page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/api/'))legacy.push(request.url());});
  await page.goto('http://127.0.0.1:4173/index.html#/login');
  await page.locator('#login-identity').fill(name);
@@ -44,6 +46,28 @@ try {
  assert.equal(await page.getByRole('dialog').filter({has:page.getByText('Welcome to Tumbang Preso!')}).isVisible(),false);
  assert.deepEqual(errors,[],'No JavaScript errors');
  assert.deepEqual(legacy,[],'No requests to a local PHP backend');
+ // Serve the production artifact at the actual shared-origin hostname without uploading it.
+ const shared=await browser.newPage({viewport:{width:1280,height:900}});
+ const buildRoot=resolve('dist/tubongpinoybeta2/browser');
+ await shared.route('https://html-classic.itch.zone/**',async route=>{
+  const pathname=decodeURIComponent(new URL(route.request().url()).pathname);
+  if(!pathname.startsWith('/html/tubong-security/'))return route.fulfill({status:404,body:''});
+  const file=resolve(buildRoot,pathname.slice('/html/tubong-security/'.length)||'index.html');
+  if(!file.startsWith(buildRoot+'/'))return route.fulfill({status:404,body:''});
+  try { await route.fulfill({body:await readFile(file),contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.mp3':'audio/mpeg','.woff2':'font/woff2'})[extname(file)]??'application/octet-stream'}); }
+  catch { await route.fulfill({status:404,body:''}); }
+ });
+ shared.on('pageerror',error=>errors.push(error.message));
+ await shared.goto('https://html-classic.itch.zone/html/tubong-security/index.html#/login?returnUrl=/account/settings');
+ assert.equal(await shared.locator('input[formcontrolname=rememberMe]').count(),0,'No Remember Me on itch.io');
+ await shared.locator('#login-identity').fill(name); await shared.locator('#login-password').fill(password);
+ await shared.locator('button[type=submit]').click(); await shared.waitForURL('**/#/account/settings');
+ assert.equal(await shared.evaluate(()=>localStorage.getItem('tubong.session.v1')),null,'Shared origin cannot read a stored login token');
+ assert.equal(await shared.evaluate(()=>sessionStorage.getItem('tubong.session.v1')),null,'Shared session storage contains no token');
+ await shared.locator('#username-value').waitFor();
+ await shared.reload(); await shared.locator('#login-identity').waitFor();
+ assert.deepEqual(errors,[],'No JavaScript errors under the CSP');
+ console.log('Chrome verified memory-only itch.io sessions, protected account settings and sign-out after reload.');
  console.log('Chrome verified cloud login, profile save/reload, protected game start, tutorial persistence and zero PHP requests.');
 } finally {
  await browser?.close();

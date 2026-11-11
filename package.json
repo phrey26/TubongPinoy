@@ -11,7 +11,9 @@
     "postbuild": "node scripts/check-public-files.mjs build",
     "build:itch": "npm run build -- --base-href ./",
     "test:supabase": "node scripts/test-supabase-api.mjs",
-    "check:physics": "node scripts/sync-supabase-physics.mjs --check && node scripts/check-ranked-physics.mjs"
+    "check:physics": "node scripts/sync-supabase-physics.mjs --check && node scripts/check-ranked-physics.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs --history",
+    "test:security": "node scripts/test-supabase-security.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
