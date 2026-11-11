@@ -73,3 +73,28 @@ results, and remaining launch requirements are in
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Supabase backend (current)
+
+The application now uses Supabase's `tubong-api` Edge Function for every account,
+wallet, inventory, tutorial, recovery, and verified-game request. No PHP server or
+Angular development proxy is required. The existing service contracts are routed
+through `BackendApi` in `src/app/core/services/backend-api.ts`.
+
+Browser-safe project configuration is in `src/environments/environment.ts`.
+Only a publishable key belongs there. Server credentials are supplied by Supabase
+inside the Edge Function; never copy them into Angular or the public directory.
+
+See [Supabase deployment and verification](docs/supabase-backend.md) for architecture,
+migrations, account transfer, security, and deployment instructions. The PHP code
+and MAMP documentation above are retained for historical regression/reference.
+
+The app uses hash routing for static itch.io hosting. Build the upload files with:
+
+```sh
+npm run build:itch
+```
+
+Upload only the contents of `dist/tubongpinoybeta2/browser` as a ZIP with index.html
+at its root, excluding `.htaccess`. Backend source, configuration, and SQL exports
+must never be included in the frontend ZIP.

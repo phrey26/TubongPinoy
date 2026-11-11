@@ -33,7 +33,7 @@ export class Auth {
 
   constructor(private http: HttpClient) {}
 
-  // The server cookie establishes identity; browser storage is never trusted.
+  // Supabase validates the bearer session before returning the account snapshot.
   loadSession(): Observable<AuthSession> {
     if (!this.sessionRequest) {
       this.sessionRequest = defer(() => {

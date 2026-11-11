@@ -8,7 +8,10 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "prebuild": "node scripts/check-public-files.mjs source",
-    "postbuild": "node scripts/check-public-files.mjs build"
+    "postbuild": "node scripts/check-public-files.mjs build",
+    "build:itch": "npm run build -- --base-href ./",
+    "test:supabase": "node scripts/test-supabase-api.mjs",
+    "check:physics": "node scripts/sync-supabase-physics.mjs --check && node scripts/check-ranked-physics.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
@@ -19,6 +22,7 @@
     "@angular/forms": "22.2.4",
     "@angular/platform-browser": "22.2.4",
     "@angular/router": "22.2.4",
+    "@supabase/supabase-js": "2.119.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -28,8 +32,10 @@
     "@angular/compiler-cli": "22.2.4",
     "@tailwindcss/postcss": "^4.1.12",
     "jsdom": "^28.0.0",
+    "playwright-core": "1.65.0",
     "postcss": "^8.5.3",
     "prettier": "^3.8.1",
+    "supabase": "3.1.0",
     "tailwindcss": "^4.1.12",
     "typescript": "~6.0.3",
     "vitest": "^4.1.12"

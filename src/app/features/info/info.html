@@ -32,10 +32,10 @@
           <p>Signed-in players can view game leaderboards containing account IDs, usernames, display names, avatars, and scores. Your password hash and wallet records are not included in leaderboard responses. Choose a display name that you are comfortable sharing with other players.</p>
         </section>
         <section id="cookies">
-          <h2>Cookies and browser storage</h2>
-          <p>The essential <code>tubong_session</code> cookie supports sign-in and request protection. A normal login expires after up to eight hours; Remember Me keeps the login for up to 30 days. Logging out ends the current session. Blocking this cookie prevents account features from working.</p>
+          <h2>Sign-in sessions and browser storage</h2>
+          <p>An essential sign-in token lets the account service verify your requests. A normal login lasts up to eight hours and is stored in session storage. Remember Me uses local storage and lasts up to 30 days. Logging out revokes the token. If browser storage is unavailable, sign-in lasts only while the page remains open.</p>
           <p>Saved sound settings use local storage for the current account on this browser. They are not sent to the account service. Clearing site data resets them.</p>
-          <p>You can manage stored cookies in your browser settings. No optional analytics cookies are set by this app.</p>
+          <p>Account and game records are hosted in Supabase. You can clear sign-in tokens and sound preferences using your browser site-data settings. The app does not use optional analytics cookies.</p>
         </section>
         <section>
           <h2>Contact form and payments</h2>
@@ -70,7 +70,7 @@
         <section>
           <h2>Juice, Tansans, and virtual items</h2>
           <p>Juice is used for Tumbang Preso retries and new Jolens Blast rounds. It also refills for free over time. Tansans can be spent in the in-game store. These are virtual game resources with no cash redemption or transfer feature.</p>
-          <p>Store skins are coming soon, and skin purchases are disabled. Free starter slippers and shooters can be equipped from Inventory. The store displays each item’s price before you confirm a purchase.</p>
+          <p>Available store skins can be purchased with Tansans and equipped from Inventory. Free starter slippers and shooters are available to every account. The store displays each item’s price before you confirm a purchase.</p>
           <p>Real-money top-ups are unavailable. Any enabled development top-up is a simulation and takes no payment. Planned prices and payment options are previews, not offers to accept money. Payment and refund terms must be supplied if real purchases are introduced.</p>
         </section>
         <section>
@@ -98,12 +98,12 @@
           <details><summary>How does Juice refill?</summary><p>You recover 1 Juice every 2 minutes and 24 seconds, up to 100. A full refill from zero takes four hours. Recovery also works while you are away or logged out. The timer shows when the next point is due; an internet connection is needed to confirm the new balance.</p></details>
           <details><summary>When does a game spend Juice?</summary><p>Tumbang Preso’s first attempt is free. Choosing Try Again after a miss costs 20 Juice. In Jolens Blast, each confirmed round costs 20 Juice; individual shots are free. Spending your final 20 Juice still lets you finish that attempt or round. An active unlimited pass prevents these costs.</p></details>
           <details><summary>How do the games award points?</summary><p>Tumbang Preso awards 100 points per verified can hit and saves your cumulative high score as you progress. Jolens Blast awards 50 points per marble you own when you end a session after completing a shot. Use End Session to save that result before leaving. Points do not award Tansans.</p></details>
-          <details><summary>What happens when I leave a game?</summary><p>Your account balances, equipment, tutorial preferences, and saved personal bests remain on your account. An unfinished level or Jolens session resets when you leave or reload. If a score could not be saved, use Retry saving score before leaving the game page.</p></details>
+          <details><summary>What happens when I leave a game?</summary><p>Your account balances, equipment, tutorial preferences, and saved personal bests remain on your account. An unfinished level or Jolens session resets when you leave or reload. If a score could not be saved, use Retry game sync before leaving the game page.</p></details>
           <details><summary>Why is my earlier leaderboard score missing?</summary><p>The leaderboard now includes only scores verified from game runs. Earlier scores are kept as historical results and are no longer ranked. Play a new game to set your verified personal best.</p></details>
           <details><summary>Can I buy Tansans or cash out marbles?</summary><p>Real-money top-ups are coming soon and payment buttons are disabled. Jolens marbles become game points at session end, not cash or Tansans. No cash-out feature is available.</p></details>
-          <details><summary>Can I equip items from the store?</summary><p>Store skins are coming soon and cannot be purchased yet. Any previously owned collectibles remain on your account. You can equip any free starter slipper or shooter from <a routerLink="/account/inventory">Inventory</a> without spending Tansans.</p></details>
+          <details><summary>Can I equip items from the store?</summary><p>You can buy available store skins with Tansans and equip them from Inventory. Purchased skins remain available even after their store listing retires. You can also equip any free starter slipper or shooter from <a routerLink="/account/inventory">Inventory</a> without spending Tansans.</p></details>
           <details><summary>How do I change my account or recover a password?</summary><p>Use the account menu to edit your profile or open <a routerLink="/account/settings">Settings</a>. Changing your username or password requires your current password and signs out other sessions. Password recovery is not available yet.</p></details>
-          <details><summary>Does the app track me or send my contact message?</summary><p>Third-party analytics are disabled. Account features use an essential session cookie. The Contact form is a preview and sends no message. Read the <a routerLink="/privacy">Privacy Policy</a> for details.</p></details>
+          <details><summary>Does the app track me or send my contact message?</summary><p>Third-party analytics are disabled. Account features use an essential sign-in token stored in your browser. The Contact form is a preview and sends no message. Read the <a routerLink="/privacy">Privacy Policy</a> for details.</p></details>
           <details><summary>Which controls can I use?</summary><p>Both games use a pull-back aiming action. Jolens Blast supports mouse and touch controls. Tumbang Preso currently requires a mouse or similar pointing device. The game canvases do not yet offer keyboard-only gameplay; page navigation, help, and forms support the keyboard.</p></details>
         </div>
         <div class="info-actions"><a routerLink="/games" class="ui-button ui-button-green">Choose a game →</a><a routerLink="/contact" class="ui-button ui-button-soft">Visit Contact</a></div>

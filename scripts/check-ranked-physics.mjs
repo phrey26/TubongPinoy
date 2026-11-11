@@ -12,6 +12,7 @@ try {
  async function source(path, name) {
   const outfile=join(dir,name+'.cjs'); await build({entryPoints:[path],outfile,bundle:true,platform:'node',format:'cjs'}); return require(outfile);
  }
+ const { replayShot } = await source('supabase/functions/_shared/replay.ts','edge');
  const { launchShot, stepShot } = await source('src/app/features/games/tumbang-preso/shot-physics.ts','tumbang');
  const { stepMarbles } = await source('src/app/features/games/jolens-blast/marble-physics.ts','jolens');
  const { scatterMarbles } = await source('src/app/features/games/jolens-blast/marble-placement.ts','placement');
@@ -58,5 +59,11 @@ try {
   else {assert.equal(actual[i].delta,expected[i].delta,`delta ${i}`);assert.equal(actual[i].targets.length,expected[i].targets.length);
    actual[i].targets.forEach((b,j)=>{assert.ok(Math.abs(b.x-expected[i].targets[j].x)<1e-6,`x ${i}`);assert.ok(Math.abs(b.y-expected[i].targets[j].y)<1e-6,`y ${i}`);});}
  }
- console.log(`${cases.length} browser/PHP physics parity fixtures passed.`);
+ for (let i=0;i<cases.length;i++) {
+  const c=cases[i], r=replayShot(c.game==='tumbang'?'tumbang-preso':'jolens-blast',c.vx,c.vy,{id:'test',sequence:0,obstacles:c.board,targets:c.board});
+  assert.equal(r.frames,expected[i].frames,`Edge frames ${i}`);
+  if(c.game==='tumbang') assert.equal(r.hit,expected[i].hit);
+  else { assert.equal(r.delta,expected[i].delta); assert.equal(r.targets.length,expected[i].targets.length); r.targets.forEach((b,j)=>{assert.ok(Math.abs(b.x-expected[i].targets[j].x)<1e-6);assert.ok(Math.abs(b.y-expected[i].targets[j].y)<1e-6);}); }
+ }
+ console.log(`${cases.length} browser/PHP/Supabase Edge physics parity fixtures passed.`);
 } finally { await rm(dir,{recursive:true,force:true}); }

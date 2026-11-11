@@ -46,7 +46,7 @@ export const routes: Routes = [
     data: { page: 'faq', heading: 'A little help before you play', description: 'Find answers about Tubong Pinoy accounts, Juice recovery, Tansans, game rules, scores, and starter skins.' },
     loadComponent: () => import('./features/info/info').then(m => m.Info) },
   { path: 'privacy', title: 'Privacy Policy | Tubong Pinoy',
-    data: { page: 'privacy', heading: 'Privacy Policy', description: 'Read how Tubong Pinoy handles account details, game progress, essential session cookies, and browser storage.' },
+    data: { page: 'privacy', heading: 'Privacy Policy', description: 'Read how Tubong Pinoy handles account details, game progress, sign-in sessions and browser storage.' },
     loadComponent: () => import('./features/info/info').then(m => m.Info) },
   { path: 'terms', title: 'Terms of Use | Tubong Pinoy',
     data: { page: 'terms', heading: 'Terms of Use', description: 'Read the Tubong Pinoy rules for accounts, fair play, virtual items, and the current development version.' },
