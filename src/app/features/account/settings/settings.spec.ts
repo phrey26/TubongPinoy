@@ -114,7 +114,7 @@ describe('Account settings', () => {
 
   it.each(['username', 'password'] as const)('requires confirmation before changing %s', action => {
     const { component, service, confirmation } = setup();
-    const value = action === 'username' ? 'JuanNew' : 'new-password-123';
+    const value = action === 'username' ? 'JuanNew' : 'Mga tala sa gabi! 4829';
     component.forms[action].setValue({ value, currentPassword: 'old-password', confirmPassword: value });
     component.save(action);
     expect(service.saveSettings).not.toHaveBeenCalled();

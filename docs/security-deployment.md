@@ -12,7 +12,7 @@ features are not part of this version. The four existing accounts were preserved
 | 2. Environment variables | Browser configuration validates HTTPS/project-host and publishable-key format. The server fails startup without its privileged configuration. Private environment files are ignored and excluded from builds. |
 | 3. Git credentials | `npm run check:secrets` scans current files and reachable Git history for recognized private-key/token patterns, printing paths only. This is a pattern scan, not a guarantee that every possible credential format is detected. |
 | 4. Admin routes | There are no admin web routes. Administrative/debug PHP tools remain outside the published build. Privileged database RPCs deny public/anon/authenticated execution. |
-| 5. Authentication | Passwords use bcrypt; random bearer sessions are hashed in the database, expire and can be revoked. Signup remains username/password only, with a single-use human check. Credential changes require the current password and revoke other sessions. |
+| 5. Authentication | Passwords use bcrypt; new passwords require 15+ characters within 72 UTF-8 bytes and reject common/repeated patterns and the username. Browser and database checks agree; existing passwords still work for login. Random bearer sessions are hashed, expire and can be revoked. Signup uses a single-use human check. Credential changes require the current password and revoke other sessions. |
 | 6. Permissions | Every protected operation derives its player from the validated session. Ownership, inventory, balances, scores and run sequence/version are checked on the server. |
 | 7. Inputs | Field types, lengths, allowlists, game values and password byte limits are checked on the server. JSON bodies are limited to 12 KB; file/form payloads are rejected. |
 | 8. XSS | Angular interpolation escapes text. No HTML bypass APIs are used. The frontend CSP blocks inline scripts, eval, plugins and unapproved connections. Inline styles remain necessary for Angular/game rendering. See the shared-origin limitation below. |
@@ -68,6 +68,7 @@ disabled in this application.
 npm run check:secrets
 npm test -- --watch=false
 npm run test:security
+npm run test:passwords
 npm run test:supabase
 npm run check:physics
 npm run build:itch

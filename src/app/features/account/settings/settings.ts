@@ -9,7 +9,7 @@ import { User, SettingsChange } from '../../../core/services/user';
 import { authErrorMessage } from '../../../core/services/auth';
 import { Confirmation } from '../../../core/services/confirmation';
 import { AudioSettingsPanel } from '../../../shared/audio-settings/audio-settings';
-import { passwordValidator } from '../../../core/validators/password';
+import { passwordValidatorFor } from '../../../core/validators/password';
 
 type Setting = SettingsChange['action'];
 const matchesPassword: ValidatorFn = group => group.get('value')?.value === group.get('confirmPassword')?.value
@@ -38,11 +38,11 @@ export class Settings {
   readonly showPasswords = signal(false);
   readonly forms = {
     username: makeForm(Validators.pattern(/^[A-Za-z0-9_]{3,50}$/)),
-    password: makeForm(passwordValidator, true),
+    password: makeForm(passwordValidatorFor(() => this.account.user()?.username ?? ''), true),
   };
   readonly sections: { action: Setting; title: string; label: string; help: string }[] = [
     { action: 'username', title: 'Change username', label: 'New username', help: '3–50 letters, numbers or underscores. Use this username to sign in.' },
-    { action: 'password', title: 'Change password', label: 'New password', help: 'Use 8–72 bytes. Symbols and spaces are welcome; some characters use more than one byte.' },
+    { action: 'password', title: 'Change password', label: 'New password', help: 'Use at least 15 characters, up to 72 UTF-8 bytes. Avoid common passwords, repeated patterns and your username. Spaces and symbols are welcome.' },
   ];
   private editingAccountId?: number;
   private saved = { username: '' };
@@ -50,6 +50,7 @@ export class Settings {
   constructor() {
     effect(() => {
       const user = this.account.user();
+      this.forms.password.controls.value.updateValueAndValidity({ emitEvent: false });
       if (user?.id === this.editingAccountId) return;
       this.editingAccountId = user?.id;
       this.saved = { username: user?.username || '' };

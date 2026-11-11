@@ -14,7 +14,8 @@
     "check:physics": "node scripts/sync-supabase-physics.mjs --check && node scripts/check-ranked-physics.mjs",
     "check:secrets": "node scripts/check-secrets.mjs --history",
     "test:security": "node scripts/test-supabase-security.mjs",
-    "package:itch": "npm run build:itch && node scripts/package-itch.mjs"
+    "package:itch": "npm run build:itch && node scripts/package-itch.mjs",
+    "test:passwords": "node scripts/test-password-policy.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",

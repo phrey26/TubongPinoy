@@ -30,6 +30,15 @@ try {
  page.on('pageerror',error=>errors.push(error.message));
  page.on('console',message=>{if(message.type()==='error') errors.push(message.text());});
  page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/api/'))legacy.push(request.url());});
+ await page.goto('http://127.0.0.1:4173/index.html#/signup');
+ await page.locator('#signup-username').fill('GamePlayer');
+ await page.locator('#signup-password').fill('Password123456789!');
+ assert.equal(await page.locator('progress').evaluate(element=>element.value),3,'Common passwords do not satisfy the checklist');
+ await page.locator('#signup-password').fill('Mga bituin sa gabi! 4829');
+ await page.getByText('Password meets the requirements.',{exact:true}).waitFor();
+ assert.equal(await page.locator('progress').evaluate(element=>element.value),4,'Long passphrase satisfies every requirement');
+ await page.locator('#signup-username').fill('GABI');
+ await page.getByText('Complete all four requirements.',{exact:true}).waitFor();
  await page.goto('http://127.0.0.1:4173/index.html#/login');
  await page.locator('#login-identity').fill(name);
  await page.locator('#login-password').fill(password);
@@ -121,6 +130,7 @@ try {
  assert.equal(await gameFrame.evaluate(()=>sessionStorage.getItem('tubong.session.v1')),null,'Server rejects and clears a revoked session after reload');
  assert.deepEqual(errors,[],'No JavaScript errors under the CSP');
  console.log('Chrome verified itch.io iframe login survives reload, remains isolated across tabs, and logout revokes the saved session.');
+ console.log('Chrome verified the live password checklist rejects common and username-containing passwords.');
  console.log('Chrome verified 19 Juice blocks Play and exactly 20 admits the free first attempt.');
  console.log('Chrome verified cloud login, profile save/reload, protected game start, tutorial persistence and zero PHP requests.');
 } finally {

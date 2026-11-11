@@ -43,13 +43,27 @@
           <label for="signup-password" class="block text-purple-700 font-bold mb-2 ml-1">Password</label>
           <div class="relative">
             <input id="signup-password" autocomplete="new-password" maxlength="72" formControlName="password" [type]="showPassword ? 'text' : 'password'" placeholder="••••••••"
-              [class.border-red-400]="f.password.invalid && f.password.touched" [attr.aria-invalid]="!!(f.password.invalid && f.password.touched)" [attr.aria-describedby]="f.password.invalid && f.password.touched ? 'signup-password-error' : null"
+              [class.border-red-400]="f.password.invalid && f.password.touched" [attr.aria-invalid]="!!(f.password.invalid && f.password.touched)" aria-describedby="signup-password-help signup-password-rules signup-password-status signup-password-error"
               class="auth-input w-full px-5 py-3 rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none transition bg-pink-50 text-gray-700 font-medium" />
             <button type="button" (click)="togglePassword()" class="ui-button ui-button-soft ui-button-icon password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-lg">
               <img [src]="showPassword ? 'assets/icons/eye-off.svg' : 'assets/icons/eye.svg'" [alt]="showPassword ? 'Hide password' : 'Show password'" class="app-icon" />
             </button>
           </div>
-          <p *ngIf="f.password.invalid && f.password.touched" id="signup-password-error" class="text-red-700 text-xs font-bold mt-1 ml-2"><img src="assets/icons/warning.svg" alt="" aria-hidden="true" class="app-icon" /> Use 8–72 UTF-8 bytes without null characters. Some characters use more than one byte.</p>
+          @let assessment = passwordAssessment;
+          <div class="password-guidance">
+            <p id="signup-password-help">Use a unique passphrase of at least 15 characters. Try four unrelated words. Spaces and symbols are welcome.</p>
+            <progress [value]="assessment.requirementsMet" max="4" aria-label="Password requirements met"></progress>
+            <ul id="signup-password-rules">
+              <li [class.met]="assessment.longEnough">{{ assessment.longEnough ? '✓' : '○' }} At least 15 characters, without space padding</li>
+              <li [class.met]="assessment.fitsStorage">{{ assessment.fitsStorage ? '✓' : '○' }} No more than 72 UTF-8 bytes</li>
+              <li [class.met]="assessment.notCommon">{{ assessment.notCommon ? '✓' : '○' }} Avoid common passwords and repeated patterns</li>
+              <li [class.met]="assessment.notPersonal">{{ assessment.notPersonal ? '✓' : '○' }} Does not contain your username</li>
+            </ul>
+            <p id="signup-password-status" role="status" aria-live="polite">{{ assessment.accepted ? 'Password meets the requirements.' : 'Complete all four requirements.' }}</p>
+            <p id="signup-password-error" class="text-red-700">
+              @if (f.password.invalid && f.password.touched) { Choose a longer, less predictable password that meets the requirements above. }
+            </p>
+          </div>
         </div>
 
         <div class="relative">

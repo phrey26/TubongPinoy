@@ -25,6 +25,15 @@ that arrive after an account switch. Username/password changes rotate the curren
 token, preserve its expiry, and invalidate every other session and existing run
 through the account security version.
 
+New passwords (signup and password changes) require at least 15 Unicode
+characters excluding surrounding whitespace, within bcrypt's 72-byte UTF-8
+limit. The form and database reject a small offline list of common password
+roots/numeric variations, simple repeated or sequential patterns, and passwords
+containing the username. Spaces and Unicode passphrases are allowed; there is
+no mandatory mix of character classes. This does not check every breached
+password. Existing passwords remain valid for login and for confirming changes.
+The signup checklist reports policy requirements, not an entropy estimate.
+
 This avoids third-party cookies inside itch.io's iframe. The API accepts CORS
 requests only from the exact configured origins, without cookies: every protected call must supply `X-Game-Session`.
 CORS is not authorization. The public publishable key grants no access to private
@@ -122,6 +131,9 @@ into cloud accounts, and hosted writes do not flow back to MAMP.
   accounts and controlled fixture funding; removes its accounts afterward.
 - `npm run test:security`: browser-request protections, database restrictions, input validation and live
   failed-login throttling; temporary accounts with cleanup.
+- `npm run test:passwords`: browser/database policy parity, direct weak-signup
+  rejection, password changes and legacy-login compatibility, with temporary
+  account cleanup.
 - `npm run check:secrets`: current source and Git history credential pattern scan.
 - `node scripts/test-supabase-browser.mjs`: Chrome flow against a built frontend
   served on localhost:4173, with a temporary account and cleanup. Uses the system

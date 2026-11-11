@@ -6,7 +6,8 @@ import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validator
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, takeUntil } from 'rxjs';
 import { Auth, SignupChallenge, authErrorMessage, safeReturnUrl } from '../../../core/services/auth';
-import { passwordValidator } from '../../../core/validators/password';
+import { passwordValidatorFor } from '../../../core/validators/password';
+import { assessPassword } from '../../../core/validators/password-policy';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -43,9 +44,10 @@ export class Signup implements OnInit {
       : null;
   };
 
+  readonly usernameControl = new FormControl('', [Validators.required, Validators.pattern(/^[A-Za-z0-9_]{3,50}$/)]);
   signupForm = new FormGroup({
-    username: new FormControl('', [Validators.required, Validators.pattern(/^[A-Za-z0-9_]{3,50}$/)]),
-    password: new FormControl('', [Validators.required, passwordValidator]),
+    username: this.usernameControl,
+    password: new FormControl('', [Validators.required, passwordValidatorFor(() => this.usernameControl.value ?? '')]),
     confirmPassword: new FormControl('', [Validators.required]),
     challengeAnswer: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]{1,2}$/)]),
     website: new FormControl('', { nonNullable: true }),
@@ -58,6 +60,7 @@ export class Signup implements OnInit {
   ngOnInit(): void {
     this.refreshChallenge();
     this.f.username.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.f.password.updateValueAndValidity({ emitEvent: false });
       this.usernameAvailable.set(false);
       this.usernameCheckError.set('');
       if (this.usernameTaken()) { this.usernameTaken.set(false); this.errorMessage.set(''); }
@@ -122,4 +125,5 @@ export class Signup implements OnInit {
   }
 
   get f() { return this.signupForm.controls; }
+  get passwordAssessment() { return assessPassword(this.f.password.value ?? '', this.f.username.value ?? ''); }
 }

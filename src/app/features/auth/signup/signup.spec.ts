@@ -32,7 +32,7 @@ describe('Signup', () => {
 
   it('checks availability without submitting or resetting the form and clears the result on edit', () => {
     const http = TestBed.inject(HttpTestingController);
-    component.signupForm.patchValue({ username: 'Player', password: 'password123', challengeAnswer: '5' });
+    component.signupForm.patchValue({ username: 'Player', password: 'Sipa sa ulap! 4829', challengeAnswer: '5' });
     fixture.detectChanges();
     const button = [...fixture.nativeElement.querySelectorAll('button')].find(
       (element: any) => element.textContent.includes('Check username')) as HTMLButtonElement;
@@ -42,7 +42,7 @@ describe('Signup', () => {
     request.flush({ username: 'Player', available: true });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('#signup-username-status').textContent).toContain('Username is available');
-    expect(component.f.password.value).toBe('password123');
+    expect(component.f.password.value).toBe('Sipa sa ulap! 4829');
     expect(component.f.challengeAnswer.value).toBe('5');
     expect(component.challenge()?.id).toBe('challenge');
     component.f.username.setValue('Different');
@@ -51,7 +51,7 @@ describe('Signup', () => {
 
   it('blocks a taken username and preserves the remaining registration fields', () => {
     const http = TestBed.inject(HttpTestingController);
-    component.signupForm.setValue({ username: 'Player', password: 'password123', confirmPassword: 'password123',
+    component.signupForm.setValue({ username: 'Player', password: 'Sipa sa ulap! 4829', confirmPassword: 'Sipa sa ulap! 4829',
       terms: true, challengeAnswer: '5', website: '' });
     component.checkUsername();
     http.expectOne('/api/username-availability.php?username=Player').flush({ username: 'Player', available: false });
@@ -59,7 +59,7 @@ describe('Signup', () => {
     http.expectNone('/api/session.php');
     expect(component.usernameTaken()).toBe(true);
     expect(component.f.challengeAnswer.value).toBe('5');
-    expect(component.f.password.value).toBe('password123');
+    expect(component.f.password.value).toBe('Sipa sa ulap! 4829');
     component.f.username.setValue('Another');
     expect(component.usernameTaken()).toBe(false);
   });
@@ -93,7 +93,7 @@ describe('Signup', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const http = TestBed.inject(HttpTestingController);
     component.signupForm.setValue({ username: 'Player', 
-      password: 'password123', confirmPassword: 'password123', terms: true, challengeAnswer: '5', website: '' });
+      password: 'Sipa sa ulap! 4829', confirmPassword: 'Sipa sa ulap! 4829', terms: true, challengeAnswer: '5', website: '' });
     component.onSubmit();
     component.onSubmit();
     http.expectOne('/api/session.php').flush({ user: null, csrfToken: 'token' });
@@ -109,7 +109,7 @@ describe('Signup', () => {
 
   it('rejects mismatched passwords without sending a request', () => {
     component.signupForm.setValue({ username: 'Player', 
-      password: 'password123', confirmPassword: 'different123', terms: true, challengeAnswer: '5', website: '' });
+      password: 'Sipa sa ulap! 4829', confirmPassword: 'Ibang daan sa ulap! 5197', terms: true, challengeAnswer: '5', website: '' });
     component.onSubmit();
     expect(component.signupForm.hasError('passwordMismatch')).toBe(true);
     TestBed.inject(HttpTestingController).expectNone('/api/session.php');
@@ -123,8 +123,9 @@ describe('Signup', () => {
     TestBed.inject(HttpTestingController).expectNone('/api/session.php');
   });
 
-  it('accepts a Unicode password at the byte boundary and requires policy agreement', () => {
-    const password = 'é'.repeat(36);
+  it('accepts a varied Unicode password at the byte boundary and requires policy agreement', () => {
+    const prefix = 'Café sa tahimik na gabi • 4829! 🌺';
+    const password = prefix + 'AbcDefGhJkLmNpQrStUvWxYz0123456789'.slice(0, 72 - new TextEncoder().encode(prefix).length);
     component.signupForm.setValue({ username: 'Player', password,
       confirmPassword: password, terms: false, challengeAnswer: '5', website: '' });
     expect(component.f.password.valid).toBe(true);
@@ -136,7 +137,7 @@ describe('Signup', () => {
   });
   it('shows Username is taken next to the field and refreshes the single-use challenge', () => {
     const http = TestBed.inject(HttpTestingController);
-    component.signupForm.setValue({ username: 'Player', password: 'password123', confirmPassword: 'password123',
+    component.signupForm.setValue({ username: 'Player', password: 'Sipa sa ulap! 4829', confirmPassword: 'Sipa sa ulap! 4829',
       terms: true, challengeAnswer: '5', website: '' });
     component.onSubmit(); http.expectOne('/api/session.php').flush({ user: null, csrfToken: 'token' });
     http.expectOne('/api/signup.php').flush({ message: 'Username is taken.' }, { status: 409, statusText: 'Conflict' });
@@ -147,6 +148,25 @@ describe('Signup', () => {
     expect(fixture.nativeElement.querySelector('#signup-email')).toBeNull();
     expect(component.f.challengeAnswer.value).toBe('');
     component.f.username.setValue('Different'); expect(component.usernameTaken()).toBe(false);
+  });
+
+  it.each(['password123', 'Password123456789!', 'a'.repeat(20), '123456789012345'])('blocks weak password submission %#', password => {
+    component.signupForm.setValue({ username: 'Player', password, confirmPassword: password, terms: true, challengeAnswer: '5', website: '' });
+    component.onSubmit();
+    expect(component.f.password.invalid).toBe(true);
+    TestBed.inject(HttpTestingController).expectNone('/api/session.php');
+  });
+
+  it('updates the visible checklist and rechecks a password when the username changes', () => {
+    component.f.password.setValue('Mga tala sa gabi! 4829');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#signup-password-status').textContent).toContain('meets the requirements');
+    component.f.username.setValue('GABI');
+    fixture.detectChanges();
+    expect(component.f.password.invalid).toBe(true);
+    expect(fixture.nativeElement.querySelector('#signup-password-status').textContent).toContain('Complete');
+    component.f.username.setValue('Player');
+    expect(component.f.password.valid).toBe(true);
   });
 
   it('blocks signup when the human check is missing or unavailable and supports retry', () => {
