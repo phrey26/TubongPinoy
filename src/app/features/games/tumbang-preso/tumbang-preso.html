@@ -30,7 +30,7 @@
             <li><strong>Find your way to the can.</strong> Rocks and sidewalks bounce your slipper. Use bank shots to reach the can; leaving the top or bottom, or stopping short, counts as a miss.</li>
             <li><strong>Keep the game going.</strong> Each hit earns 100 points and unlocks the next level. A retry costs 20 Juice. Your last 20 buys a full attempt—even when the meter reaches zero.</li>
           </ol>
-          <p class="mt-4 text-sm font-semibold text-purple-700">Starting this game is free. Juice is only spent when you choose Try Again after a miss.</p>
+          <p class="mt-4 text-sm font-semibold text-purple-700">You need at least 20 Juice or an active Unlimited Juice pass to start. The first attempt is free; Juice is spent when you choose Try Again after a miss.</p>
           <button type="button" (click)="closeTutorial()"
             class="ui-button ui-button-green game-action mt-5 w-full py-3">
             Got it, back to the game
@@ -75,8 +75,8 @@
           <div *ngIf="!hasStarted" class="absolute inset-0 bg-purple-950/60 backdrop-blur-sm flex items-center justify-center z-30">
             <div class="bg-white p-6 rounded-3xl border-4 border-purple-300 text-center shadow-xl">
               <h2 class="text-2xl font-black text-purple-700 mb-3">Ready to knock it down?</h2>
-              <p class="text-gray-600 mb-4">Your first attempt is free.</p>
-              <button type="button" [disabled]="tutorialLoading() || savingJuice() || !!retrySync" (click)="startGame()"
+              <p class="text-gray-600 mb-4">Have at least 20 Juice to start. Your first attempt is free.</p>
+              <button type="button" [disabled]="tutorialLoading() || savingJuice() || !!retrySync || !canStartGame" (click)="startGame()"
                 class="ui-button ui-button-green game-action w-full py-3">
                 <img src="assets/icons/play.svg" alt="" aria-hidden="true" class="app-icon" /> {{ tutorialLoading() ? 'Loading…' : 'Play' }}
               </button>
@@ -122,7 +122,7 @@
           <div *ngIf="showOutOfJuice" class="absolute inset-0 bg-purple-900/70 backdrop-blur-sm flex items-center justify-center z-40">
             <div class="bg-white p-8 rounded-3xl border-4 border-red-400 shadow-2xl text-center max-w-sm">
               <h2 class="text-3xl font-black text-red-600 mb-4">Out of Juice! <img src="assets/icons/juice.svg" alt="Juice" class="app-icon" /></h2>
-              <p class="text-gray-700 mb-6 font-medium">Wait for your Juice to refill for free, or visit the store for an instant boost.</p>
+              <p class="text-gray-700 mb-6 font-medium">You need 20 Juice to {{ hasStarted ? 'retry' : 'start' }}. Wait for your Juice to refill for free, or visit the store for an instant boost.</p>
               <div class="flex flex-col gap-3">
                 <button (click)="goToShop()"
                   class="ui-button ui-button-red px-10 py-3">

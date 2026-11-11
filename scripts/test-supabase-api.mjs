@@ -34,7 +34,7 @@ class Client {
  async action(run,action,input={},expected=200) {
   return this.call('game-run',{game:run.game,action,runId:run.id,sequence:run.sequence,requestId:randomUUID(),...input},'POST',expected);
  }
- async start(game) { return this.call('game-run',{game,action:'start',requestId:randomUUID()},'POST'); }
+ async start(game,expected=200) { return this.call('game-run',{game,action:'start',requestId:randomUUID()},'POST',expected); }
 }
 try {
  const guest=new Client(),a=new Client(),b=new Client();
@@ -63,6 +63,33 @@ try {
  await a.call('inventory',{game:'tumbang-preso',skinId:'skin_1'},'POST');
  check(!(await b.call('me')).user.ownedSkins.includes('skin_1'),'Purchased skins stay isolated');
  await a.call('scores',{game:'tumbang-preso',points:999999},'POST',422);check(true,'Direct score claims are rejected');
+ // Only the second fixture's Juice/entitlements are changed for start eligibility.
+ for (const juice of [0,1,19]) {
+  sql(`update game_private.players set juice=${juice},refill_at=floor(extract(epoch from now())),permanent_juice=false,unlimited_until=0 where username='${names[1]}'`);
+  await b.start('tumbang-preso',409);
+  check((await b.call('me')).user.juice===juice,`Tumbang start rejects ${juice} Juice without changing the balance`);
+ }
+ sql(`update game_private.players set juice=20,refill_at=floor(extract(epoch from now())) where username='${names[1]}'`);
+ const admittedStart={game:'tumbang-preso',action:'start',requestId:randomUUID()};
+ const admitted=await b.call('game-run',admittedStart,'POST');
+ check(admitted.user.juice===20,'Exactly 20 Juice admits the free first attempt');
+ await new Promise(resolve=>setTimeout(resolve,1100));
+ const missed=await b.action(admitted.run,'shot',{vx:0,vy:0});
+ const paid=await b.action(missed.run,'retry');
+ check(paid.user.juice===0&&paid.run.status==='ready','Last 20 Juice still buys a playable retry');
+ check((await b.call('game-run',admittedStart,'POST')).run.id===paid.run.id,'Admitted start retries remain idempotent at zero Juice');
+ await b.start('tumbang-preso',409);
+ await new Promise(resolve=>setTimeout(resolve,1100));
+ check((await b.action(paid.run,'shot',{vx:0,vy:0})).run.status==='miss','The paid attempt can finish after spending the final 20 Juice');
+ sql(`update game_private.players set juice=19,refill_at=floor(extract(epoch from now()))-144 where username='${names[1]}'`);
+ check((await b.start('tumbang-preso')).user.juice===20,'Start eligibility includes passive Juice recovery');
+ sql(`update game_private.players set juice=0,refill_at=floor(extract(epoch from now())),unlimited_until=floor(extract(epoch from now()))+3600 where username='${names[1]}'`);
+ check((await b.start('tumbang-preso')).user.juice===0,'Active unlimited pass admits a start at zero Juice');
+ sql(`update game_private.players set permanent_juice=true,unlimited_until=0 where username='${names[1]}'`);
+ check((await b.start('tumbang-preso')).user.juice===0,'Permanent unlimited Juice admits a start at zero');
+ sql(`update game_private.players set permanent_juice=false,unlimited_until=floor(extract(epoch from now()))-1 where username='${names[1]}'`);
+ await b.start('tumbang-preso',409);check(true,'Expired unlimited pass does not bypass the start requirement');
+ sql(`update game_private.players set juice=100,refill_at=0,unlimited_until=0 where username='${names[1]}'`);
  let {run}=await a.start('tumbang-preso');
  await b.action(run,'shot',{vx:0,vy:-17.6},409);check(true,'Another account cannot submit a stolen run');
  await a.action(run,'shot',{vx:0,vy:-100},422);check(true,'Overpowered shots are rejected');

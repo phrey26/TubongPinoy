@@ -12,6 +12,13 @@ const call=async(endpoint,data={},method='GET')=>{
  const res=await fetch(url+'/functions/v1/tubong-api',{method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:JSON.stringify({endpoint,method,data,guestId})});
  const body=await res.json(); assert.ok(res.ok,body.message||'API failure'); return body;
 };
+function setJuice(juice) {
+ assert.match(name,/^tp_browser_[a-f0-9]{12}$/);
+ assert.ok(Number.isInteger(juice)&&juice>=0&&juice<=100);
+ const result=spawnSync('node_modules/.bin/supabase',['db','query','--remote='+new URL(url).hostname.split('.')[0],'--yes',
+  `update game_private.players set juice=${juice},refill_at=floor(extract(epoch from now())) where username='${name}'`],{encoding:'utf8'});
+ assert.equal(result.status,0,'Only the browser fixture Juice is updated');
+}
 let browser;
 try {
  const challenge=await call('signup-challenge'), numbers=challenge.question.match(/\d+/g).map(Number);
@@ -44,6 +51,21 @@ try {
  // Reload resets the run but retains session and saved tutorial preference.
  await page.getByRole('button',{name:'Play',exact:true}).waitFor();
  assert.equal(await page.getByRole('dialog').filter({has:page.getByText('Welcome to Tumbang Preso!')}).isVisible(),false);
+ setJuice(19);
+ await page.reload();
+ await page.getByRole('heading',{name:/Out of Juice!/}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'Play',exact:true}).isDisabled(),true,'Play is disabled below 20 Juice');
+ setJuice(20);
+ await page.reload();
+ const play=page.getByRole('button',{name:'Play',exact:true});
+ await play.waitFor();
+ const startResponse=page.waitForResponse(response=>{
+  const body=response.request().postDataJSON();
+  return body?.endpoint==='game-run'&&body?.data?.action==='start';
+ });
+ await play.click();
+ assert.equal((await (await startResponse).json()).user.juice,20,'The first attempt remains free at the 20 Juice boundary');
+ await page.getByRole('heading',{name:'Ready to knock it down?'}).waitFor({state:'hidden'});
  assert.deepEqual(errors,[],'No JavaScript errors');
  assert.deepEqual(legacy,[],'No requests to a local PHP backend');
  // Serve the production artifact at the actual shared-origin hostname without uploading it.
@@ -68,6 +90,7 @@ try {
  await shared.reload(); await shared.locator('#login-identity').waitFor();
  assert.deepEqual(errors,[],'No JavaScript errors under the CSP');
  console.log('Chrome verified memory-only itch.io sessions, protected account settings and sign-out after reload.');
+ console.log('Chrome verified 19 Juice blocks Play and exactly 20 admits the free first attempt.');
  console.log('Chrome verified cloud login, profile save/reload, protected game start, tutorial persistence and zero PHP requests.');
 } finally {
  await browser?.close();

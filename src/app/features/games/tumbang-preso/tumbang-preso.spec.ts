@@ -399,6 +399,44 @@ describe('TumbangPreso', () => {
     expect(TestBed.inject(Energy).getEnergyLevelValue()).toBe(100);
   });
 
+  it.each([0, 1, 19])('blocks starting with %s Juice even though the first attempt is free', juice => {
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
+    component.hasStarted = false;
+    energy.consumeEnergy(100 - juice);
+    const start = vi.spyOn(TestBed.inject(Game), 'runAction');
+    component.startGame();
+    expect(start).not.toHaveBeenCalled();
+    expect(component.hasStarted).toBe(false);
+    expect(component.showOutOfJuice).toBe(true);
+    fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    const play = [...fixture.nativeElement.querySelectorAll('button')].find(
+      (button: HTMLButtonElement) => button.textContent?.trim() === 'Play');
+    expect(play.disabled).toBe(true);
+  });
+
+  it('allows the free first attempt once Juice reaches exactly 20', () => {
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
+    component.hasStarted = false;
+    energy.consumeEnergy(81);
+    expect(component.showOutOfJuice).toBe(true);
+    energy.addEnergy(1);
+    expect(component.showOutOfJuice).toBe(false);
+    component.startGame();
+    expect(component.hasStarted).toBe(true);
+    expect(energy.getEnergyLevelValue()).toBe(20);
+  });
+
+  it('allows starting at zero Juice with an active unlimited pass', () => {
+    const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
+    component.hasStarted = false;
+    energy.consumeEnergy(100);
+    energy.unlimited = true;
+    component.startGame();
+    expect(component.hasStarted).toBe(true);
+    expect(component.showOutOfJuice).toBe(false);
+    expect(energy.getEnergyLevelValue()).toBe(0);
+  });
+
   it('lets the final 20 Juice buy a playable retry and only blocks the following retry', () => {
     const energy = TestBed.inject(Energy) as unknown as MemoryEnergy;
     energy.consumeEnergy(80);

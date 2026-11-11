@@ -50,6 +50,11 @@ Purchases, ownership, passive Juice recovery, operation deduplication and game
 progress serialize under the player row lock. Currency and score values never
 come from trusted browser input. Demo top-ups remain disabled.
 
+Starting a new Tumbang Preso run requires at least 20 recovered Juice or an active
+unlimited entitlement. The first attempt remains free. Already admitted runs and
+attempts purchased with the final 20 Juice remain playable at zero; starting a
+different run checks eligibility again.
+
 The Edge Function replays each shot with copies of the browser's physics modules.
 The PostgreSQL commit checks run identity, sequence and security version again,
 so concurrent/replaced runs cannot commit a stale replay. The replay endpoint

@@ -189,6 +189,7 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
   readonly accountError = signal('');
 
   get unlimitedJuice(): boolean { return this.energyService.hasUnlimited(); }
+  get canStartGame(): boolean { return this.energyLevel >= 20 || this.unlimitedJuice; }
 
   // Game State
   currentScore = 0;
@@ -205,9 +206,9 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
       this.energyLevel = value;
       // Spending the last Juice must not interrupt an attempt already purchased.
       if (value >= 20 || this.energyService.hasUnlimited()) this.showOutOfJuice = false;
+      else if (!this.hasStarted) this.showOutOfJuice = true;
     });
-    // The first attempt is free, including for accounts returning with zero Juice.
-    this.showOutOfJuice = false;
+    this.showOutOfJuice = !this.canStartGame;
   }
 
   private readonly CANVAS_WIDTH = 450;
@@ -326,7 +327,12 @@ export class TumbangPreso implements AfterViewInit, OnInit, OnDestroy {
 
   startGame(): void {
     if (this.showIntroduction || this.hasStarted || this.savingJuice() || this.retrySync) return;
+    if (!this.canStartGame) {
+      this.showOutOfJuice = true;
+      return;
+    }
     this.syncRun('start', () => {
+      this.showOutOfJuice = false;
       this.hasStarted = true; this.audio.start();
       if (this.windowAway || document.hidden) this.pauseGame();
     });
