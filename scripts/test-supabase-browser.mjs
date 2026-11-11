@@ -34,7 +34,7 @@ try {
  await page.locator('#login-identity').fill(name);
  await page.locator('#login-password').fill(password);
  await page.locator('button[type=submit]').click();
- await page.waitForURL('**/#/games');
+ await page.waitForURL('**/index.html#/games');
  await page.goto('http://127.0.0.1:4173/index.html#/account/profile');
  await page.locator('#display-name').fill('Browser Player');
  await page.getByRole('button',{name:'Save profile',exact:true}).click();
@@ -74,7 +74,9 @@ try {
  await shared.route('https://html-classic.itch.zone/**',async route=>{
   const pathname=decodeURIComponent(new URL(route.request().url()).pathname);
   if(!pathname.startsWith('/html/tubong-security/'))return route.fulfill({status:404,body:''});
-  const file=resolve(buildRoot,pathname.slice('/html/tubong-security/'.length)||'index.html');
+  // itch.io rejects directory requests instead of resolving them to index.html.
+  if(pathname.endsWith('/'))return route.fulfill({status:403,body:'Directory requests are forbidden'});
+  const file=resolve(buildRoot,pathname.slice('/html/tubong-security/'.length));
   if(!file.startsWith(buildRoot+'/'))return route.fulfill({status:404,body:''});
   try { await route.fulfill({body:await readFile(file),contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.mp3':'audio/mpeg','.woff2':'font/woff2'})[extname(file)]??'application/octet-stream'}); }
   catch { await route.fulfill({status:404,body:''}); }
@@ -83,7 +85,7 @@ try {
  await shared.goto('https://html-classic.itch.zone/html/tubong-security/index.html#/login?returnUrl=/account/settings');
  assert.equal(await shared.locator('input[formcontrolname=rememberMe]').count(),0,'No Remember Me on itch.io');
  await shared.locator('#login-identity').fill(name); await shared.locator('#login-password').fill(password);
- await shared.locator('button[type=submit]').click(); await shared.waitForURL('**/#/account/settings');
+ await shared.locator('button[type=submit]').click(); await shared.waitForURL('**/index.html#/account/settings');
  assert.equal(await shared.evaluate(()=>localStorage.getItem('tubong.session.v1')),null,'Shared origin cannot read a stored login token');
  assert.equal(await shared.evaluate(()=>sessionStorage.getItem('tubong.session.v1')),null,'Shared session storage contains no token');
  await shared.locator('#username-value').waitFor();

@@ -96,9 +96,13 @@ memory and reloading the game requires signing in again.
 The app uses hash routing for static itch.io hosting. Build the upload files with:
 
 ```sh
-npm run build:itch
+npm run package:itch
 ```
 
-Upload only the contents of `dist/tubongpinoybeta2/browser` as a ZIP with index.html
-at its root, excluding `.htaccess`. Backend source, configuration, and SQL exports
-must never be included in the frontend ZIP.
+Upload `dist/tubong-pinoy-itch.zip`. The packaging command builds production,
+checks public files and itch.io limits, and creates a verified ZIP with index.html
+at its root and no hidden files. Navigation preserves index.html because itch.io
+rejects directory URLs. Backend source, configuration, and SQL exports must never
+be included in the frontend ZIP.
+
+See [the itch.io upload steps](docs/itch-deployment.md) for project settings and updates.
