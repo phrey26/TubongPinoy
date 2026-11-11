@@ -39,7 +39,7 @@ export const routes: Routes = [
   { path: 'account/settings', title: 'Account Settings | Tubong Pinoy', data: { noindex: true, description: 'Manage your Tubong Pinoy username, password, and game audio.' }, canActivate: [authGuard], canDeactivate: [leaveGuard],
     loadComponent: () => import('./features/account/settings/settings').then(module => module.Settings) },
 
-  { path: 'contact', title: 'Contact & Feedback | Tubong Pinoy', data: { description: 'Meet HH productions and preview your feedback for Tubong Pinoy. Message delivery is coming soon.' },
+  { path: 'contact', title: 'Contact & Feedback | Tubong Pinoy', data: { description: 'Meet Big Chico Studio and preview your feedback for Tubong Pinoy. Message delivery is coming soon.' },
     loadComponent: () => import('./features/contact/contact/contact').then(m => m.Contact), canDeactivate: [leaveGuard] },
 
   { path: 'faq', title: 'Frequently Asked Questions | Tubong Pinoy',

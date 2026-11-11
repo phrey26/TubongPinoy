@@ -1,6 +1,6 @@
 # Tubongpinoybeta2
 
-A browser gaming website featuring traditional Filipino games.
+A browser gaming website featuring traditional Filipino games, owned by Big Chico Studio.
 This project uses Angular 22.2.4, Angular CLI 22.2.5, and TypeScript 6.0.
 
 PHP/MySQL authentication setup and SQL are documented in [backend/README.md](backend/README.md).

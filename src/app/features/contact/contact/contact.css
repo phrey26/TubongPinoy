@@ -17,3 +17,10 @@
 .developer-profile p { color: #6b7280; font-size: 13px; margin-top: 4px; }
 @media (max-width: 799px) { .contact-grid { grid-template-columns: 1fr; } }
 @media (max-width: 419px) { .contact-card { padding: 20px; } .developer-profile { align-items: flex-start; } .developer-avatar { width: 48px; height: 48px; border-radius: 14px; } .developer-avatar img { width: 32px; height: 32px; } }
+
+.developer-profile { flex-wrap: wrap; }
+.developer-avatar { width: 144px; height: 116px; background: #faf7f3; overflow: hidden; }
+.developer-avatar img { width: 144px; height: 116px; object-fit: contain; }
+.studio-intro { margin: 24px 0 20px; color: #64748b; font-size: 14px; }
+.studio-socials { display: flex; flex-wrap: wrap; gap: 12px; }
+.studio-socials a { font-size: 13px; }
